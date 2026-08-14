@@ -1,0 +1,170 @@
+/* ================================
+   Access Denied Page
+================================ */
+
+.access-denied-page {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+  box-sizing: border-box;
+
+  background-color: #f8fafc;
+}
+
+
+/* ================================
+   Card
+================================ */
+
+.access-denied-card {
+  width: 100%;
+  max-width: 460px;
+
+  padding: 40px 36px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  text-align: center;
+
+  box-sizing: border-box;
+
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+}
+
+
+/* ================================
+   Warning Icon
+================================ */
+
+.access-denied-icon {
+  width: 64px;
+  height: 64px;
+
+  margin: 0 auto 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #fef2f2;
+
+  color: #dc2626;
+
+  border: 1px solid #fecaca;
+
+  font-size: 30px;
+  font-weight: 700;
+}
+
+
+/* ================================
+   Heading
+================================ */
+
+.access-denied-card h1 {
+  margin: 0 0 12px;
+
+  color: #0f172a;
+
+  font-size: 26px;
+  font-weight: 700;
+
+  letter-spacing: -0.4px;
+}
+
+
+/* ================================
+   Description
+================================ */
+
+.access-denied-card p {
+  margin: 8px 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+.access-denied-card strong {
+  color: #334155;
+
+  font-weight: 600;
+}
+
+
+/* ================================
+   Back Button
+================================ */
+
+.access-denied-card button {
+  width: 100%;
+
+  height: 46px;
+
+  margin-top: 24px;
+
+  border: none;
+  border-radius: 9px;
+
+  background-color: #0f172a;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.access-denied-card button:hover {
+  background-color: #1e293b;
+
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+}
+
+.access-denied-card button:active {
+  transform: scale(0.98);
+}
+
+
+/* ================================
+   Responsive
+================================ */
+
+@media (max-width: 480px) {
+  .access-denied-page {
+    padding: 16px;
+  }
+
+  .access-denied-card {
+    padding: 32px 24px;
+  }
+
+  .access-denied-card h1 {
+    font-size: 23px;
+  }
+
+  .access-denied-icon {
+    width: 56px;
+    height: 56px;
+
+    font-size: 26px;
+  }
+}

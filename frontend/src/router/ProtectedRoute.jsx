@@ -1,43 +1,31 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-
 import { supabase } from "../lib/supabase";
+import { ALLOWED_USERS } from "../constants/allowedUsers";
 
 const ProtectedRoute = () => {
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let mounted = true;
-
-        const getInitialSession = async () => {
+        const checkSession = async () => {
             const {
                 data: { session },
-                error,
             } = await supabase.auth.getSession();
 
-            if (error) {
-                console.error("Session error:", error.message);
-            }
-
-            if (mounted) {
-                setSession(session);
-                setLoading(false);
-            }
+            setSession(session);
+            setLoading(false);
         };
 
-        getInitialSession();
+        checkSession();
 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (mounted) {
-                setSession(session);
-            }
+            setSession(session);
         });
 
         return () => {
-            mounted = false;
             subscription.unsubscribe();
         };
     }, []);
@@ -46,8 +34,16 @@ const ProtectedRoute = () => {
         return <div>Checking authentication...</div>;
     }
 
+    // Not logged in
     if (!session) {
         return <Navigate to="/login" replace />;
+    }
+
+    // Check mentor email domain
+    const email = session.user?.email?.toLowerCase();
+
+    if (!email || !ALLOWED_USERS.includes(email)) {
+        return <Navigate to="/access-denied" replace />;
     }
 
     return <Outlet />;
