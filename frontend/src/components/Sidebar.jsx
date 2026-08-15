@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./Sidebar.css";
 
 function Sidebar() {
@@ -12,11 +13,11 @@ function Sidebar() {
 
       <nav className="sidebar-menu">
 
-        <a href="#">Dashboard</a>
+        <Link to="/dashboard">Dashboard</Link>
 
         <div className="menu-section">
-          <a href="#">Attendance</a>
-          <a href="#" className="submenu">Import Excel</a>
+          <Link to="/import-attendance">Attendance</Link>
+          <Link to="/import-attendance" className="submenu">Import Excel</Link>
           <a href="#" className="submenu">Attendance Records</a>
         </div>
 

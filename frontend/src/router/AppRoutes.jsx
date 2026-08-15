@@ -8,6 +8,7 @@ import {
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import AccessDenied from "../pages/AccessDenied/AccessDenied";
+import ImportAttendance from "../pages/ImportAttendance/ImportAttendance";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
@@ -34,6 +35,11 @@ const AppRoutes = () => {
             <Route
               path="/dashboard"
               element={<Dashboard />}
+            />
+
+            <Route
+              path="/import-attendance"
+              element={<ImportAttendance />}
             />
 
           </Route>
