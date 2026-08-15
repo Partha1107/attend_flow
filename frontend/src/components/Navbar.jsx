@@ -1,18 +1,48 @@
-import React from "react";
+import {
+  Bell,
+  CalendarDays,
+  ChevronDown,
+  Menu,
+} from "lucide-react";
+
 import "./Navbar.css";
 
-function Navbar() {
+function Navbar({ onMenuClick }) {
   return (
     <header className="navbar">
-
-      <button className="menu-button">
-        ☰
+      <button
+        type="button"
+        className="menu-button"
+        aria-label="Open navigation"
+        onClick={onMenuClick}
+      >
+        <Menu size={22} />
       </button>
 
       <div className="navbar-right">
+        <button
+          type="button"
+          className="top-date"
+        >
+          <CalendarDays size={16} />
 
-        <button className="notification">
-          🔔
+          <span>
+            May 12 – May 18, 2024
+          </span>
+
+          <ChevronDown size={14} />
+        </button>
+
+        <button
+          type="button"
+          className="notification"
+          aria-label="Notifications"
+        >
+          <Bell size={19} />
+
+          <span className="notification-count">
+            3
+          </span>
         </button>
 
         <div className="profile">
@@ -20,14 +50,17 @@ function Navbar() {
             M
           </div>
 
-          <div>
+          <div className="profile-copy">
             <strong>Mentor</strong>
-            <p>mentor@aesea.edu</p>
+            <span>mentor@aesa.edu</span>
           </div>
+
+          <ChevronDown
+            size={15}
+            className="profile-chevron"
+          />
         </div>
-
       </div>
-
     </header>
   );
 }

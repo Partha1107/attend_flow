@@ -25,6 +25,7 @@ const AccessDenied = () => {
                 <p>
                     Please sign in using your official
                     <strong> @kalvium.com </strong>
+                    
                     account.
                 </p>
 

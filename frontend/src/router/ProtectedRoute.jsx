@@ -1,61 +1,92 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import { supabase } from "../lib/supabase";
 import { ALLOWED_USERS } from "../constants/allowedUsers";
 
 const ProtectedRoute = () => {
-    const [session, setSession] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(Boolean(supabase));
 
-    useEffect(() => {
-        if (!supabase) {
-            setLoading(false);
-            return;
-        }
-
-        const checkSession = async () => {
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-
-            setSession(session);
-            setLoading(false);
-        };
-
-        checkSession();
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []);
-
-    if (loading) {
-        return <div>Checking authentication...</div>;
-    }
-
+  useEffect(() => {
     if (!supabase) {
-        return <Navigate to="/login" replace />;
+      return undefined;
     }
 
-    // Not logged in
-    if (!session) {
-        return <Navigate to="/login" replace />;
-    }
+    let mounted = true;
 
-    // Check mentor email domain
-    const email = session.user?.email?.toLowerCase();
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    if (!email || !ALLOWED_USERS.includes(email)) {
-        return <Navigate to="/access-denied" replace />;
-    }
+      if (mounted) {
+        setSession(session);
+        setLoading(false);
+      }
+    };
 
-    return <Outlet />;
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        if (mounted) {
+          setSession(nextSession);
+          setLoading(false);
+        }
+      }
+    );
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div>
+        Checking authentication...
+      </div>
+    );
+  }
+
+  if (!supabase) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
+  }
+
+  if (!session) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
+  }
+
+  const email =
+    session.user?.email?.toLowerCase();
+
+  if (
+    !email ||
+    !ALLOWED_USERS.includes(email)
+  ) {
+    return (
+      <Navigate
+        to="/access-denied"
+        replace
+      />
+    );
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
