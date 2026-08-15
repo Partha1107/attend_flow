@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { FaGoogle } from "react-icons/fa";
+import { useState } from "react";
 import {
     supabase,
     supabaseConfigError,
@@ -8,22 +9,29 @@ import "./Login.css";
 
 const Login = () => {
     const hasSupabase = Boolean(supabase);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleGoogleLogin = async () => {
         if (!supabase) {
-            console.error(supabaseConfigError);
+            setError(supabaseConfigError);
             return;
         }
+
+        setLoading(true);
+        setError("");
 
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: window.location.origin,
+                redirectTo: `${window.location.origin}/dashboard`,
             },
         });
 
         if (error) {
             console.error("Google login error:", error.message);
+            setError(error.message);
+            setLoading(false);
         }
     };
 
@@ -59,12 +67,20 @@ const Login = () => {
                         type="button"
                         className="google-login-button"
                         onClick={handleGoogleLogin}
-                        disabled={!hasSupabase}
+                        disabled={!hasSupabase || loading}
                     >
                         <FaGoogle className="google-icon" />
 
-                        <span>Continue with Google</span>
+                        <span>
+                            {loading
+                                ? "Redirecting..."
+                                : "Continue with Google"}
+                        </span>
                     </button>
+
+                    {error && (
+                        <p className="login-error">{error}</p>
+                    )}
 
                     {!hasSupabase && (
                         <p className="login-info">
