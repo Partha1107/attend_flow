@@ -186,3 +186,10 @@
   margin-left: 240px;
   padding: 30px; 
 }
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+}

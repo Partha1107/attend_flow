@@ -1,23 +1,38 @@
-import React from "react";
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import "./DashboardLayout.css";
 
 const DashboardLayout = () => {
-    return (
-        <div className="min-h-screen">
-            <Navbar />
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-            <div className="flex">
-                <Sidebar />
+  return (
+    <div className="app-shell">
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-                <main className="flex-1">
-                    <Outlet />
-                </main>
-            </div>
-        </div>
-    );
+      <div className="app-main">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+        <main className="page-content">
+          <Outlet />
+        </main>
+      </div>
+
+      {sidebarOpen && (
+        <button
+          className="sidebar-backdrop"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+    </div>
+  );
 };
 
 export default DashboardLayout;
