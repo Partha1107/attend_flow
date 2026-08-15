@@ -13,6 +13,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
+  const isDev = import.meta.env.DEV;
+
   return (
     <BrowserRouter>
       <Routes>
@@ -36,6 +38,16 @@ const AppRoutes = () => {
 
           </Route>
         </Route>
+
+        {/* Dev preview (no auth) */}
+        {isDev && (
+          <Route element={<DashboardLayout />}>
+            <Route
+              path="/dashboard-preview"
+              element={<Dashboard />}
+            />
+          </Route>
+        )}
 
         {/* Root */}
         <Route
