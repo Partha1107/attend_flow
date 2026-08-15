@@ -8,6 +8,11 @@ const ProtectedRoute = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!supabase) {
+            setLoading(false);
+            return;
+        }
+
         const checkSession = async () => {
             const {
                 data: { session },
@@ -32,6 +37,10 @@ const ProtectedRoute = () => {
 
     if (loading) {
         return <div>Checking authentication...</div>;
+    }
+
+    if (!supabase) {
+        return <Navigate to="/login" replace />;
     }
 
     // Not logged in

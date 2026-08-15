@@ -1,0 +1,71 @@
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background-color: #111111;
+  color: white;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 20px;
+}
+
+.logo {
+  margin-bottom: 30px;
+}
+
+.logo h2 {
+  margin: 0;
+}
+
+.logo p {
+  font-size: 11px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-menu a {
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.sidebar-menu a:hover {
+  background-color: #dc2626;
+}
+
+.submenu {
+  padding-left: 30px !important;
+  font-size: 14px;
+}
+
+.help-box {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.help-box button {  
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  background-color: #dc2626;
+  color: white;
+}
+
+.sidebar-menu a.active {
+  background-color: #dc2626;
+  color: white;
+}

@@ -1,10 +1,20 @@
 import { motion } from "framer-motion";
 import { FaGoogle } from "react-icons/fa";
-import { supabase } from "../../lib/supabase";
+import {
+    supabase,
+    supabaseConfigError,
+} from "../../lib/supabase";
 import "./Login.css";
 
 const Login = () => {
+    const hasSupabase = Boolean(supabase);
+
     const handleGoogleLogin = async () => {
+        if (!supabase) {
+            console.error(supabaseConfigError);
+            return;
+        }
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
@@ -49,11 +59,19 @@ const Login = () => {
                         type="button"
                         className="google-login-button"
                         onClick={handleGoogleLogin}
+                        disabled={!hasSupabase}
                     >
                         <FaGoogle className="google-icon" />
 
                         <span>Continue with Google</span>
                     </button>
+
+                    {!hasSupabase && (
+                        <p className="login-info">
+                            Supabase is not configured. Add environment variables in
+                            frontend/.env and restart the dev server.
+                        </p>
+                    )}
 
                     {/* Divider */}
                     <div className="login-divider">
