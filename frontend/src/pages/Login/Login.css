@@ -168,8 +168,35 @@
   transform: scale(0.99);
 }
 
+.google-login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-login-button:disabled:hover {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: none;
+}
+
 .google-icon {
   font-size: 17px;
+}
+
+/* ================================
+   Error Message
+=============================== */
+
+.login-error {
+  margin: 12px 0 0;
+
+  text-align: center;
+
+  color: #dc2626;
+
+  font-size: 13px;
+
+  line-height: 1.5;
 }
 
 
