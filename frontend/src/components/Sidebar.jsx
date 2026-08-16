@@ -14,6 +14,8 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+
+import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
 const mainItems = [
@@ -73,59 +75,57 @@ function Sidebar({ open = false, onClose = () => {} }) {
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {mainItems.map(({ label, icon: Icon, active }) => (
-          <div key={label}>
-            <a
-              href={
-                label === "Dashboard"
-                  ? "#dashboard"
-                  : `#${label.toLowerCase()}`
-              }
-              className={`nav-item ${active ? "active" : ""}`}
-              onClick={onClose}
-            >
-              <Icon
-                size={19}
-                strokeWidth={active ? 2.3 : 1.9}
-              />
+        {mainItems.map(({ label, icon: Icon }) => {
+          const destination =
+            label === "Dashboard"
+              ? "/dashboard"
+              : label === "Students"
+                ? "/students"
+                : `/${label.toLowerCase()}`;
 
-              <span>{label}</span>
-            </a>
+          return (
+            <div key={label} className="nav-group">
+              <NavLink
+                to={destination}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </NavLink>
 
-            {label === "Dashboard" && (
-              <div className="attendance-group">
-                <div className="attendance-title">
-                  <ShieldCheck size={18} />
+              {label === "Dashboard" && (
+                <div className="attendance-group">
+                  <div className="attendance-title">
+                    <ShieldCheck size={18} />
+                    <span>Attendance</span>
+                    <ChevronDown size={15} className="attendance-chevron" />
+                  </div>
 
-                  <span>Attendance</span>
+                  <NavLink
+                    to="/import-attendance"
+                    className="subnav-item"
+                    onClick={onClose}
+                  >
+                    <FileSpreadsheet size={16} />
+                    <span>Import Excel</span>
+                  </NavLink>
 
-                  <ChevronDown
-                    size={15}
-                    className="attendance-chevron"
-                  />
+                  <NavLink
+                    to="/dashboard"
+                    className="subnav-item"
+                    onClick={onClose}
+                  >
+                    <Bell size={16} />
+                    <span>Attendance Records</span>
+                  </NavLink>
                 </div>
-
-                <a
-                  href="#import-excel"
-                  className="subnav-item"
-                  onClick={onClose}
-                >
-                  <FileSpreadsheet size={16} />
-                  <span>Import Excel</span>
-                </a>
-
-                <a
-                  href="#attendance-records"
-                  className="subnav-item"
-                  onClick={onClose}
-                >
-                  <Bell size={16} />
-                  <span>Attendance Records</span>
-                </a>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="sidebar-help">
