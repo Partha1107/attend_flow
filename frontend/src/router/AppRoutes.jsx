@@ -12,6 +12,7 @@ import ImportAttendance from "../pages/ImportAttendance/ImportAttendance";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import StudentPage from "../pages/student-page/StudentPage";
 
 const AppRoutes = () => {
   const isDev = import.meta.env.DEV;
@@ -40,6 +41,11 @@ const AppRoutes = () => {
             <Route
               path="/import-attendance"
               element={<ImportAttendance />}
+            />
+
+            <Route 
+              path="/students" 
+              element={<StudentPage />} 
             />
 
           </Route>
