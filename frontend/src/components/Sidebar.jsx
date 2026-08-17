@@ -22,7 +22,7 @@ const mainItems = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    active: true,
+    to: "/dashboard",
   },
   {
     label: "Students",
@@ -47,6 +47,11 @@ const mainItems = [
 ];
 
 function Sidebar({ open = false, onClose = () => {} }) {
+  const { pathname } = useLocation();
+
+  const isImportActive = pathname === "/import-attendance";
+  const isRecordsActive = pathname === "/attendance-records";
+
   return (
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
       <div className="sidebar-brand">
