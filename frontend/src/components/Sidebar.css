@@ -7,21 +7,8 @@
   padding: 24px 16px 18px;
   display: flex;
   flex-direction: column;
-  color: #fff;
-
-  background:
-    radial-gradient(
-      circle at 85% 4%,
-      rgba(255, 255, 255, 0.11),
-      transparent 24%
-    ),
-    linear-gradient(
-      180deg,
-      #d71920 0%,
-      #c3131a 48%,
-      #a80e15 100%
-    );
-
+  color: #ffffff;
+  background-color: #0b1f3a;
   box-shadow:
     8px 0 28px rgba(83, 12, 17, 0.08);
 }
