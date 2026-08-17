@@ -14,7 +14,8 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+
+import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
 const mainItems = [
@@ -79,66 +80,52 @@ function Sidebar({ open = false, onClose = () => {} }) {
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {mainItems.map(({ label, icon: Icon, to }) => {
-          const active = to ? pathname === to : false;
+        {mainItems.map(({ label, icon: Icon }) => {
+          const destination =
+            label === "Dashboard"
+              ? "/dashboard"
+              : label === "Students"
+                ? "/students"
+                : `/${label.toLowerCase()}`;
 
           return (
-            <div key={label}>
-              {to ? (
-                <Link
-                  to={to}
-                  className={`nav-item ${active ? "active" : ""}`}
-                  onClick={onClose}
-                >
-                  <Icon
-                    size={19}
-                    strokeWidth={active ? 2.3 : 1.9}
-                  />
-
-                  <span>{label}</span>
-                </Link>
-              ) : (
-                <a
-                  href={`#${label.toLowerCase()}`}
-                  className="nav-item"
-                  onClick={onClose}
-                >
-                  <Icon size={19} strokeWidth={1.9} />
-
-                  <span>{label}</span>
-                </a>
-              )}
+            <div key={label} className="nav-group">
+              <NavLink
+                to={destination}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </NavLink>
 
               {label === "Dashboard" && (
                 <div className="attendance-group">
                   <div className="attendance-title">
                     <ShieldCheck size={18} />
-
                     <span>Attendance</span>
-
-                    <ChevronDown
-                      size={15}
-                      className="attendance-chevron"
-                    />
+                    <ChevronDown size={15} className="attendance-chevron" />
                   </div>
 
-                  <Link
+                  <NavLink
                     to="/import-attendance"
-                    className={`subnav-item ${isImportActive ? "active" : ""}`}
+                    className="subnav-item"
                     onClick={onClose}
                   >
                     <FileSpreadsheet size={16} />
                     <span>Import Excel</span>
-                  </Link>
+                  </NavLink>
 
-                  <Link
-                    to="/attendance-records"
-                    className={`subnav-item ${isRecordsActive ? "active" : ""}`}
+                  <NavLink
+                    to="/dashboard"
+                    className="subnav-item"
                     onClick={onClose}
                   >
                     <Bell size={16} />
                     <span>Attendance Records</span>
-                  </Link>
+                  </NavLink>
                 </div>
               )}
             </div>

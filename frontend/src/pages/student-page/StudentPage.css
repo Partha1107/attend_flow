@@ -1,0 +1,738 @@
+.student-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 32px 48px;
+  box-sizing: border-box;
+  background: #f8fafc;
+  color: #111111;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================
+   PAGE HEADER
+========================= */
+
+.student-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.student-page-header h1 {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.student-page-header p {
+  margin: 10px 0 0;
+  font-size: 16px;
+  color: #222;
+}
+
+.add-student-btn {
+  border: none;
+  background: #dc2626;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 9px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: 0.2s ease;
+}
+
+.add-student-btn:hover {
+  background: #b91c1c;
+}
+
+.add-student-btn span {
+  font-size: 21px;
+}
+
+/* =========================
+   FILTER SECTION
+========================= */
+
+.filter-container {
+  background: white;
+  border: 1px solid #222;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 34px;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 280px;
+}
+
+.search-box input {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid #222;
+  border-radius: 7px;
+  padding: 0 14px 0 44px;
+  font-size: 15px;
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: #dc2626;
+}
+
+.search-icon {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  fill: none;
+  stroke: #111;
+  stroke-width: 2;
+}
+
+.filter-container select {
+  height: 44px;
+  min-width: 130px;
+  padding: 0 36px 0 13px;
+  border: 1px solid #222;
+  border-radius: 7px;
+  background: white;
+  font-size: 15px;
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-container select:focus {
+  border-color: #dc2626;
+}
+
+.clear-filter-btn {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.clear-filter-btn:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   STATISTICS
+========================= */
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 34px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #222;
+  border-radius: 14px;
+  min-height: 118px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.stat-card p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.stat-card h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 28px;
+}
+
+/* =========================
+   STUDENT TABLE
+========================= */
+
+.student-table-container {
+  background: white;
+  border: 1px solid #222;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.student-table-header,
+.student-row {
+  display: grid;
+  grid-template-columns:
+    1.7fr
+    1.15fr
+    0.65fr
+    0.65fr
+    1.1fr
+    1fr
+    1.2fr;
+
+  align-items: center;
+}
+
+.student-table-header {
+  min-height: 46px;
+  padding: 0 18px;
+  background: #f1f5f9;
+  border-bottom: 1px solid #333;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.student-row {
+  min-height: 72px;
+  padding: 0 18px;
+  border-bottom: 1px solid #777;
+  font-size: 15px;
+}
+
+.student-row:last-of-type {
+  border-bottom: none;
+}
+
+.student-row:hover {
+  background: #fafafa;
+}
+
+.student-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-name strong {
+  font-size: 17px;
+}
+
+.student-name small {
+  color: #9ca3af;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.attendance-badge {
+  border: 1px solid #444;
+  background: #f3f4f6;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-badge {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #222;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #111;
+}
+
+.status-present {
+  color: #111;
+  background: white;
+}
+
+.status-absent {
+  color: #dc2626;
+  border-color: #dc2626;
+  background: #fff1f2;
+}
+
+.status-absent .status-dot {
+  background: #dc2626;
+}
+
+.view-profile-btn {
+  background: white;
+  border: 1px solid #222;
+  border-radius: 5px;
+  padding: 9px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s ease;
+}
+
+.view-profile-btn:hover {
+  background: #111;
+  color: white;
+}
+
+/* =========================
+   PAGINATION
+========================= */
+
+.pagination {
+  min-height: 60px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.pagination strong {
+  font-size: 14px;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pagination-buttons button {
+  min-width: 36px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #888;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pagination-buttons button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.pagination-buttons button:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.pagination-buttons .active-page {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.empty-state button {
+  border: none;
+  background: #dc2626;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.student-profile-modal,
+.add-student-modal {
+  position: relative;
+  width: min(700px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-sizing: border-box;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.add-student-modal {
+  width: min(650px, 100%);
+}
+
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 50%;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* =========================
+   PROFILE HEADER
+========================= */
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-right: 40px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #ddd;
+}
+
+.profile-avatar {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.profile-header h2 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+.profile-header h3 {
+  margin: 0 0 3px;
+  font-size: 22px;
+}
+
+.profile-header p {
+  margin: 0;
+  color: #999;
+  font-size: 13px;
+}
+
+.active-badge {
+  margin-left: auto;
+  background: #dcfce7;
+  color: #166534;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================
+   PROFILE INFORMATION
+========================= */
+
+.profile-section {
+  padding: 22px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.profile-section h4 {
+  margin: 0 0 18px;
+  font-size: 16px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.profile-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profile-grid span {
+  color: #777;
+  font-size: 12px;
+}
+
+.profile-grid strong {
+  font-size: 14px;
+}
+
+/* =========================
+   ATTENDANCE SUMMARY
+========================= */
+
+.attendance-summary {
+  margin-top: 22px;
+  padding: 20px;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.attendance-summary > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attendance-summary span {
+  font-size: 14px;
+  color: #555;
+}
+
+.attendance-summary strong {
+  color: #dc2626;
+  font-size: 28px;
+}
+
+.progress-bar {
+  height: 10px;
+  background: #fee2e2;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 14px 0;
+}
+
+.progress-bar div {
+  height: 100%;
+  background: #dc2626;
+  border-radius: inherit;
+}
+
+.attendance-details {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+
+/* =========================
+   MODAL ACTIONS
+========================= */
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.edit-profile-btn,
+.close-profile-btn {
+  padding: 11px 18px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.edit-profile-btn {
+  border: none;
+  background: #dc2626;
+  color: white;
+}
+
+.edit-profile-btn:hover {
+  background: #b91c1c;
+}
+
+.close-profile-btn {
+  border: 1px solid #222;
+  background: white;
+}
+
+/* =========================
+   ADD STUDENT FORM
+========================= */
+
+.add-student-modal h2 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.add-student-modal > p {
+  color: #666;
+  margin: 8px 0 25px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.form-grid input,
+.form-grid select {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  border: 1px solid #aaa;
+  border-radius: 7px;
+  padding: 0 12px;
+  background: white;
+  outline: none;
+}
+
+.form-grid input:focus,
+.form-grid select:focus {
+  border-color: #dc2626;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1200px) {
+  .student-page {
+    padding: 28px;
+  }
+
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .student-table-container {
+    overflow-x: auto;
+  }
+
+  .student-table-header,
+  .student-row {
+    min-width: 950px;
+  }
+}
+
+@media (max-width: 768px) {
+  .student-page {
+    padding: 20px 16px;
+  }
+
+  .student-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .student-page-header h1 {
+    font-size: 34px;
+  }
+
+  .add-student-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .filter-container select {
+    width: 100%;
+  }
+
+  .clear-filter-btn {
+    text-align: left;
+    padding-left: 0;
+  }
+
+  .pagination {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 15px;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .active-badge {
+    margin-left: 0;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-details {
+    flex-direction: column;
+  }
+}

@@ -1,5 +1,3 @@
-import { useMemo, useState } from "react";
-
 import {
   AlertCircle,
   ArrowDownRight,
@@ -14,28 +12,71 @@ import {
 } from "lucide-react";
 
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
   Cell,
   Pie,
   PieChart,
   ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
 } from "recharts";
 
 import "./Dashboard.css";
 
-const weeklyAttendance = [
-  { week: "Apr 01", value: 78.1 },
-  { week: "Apr 08", value: 79.4 },
-  { week: "Apr 15", value: 81.2 },
-  { week: "Apr 22", value: 82.0 },
-  { week: "Apr 29", value: 80.3 },
-  { week: "May 06", value: 81.6 },
-  { week: "May 13", value: 82.4 },
+const statCards = [
+  {
+    label: "Students",
+    value: "156",
+    change: "5 from last week",
+    direction: "up",
+    icon: UsersRound,
+    tone: "blue",
+  },
+  {
+    label: "Avg Attendance",
+    value: "82.4%",
+    change: "2.6% from last week",
+    direction: "up",
+    icon: CheckCircle2,
+    tone: "green",
+  },
+  {
+    label: "At Risk Students",
+    value: "24",
+    change: "4 from last week",
+    direction: "down",
+    icon: AlertCircle,
+    tone: "orange",
+  },
+  {
+    label: "Alerts Sent",
+    value: "118",
+    change: "18 from last week",
+    direction: "up",
+    icon: Mail,
+    tone: "purple",
+  },
+];
+
+const distribution = [
+  {
+    name: "Good",
+    description: "75% and above",
+    value: 102,
+    percentage: 65.4,
+    fill: "#25B86A",
+  },
+  {
+    name: "Warning",
+    description: "65% – 74%",
+    value: 32,
+    percentage: 20.5,
+    fill: "#F3B62F",
+  },
+  {
+    name: "Critical",
+    description: "Below 65%",
+    value: 22,
+    percentage: 14.1,
+    fill: "#E64B4B",
+  },
 ];
 
 const students = [
@@ -73,65 +114,6 @@ const students = [
     attendance: 64,
     updated: "May 18, 2024",
     status: "Critical",
-  },
-];
-
-const distribution = [
-  {
-    name: "Good",
-    description: "75% and above",
-    value: 102,
-    percentage: 65.4,
-    fill: "#27b36a",
-  },
-  {
-    name: "Warning",
-    description: "65% – 74%",
-    value: 32,
-    percentage: 20.5,
-    fill: "#f4b52d",
-  },
-  {
-    name: "Critical",
-    description: "Below 65%",
-    value: 22,
-    percentage: 14.1,
-    fill: "#e94d4d",
-  },
-];
-
-const statCards = [
-  {
-    label: "Students",
-    value: "156",
-    change: "5 from last week",
-    direction: "up",
-    icon: UsersRound,
-    tone: "blue",
-  },
-  {
-    label: "Avg Attendance",
-    value: "82.4%",
-    change: "2.6% from last week",
-    direction: "up",
-    icon: CheckCircle2,
-    tone: "green",
-  },
-  {
-    label: "At Risk Students",
-    value: "24",
-    change: "4 from last week",
-    direction: "down",
-    icon: AlertCircle,
-    tone: "orange",
-  },
-  {
-    label: "Alerts Sent",
-    value: "118",
-    change: "18 from last week",
-    direction: "up",
-    icon: Mail,
-    tone: "purple",
   },
 ];
 
@@ -173,60 +155,67 @@ function StatCard({ card }) {
   );
 }
 
-function AttendanceTooltip({
-  active,
-  payload,
-  label,
-}) {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
+function DistributionItem({ item }) {
   return (
-    <div className="chart-tooltip">
-      <span>{label}</span>
+    <div className="distribution-item">
+      <div className="distribution-item-top">
+        <div className="distribution-name">
+          <span
+            className="distribution-dot"
+            style={{
+              backgroundColor: item.fill,
+            }}
+          />
 
-      <strong>
-        {payload[0].value}%
-      </strong>
+          <div>
+            <strong>{item.name}</strong>
+
+            <span>
+              {item.description}
+            </span>
+          </div>
+        </div>
+
+        <div className="distribution-value">
+          <strong>
+            {item.value}
+          </strong>
+
+          <span>
+            {item.percentage}%
+          </span>
+        </div>
+      </div>
+
+      <div className="distribution-progress">
+        <span
+          style={{
+            width: `${item.percentage}%`,
+            backgroundColor: item.fill,
+          }}
+        />
+      </div>
     </div>
   );
 }
 
 function Dashboard() {
-  const [range, setRange] =
-    useState("Last 6 Weeks");
+  const totalStudents = distribution.reduce(
+    (total, item) => total + item.value,
+    0
+  );
 
-  const [dateRange, setDateRange] =
-    useState("May 12 – May 18, 2024");
-
-  const chartData = useMemo(() => {
-    if (range === "Last 4 Weeks") {
-      return weeklyAttendance.slice(-5);
-    }
-
-    if (range === "Last 8 Weeks") {
-      return [
-        {
-          week: "Mar 18",
-          value: 76.9,
-        },
-        {
-          week: "Mar 25",
-          value: 77.6,
-        },
-        ...weeklyAttendance,
-      ];
-    }
-
-    return weeklyAttendance;
-  }, [range]);
+  const studentsNeedingAttention =
+    distribution[1].value +
+    distribution[2].value;
 
   return (
     <section
       className="dashboard-page"
       id="dashboard"
     >
+      {/* PAGE HEADER */}
+
       <div className="dashboard-heading">
         <div>
           <div className="eyebrow">
@@ -248,19 +237,18 @@ function Dashboard() {
         <button
           className="mobile-date"
           type="button"
-          onClick={() =>
-            setDateRange(
-              "May 12 – May 18, 2024"
-            )
-          }
         >
           <CalendarDays size={16} />
 
-          {dateRange}
+          <span>
+            May 12 – May 18, 2024
+          </span>
 
           <ChevronDown size={14} />
         </button>
       </div>
+
+      {/* STATISTICS */}
 
       <div className="stats-grid">
         {statCards.map((card) => (
@@ -271,156 +259,41 @@ function Dashboard() {
         ))}
       </div>
 
-      <div className="analytics-grid">
-        <article className="panel attendance-panel">
-          <div className="panel-header">
-            <div>
-              <h2>
-                Attendance Overview
-              </h2>
+      {/* ATTENDANCE DISTRIBUTION */}
 
-              <p>
-                Weekly average attendance
-              </p>
+      <article className="panel distribution-panel">
+        <div className="distribution-header">
+          <div>
+            <div className="section-kicker">
+              ATTENDANCE HEALTH
             </div>
 
-            <select
-              value={range}
-              onChange={(event) =>
-                setRange(
-                  event.target.value
-                )
-              }
-            >
-              <option>
-                Last 6 Weeks
-              </option>
+            <h2>
+              Attendance Distribution
+            </h2>
 
-              <option>
-                Last 4 Weeks
-              </option>
-
-              <option>
-                Last 8 Weeks
-              </option>
-            </select>
+            <p>
+              Current attendance status
+              across all active students
+            </p>
           </div>
 
-          <div className="line-chart-wrap">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <AreaChart
-                data={chartData}
-                margin={{
-                  top: 24,
-                  right: 10,
-                  left: -20,
-                  bottom: 0,
-                }}
-              >
-                <defs>
-                  <linearGradient
-                    id="attendanceFill"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="#d71920"
-                      stopOpacity={0.22}
-                    />
+          <div className="distribution-date">
+            <CalendarDays size={15} />
 
-                    <stop
-                      offset="100%"
-                      stopColor="#d71920"
-                      stopOpacity={0.02}
-                    />
-                  </linearGradient>
-                </defs>
+            <span>
+              May 12 – May 18, 2024
+            </span>
 
-                <CartesianGrid
-                  stroke="#edf0f3"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="week"
-                  tick={{
-                    fill: "#8a93a3",
-                    fontSize: 10,
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                  dy={9}
-                />
-
-                <YAxis
-                  domain={[0, 100]}
-                  ticks={[
-                    0,
-                    25,
-                    50,
-                    75,
-                    100,
-                  ]}
-                  tick={{
-                    fill: "#8a93a3",
-                    fontSize: 10,
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip
-                  content={
-                    <AttendanceTooltip />
-                  }
-                  cursor={{
-                    stroke: "#e9edf2",
-                  }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#d71920"
-                  strokeWidth={2.5}
-                  fill="url(#attendanceFill)"
-                  dot={{
-                    r: 3.5,
-                    fill: "#fff",
-                    stroke: "#d71920",
-                    strokeWidth: 2,
-                  }}
-                  activeDot={{
-                    r: 5,
-                  }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <ChevronDown size={13} />
           </div>
-        </article>
+        </div>
 
-        <article className="panel distribution-panel">
-          <div className="panel-header">
-            <div>
-              <h2>
-                Attendance Distribution
-              </h2>
+        <div className="distribution-main">
+          {/* DONUT */}
 
-              <p>
-                Current student attendance
-                status
-              </p>
-            </div>
-          </div>
-
-          <div className="distribution-body">
-            <div className="donut-wrap">
+          <div className="donut-section">
+            <div className="donut-chart">
               <ResponsiveContainer
                 width="100%"
                 height="100%"
@@ -430,11 +303,13 @@ function Dashboard() {
                     data={distribution}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius="54%"
-                    outerRadius="78%"
-                    paddingAngle={1.5}
-                    stroke="#fff"
-                    strokeWidth={2}
+                    innerRadius="66%"
+                    outerRadius="88%"
+                    startAngle={90}
+                    endAngle={-270}
+                    paddingAngle={2}
+                    stroke="#FFFFFF"
+                    strokeWidth={4}
                   >
                     {distribution.map(
                       (item) => (
@@ -449,59 +324,129 @@ function Dashboard() {
               </ResponsiveContainer>
 
               <div className="donut-center">
-                <strong>156</strong>
-                <span>Students</span>
+                <span>
+                  Total Students
+                </span>
+
+                <strong>
+                  {totalStudents}
+                </strong>
+
+                <small>
+                  100% population
+                </small>
+              </div>
+            </div>
+          </div>
+
+          {/* DISTRIBUTION DETAILS */}
+
+          <div className="distribution-details">
+            <div className="distribution-summary">
+              <div>
+                <span className="summary-label">
+                  Overall healthy
+                </span>
+
+                <strong>
+                  65.4%
+                </strong>
+              </div>
+
+              <div className="summary-status">
+                <CheckCircle2 size={17} />
+
+                <span>
+                  Majority of students
+                  are above the safe
+                  attendance level.
+                </span>
               </div>
             </div>
 
             <div className="distribution-list">
               {distribution.map(
                 (item) => (
-                  <div
-                    className="distribution-row"
+                  <DistributionItem
                     key={item.name}
-                  >
-                    <div className="distribution-label">
-                      <span
-                        className="legend-dot"
-                        style={{
-                          background:
-                            item.fill,
-                        }}
-                      />
-
-                      <div>
-                        <strong>
-                          {item.name}
-                        </strong>
-
-                        <span>
-                          {item.description}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="distribution-number">
-                      <strong>
-                        {item.value}
-                      </strong>
-
-                      <span>
-                        {item.percentage}%
-                      </span>
-                    </div>
-                  </div>
+                    item={item}
+                  />
                 )
               )}
             </div>
           </div>
+        </div>
 
-          <div className="distribution-total">
-            <span>Total Students</span>
-            <strong>156</strong>
+        {/* BOTTOM SUMMARY */}
+
+        <div className="distribution-footer">
+          <div className="distribution-footer-item good">
+            <div className="footer-icon">
+              <CheckCircle2 size={17} />
+            </div>
+
+            <div>
+              <span>
+                Healthy Students
+              </span>
+
+              <strong>
+                102
+              </strong>
+            </div>
           </div>
-        </article>
-      </div>
+
+          <div className="distribution-footer-item warning">
+            <div className="footer-icon">
+              <AlertCircle size={17} />
+            </div>
+
+            <div>
+              <span>
+                Warning Students
+              </span>
+
+              <strong>
+                32
+              </strong>
+            </div>
+          </div>
+
+          <div className="distribution-footer-item critical">
+            <div className="footer-icon">
+              <AlertCircle size={17} />
+            </div>
+
+            <div>
+              <span>
+                Critical Students
+              </span>
+
+              <strong>
+                22
+              </strong>
+            </div>
+          </div>
+
+          <div className="distribution-footer-item attention">
+            <div className="footer-icon">
+              <UsersRound size={17} />
+            </div>
+
+            <div>
+              <span>
+                Need Attention
+              </span>
+
+              <strong>
+                {studentsNeedingAttention}
+              </strong>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {/* STUDENTS REQUIRING ATTENTION */}
 
       <article className="panel attention-panel">
         <div className="attention-header">
@@ -601,6 +546,7 @@ function Dashboard() {
 
                     <td className="updated-cell">
                       <Clock3 size={13} />
+
                       {student.updated}
                     </td>
 
@@ -622,6 +568,7 @@ function Dashboard() {
         <div className="attention-footer">
           <span>
             <MoreHorizontal size={16} />
+
             Showing 5 of 24 at-risk
             students
           </span>
@@ -631,6 +578,8 @@ function Dashboard() {
           </button>
         </div>
       </article>
+
+      {/* FOOTER */}
 
       <footer className="dashboard-footer">
         © 2024 AESA — Attendance &amp;
