@@ -9,6 +9,7 @@ import {
   Mail,
   MoreHorizontal,
   UsersRound,
+  Filter,
 } from "lucide-react";
 
 import {
@@ -19,6 +20,7 @@ import {
 } from "recharts";
 
 import "./Dashboard.css";
+import React, { useState } from "react";
 
 const statCards = [
   {
@@ -128,7 +130,10 @@ function StatCard({ card }) {
   return (
     <article className="stat-card">
       <div className={`stat-icon ${card.tone}`}>
-        <Icon size={22} strokeWidth={2.2} />
+        <Icon
+          size={22}
+          strokeWidth={2.2}
+        />
       </div>
 
       <div className="stat-copy">
@@ -177,9 +182,7 @@ function DistributionItem({ item }) {
         </div>
 
         <div className="distribution-value">
-          <strong>
-            {item.value}
-          </strong>
+          <strong>{item.value}</strong>
 
           <span>
             {item.percentage}%
@@ -200,21 +203,70 @@ function DistributionItem({ item }) {
 }
 
 function Dashboard() {
-  const totalStudents = distribution.reduce(
-    (total, item) => total + item.value,
-    0
-  );
+  const [filterOpen, setFilterOpen] =
+    useState(false);
+
+  const [selectedSquad, setSelectedSquad] =
+    useState("All");
+
+  const totalStudents =
+    distribution.reduce(
+      (total, item) =>
+        total + item.value,
+      0
+    );
 
   const studentsNeedingAttention =
     distribution[1].value +
     distribution[2].value;
+
+  /*
+   * FILTER STUDENTS
+   *
+   * If selectedSquad is "All",
+   * show every student.
+   *
+   * Otherwise show only the
+   * selected squad.
+   */
+  const filteredStudents =
+    selectedSquad === "All"
+      ? students
+      : students.filter(
+          (student) =>
+            student.squad ===
+            selectedSquad
+        );
+
+  /*
+   * VIEW ALL
+   *
+   * Reset the squad filter and
+   * close the dropdown.
+   */
+  const handleViewAll = () => {
+    setSelectedSquad("All");
+    setFilterOpen(false);
+  };
+
+  /*
+   * FILTER BY SQUAD
+   */
+  const handleSquadFilter = (
+    squad
+  ) => {
+    setSelectedSquad(squad);
+    setFilterOpen(false);
+  };
 
   return (
     <section
       className="dashboard-page"
       id="dashboard"
     >
-      {/* PAGE HEADER */}
+      {/* =====================================
+          PAGE HEADER
+      ====================================== */}
 
       <div className="dashboard-heading">
         <div>
@@ -230,7 +282,8 @@ function Dashboard() {
           </h1>
 
           <p>
-            Here&apos;s your attendance overview.
+            Here&apos;s your attendance
+            overview.
           </p>
         </div>
 
@@ -248,7 +301,9 @@ function Dashboard() {
         </button>
       </div>
 
-      {/* STATISTICS */}
+      {/* =====================================
+          STATISTICS
+      ====================================== */}
 
       <div className="stats-grid">
         {statCards.map((card) => (
@@ -259,7 +314,9 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* ATTENDANCE DISTRIBUTION */}
+      {/* =====================================
+          ATTENDANCE DISTRIBUTION
+      ====================================== */}
 
       <article className="panel distribution-panel">
         <div className="distribution-header">
@@ -290,7 +347,8 @@ function Dashboard() {
         </div>
 
         <div className="distribution-main">
-          {/* DONUT */}
+
+          {/* DONUT CHART */}
 
           <div className="donut-section">
             <div className="donut-chart">
@@ -380,6 +438,7 @@ function Dashboard() {
         {/* BOTTOM SUMMARY */}
 
         <div className="distribution-footer">
+
           <div className="distribution-footer-item good">
             <div className="footer-icon">
               <CheckCircle2 size={17} />
@@ -443,14 +502,23 @@ function Dashboard() {
               </strong>
             </div>
           </div>
+
         </div>
       </article>
 
-      {/* STUDENTS REQUIRING ATTENTION */}
+      {/* =====================================
+          STUDENTS REQUIRING ATTENTION
+      ====================================== */}
 
       <article className="panel attention-panel">
+
+        {/* HEADER */}
+
         <div className="attention-header">
-          <div>
+
+          {/* LEFT - TITLE */}
+
+          <div className="attention-title">
             <h2>
               Students Requiring
               Attention
@@ -463,57 +531,189 @@ function Dashboard() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="view-all-button"
-          >
-            View All
-          </button>
+          {/* RIGHT - FILTER + VIEW ALL */}
+
+          <div className="attention-actions">
+
+            {/* FILTER */}
+
+            <div className="filter-wrap">
+
+              <button
+                type="button"
+                className="outline-button"
+                onClick={() =>
+                  setFilterOpen(
+                    (value) =>
+                      !value
+                  )
+                }
+                aria-expanded={
+                  filterOpen
+                }
+              >
+                <Filter
+                  size={16}
+                  strokeWidth={2.2}
+                />
+
+                <span>
+                  Filter
+                </span>
+
+                <ChevronDown
+                  size={14}
+                />
+              </button>
+
+              {/* FILTER DROPDOWN */}
+
+              {filterOpen && (
+                <div className="filter-menu">
+
+                  <button
+                    type="button"
+                    className={
+                      selectedSquad ===
+                      "Squad 138"
+                        ? "selected"
+                        : ""
+                    }
+                    onClick={() =>
+                      handleSquadFilter(
+                        "Squad 138"
+                      )
+                    }
+                  >
+                    Squad 138
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      selectedSquad ===
+                      "Squad 139"
+                        ? "selected"
+                        : ""
+                    }
+                    onClick={() =>
+                      handleSquadFilter(
+                        "Squad 139"
+                      )
+                    }
+                  >
+                    Squad 139
+                  </button>
+
+                </div>
+              )}
+
+            </div>
+
+            {/* VIEW ALL */}
+
+            <button
+              type="button"
+              className="outline-button"
+              onClick={
+                handleViewAll
+              }
+            >
+              View All
+            </button>
+
+          </div>
         </div>
 
+        {/* =====================================
+            STUDENT TABLE
+        ====================================== */}
+
         <div className="student-table-wrap">
+
           <table className="student-table">
+
             <thead>
               <tr>
-                <th>Student</th>
-                <th>Squad</th>
+                <th>
+                  Student
+                </th>
+
+                <th>
+                  Squad
+                </th>
+
                 <th>
                   Overall Attendance
                 </th>
-                <th>Status</th>
-                <th>Last Updated</th>
+
+                <th>
+                  Status
+                </th>
+
+                <th>
+                  Last Updated
+                </th>
+
                 <th aria-label="Action" />
               </tr>
             </thead>
 
             <tbody>
-              {students.map(
+
+              {filteredStudents.map(
                 (student) => (
-                  <tr key={student.name}>
+
+                  <tr
+                    key={
+                      student.name
+                    }
+                  >
+
+                    {/* STUDENT */}
+
                     <td>
+
                       <div className="student-name">
+
+                        {/* CIRCLE DIRECTLY
+                            IN FRONT OF NAME */}
+
                         <div className="student-avatar">
-                          {
-                            student.name.split(
-                              " "
-                            )[1]
-                          }
+                          {student.name
+                            .split(" ")
+                            .map(
+                              (word) =>
+                                word[0]
+                            )
+                            .join("")
+                            .toUpperCase()}
                         </div>
 
                         <strong>
                           {student.name}
                         </strong>
+
                       </div>
+
                     </td>
 
+                    {/* SQUAD */}
+
                     <td>
+
                       <span className="squad-pill">
                         {student.squad}
                       </span>
+
                     </td>
 
+                    {/* ATTENDANCE */}
+
                     <td>
+
                       <div className="attendance-cell">
+
                         <strong>
                           {
                             student.attendance
@@ -521,6 +721,7 @@ function Dashboard() {
                         </strong>
 
                         <div className="progress-track">
+
                           <span
                             className={
                               student.attendance <
@@ -532,60 +733,117 @@ function Dashboard() {
                               width: `${student.attendance}%`,
                             }}
                           />
+
                         </div>
+
                       </div>
+
                     </td>
 
+                    {/* STATUS */}
+
                     <td>
+
                       <span
                         className={`status-pill ${student.status.toLowerCase()}`}
                       >
-                        {student.status}
+                        {
+                          student.status
+                        }
                       </span>
+
                     </td>
+
+                    {/* LAST UPDATED */}
 
                     <td className="updated-cell">
-                      <Clock3 size={13} />
 
-                      {student.updated}
+                      <Clock3
+                        size={13}
+                      />
+
+                      {
+                        student.updated
+                      }
+
                     </td>
 
+                    {/* VIEW */}
+
                     <td>
+
                       <button
                         className="student-action"
                         type="button"
                       >
                         View
                       </button>
+
                     </td>
+
                   </tr>
+
                 )
               )}
+
             </tbody>
+
           </table>
+
+          {/* EMPTY STATE */}
+
+          {filteredStudents.length ===
+            0 && (
+              <div className="empty-state">
+                No students found for
+                this squad.
+              </div>
+            )}
+
         </div>
+
+        {/* ATTENTION FOOTER */}
 
         <div className="attention-footer">
-          <span>
-            <MoreHorizontal size={16} />
 
-            Showing 5 of 24 at-risk
+          <span>
+
+            <MoreHorizontal
+              size={16}
+            />
+
+            Showing{" "}
+            {
+              filteredStudents.length
+            }{" "}
+            of 24 at-risk
             students
+
           </span>
 
-          <button type="button">
+          <button
+            type="button"
+            onClick={
+              handleViewAll
+            }
+          >
             Open Students
           </button>
+
         </div>
+
       </article>
 
-      {/* FOOTER */}
+      {/* =====================================
+          FOOTER
+      ====================================== */}
 
       <footer className="dashboard-footer">
         © 2024 AESA — Attendance &amp;
         Alert Automation System. All
         rights reserved.
       </footer>
+
     </section>
   );
 }
