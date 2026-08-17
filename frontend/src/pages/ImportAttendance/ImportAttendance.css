@@ -1,202 +1,117 @@
-/* ================================
-   Import Attendance Page
-================================ */
+.import-attendance-page {
+  padding: 32px;
+  min-height: 100%;
+  background: #f8fafc;
+}
 
-.import-page {
-  padding: 24px;
-  max-width: 900px;
+/* Header */
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.page-header p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+/* Import Card */
+
+.import-card {
+  max-width: 700px;
   margin: 0 auto;
-}
-
-.import-header {
-  margin-bottom: 24px;
-}
-
-.import-header h1 {
-  margin: 0 0 8px;
-  font-size: 24px;
-  color: #0f172a;
-}
-
-.import-header p {
-  margin: 0;
-  color: #64748b;
-  font-size: 14px;
-}
-
-/* ================================
-   Upload Area
-================================ */
-
-.upload-area {
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  padding: 40px 24px;
+  padding: 48px 32px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   text-align: center;
-  cursor: pointer;
-  background-color: #f8fafc;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
 }
 
-.upload-area.drag-active {
-  border-color: #dc2626;
-  background-color: #fef2f2;
+/* Icon */
+
+.import-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 14px;
 }
 
-.upload-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
-}
-
-.upload-title {
-  margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #0f172a;
-  word-break: break-all;
-}
-
-.upload-subtitle {
+.import-card h2 {
   margin: 0;
-  font-size: 13px;
-  color: #64748b;
+  font-size: 21px;
+  font-weight: 650;
+  color: #111827;
 }
+
+.import-card p {
+  margin: 10px 0 24px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Upload Button */
 
 .upload-button {
-  margin-top: 16px;
-  padding: 10px 24px;
-  border: none;
-  border-radius: 8px;
-  background-color: #dc2626;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 9px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .upload-button:hover {
-  background-color: #b91c1c;
+  background: #1f2937;
+  transform: translateY(-1px);
 }
 
-.upload-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.upload-button:active {
+  transform: translateY(0);
 }
 
-/* ================================
-   Error
-================================ */
+/* Supported format */
 
-.import-error {
-  margin-top: 16px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  font-size: 14px;
-}
-
-/* ================================
-   Import Summary
-================================ */
-
-.import-summary {
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: 12px;
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-}
-
-.import-summary h2 {
-  margin: 0 0 16px;
-  font-size: 18px;
-  color: #166534;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-}
-
-.summary-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.summary-label {
+.supported-format {
+  display: block;
+  margin-top: 14px;
   font-size: 12px;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #9ca3af;
 }
 
-.summary-value {
-  font-size: 15px;
-  font-weight: 500;
-  color: #0f172a;
-  word-break: break-all;
-}
+/* Responsive */
 
-.summary-warning {
-  margin: 12px 0 0;
-  font-size: 13px;
-  color: #b45309;
-}
+@media (max-width: 768px) {
+  .import-attendance-page {
+    padding: 20px;
+  }
 
-/* ================================
-   Recent Imports
-================================ */
+  .import-card {
+    padding: 36px 20px;
+  }
 
-.recent-imports {
-  margin-top: 32px;
-}
-
-.recent-imports h2 {
-  margin: 0 0 16px;
-  font-size: 18px;
-  color: #0f172a;
-}
-
-.no-imports {
-  color: #64748b;
-  font-size: 14px;
-}
-
-.imports-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-}
-
-.imports-table th,
-.imports-table td {
-  padding: 10px 12px;
-  text-align: left;
-  font-size: 13px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.imports-table th {
-  background-color: #f8fafc;
-  color: #64748b;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.imports-table tr:last-child td {
-  border-bottom: none;
-}
-
-.imports-table tr:hover td {
-  background-color: #f8fafc;
+  .page-header h1 {
+    font-size: 24px;
+  }
 }
