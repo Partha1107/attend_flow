@@ -9,13 +9,14 @@ import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import AccessDenied from "../pages/AccessDenied/AccessDenied";
 import ImportAttendance from "../pages/ImportAttendance/ImportAttendance";
-import AttendanceRecords from "../pages/AttendanceRecords/AttendanceRecords";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import StudentPage from "../pages/student-page/StudentPage";
+import NotFound from "../pages/NotFound page/NotFound";
+import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHistory";
 
-const AppRoutes = () => {
+const AppRoutes = () => { 
   const isDev = import.meta.env.DEV;
 
   return (
@@ -49,6 +50,11 @@ const AppRoutes = () => {
               element={<StudentPage />} 
             />
 
+            <Route
+               path="/communication-History"
+               element={<CommunicationHistory />}
+            />
+
           </Route>
         </Route>
 
@@ -68,10 +74,10 @@ const AppRoutes = () => {
           element={<Navigate to="/dashboard" replace />}
         />
 
-        {/* Unknown */}
+        {/* Not Found */}
         <Route
           path="*"
-          element={<Navigate to="/login" replace />}
+          element={<NotFound />}
         />
 
       </Routes>

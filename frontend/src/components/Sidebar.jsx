@@ -37,7 +37,7 @@ const mainItems = [
   {
     label: "Communications",
     icon: Mail,
-    to: "/communications",
+    to: "/communication-history",
   },
   {
     label: "Analytics",
