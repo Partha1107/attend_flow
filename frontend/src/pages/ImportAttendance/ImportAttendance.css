@@ -63,6 +63,15 @@
   color: #6b7280;
 }
 
+.import-success {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: #dcfce7;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 500;
+}
 /* Upload Button */
 
 .upload-button {
