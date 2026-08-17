@@ -15,40 +15,51 @@ import {
   X,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 
 const mainItems = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    active: true,
+    to: "/dashboard",
   },
   {
     label: "Students",
     icon: UsersRound,
+    to: "/students",
   },
   {
     label: "Alerts",
     icon: AlertTriangle,
+    to: "/alerts",
   },
   {
     label: "Communications",
     icon: Mail,
+    to: "/communications",
   },
   {
     label: "Analytics",
     icon: BarChart3,
+    to: "/analytics",
   },
   {
     label: "Settings",
     icon: Settings,
+    to: "/settings",
   },
 ];
 
 function Sidebar({ open = false, onClose = () => {} }) {
+  const { pathname } = useLocation();
+
+  const isImportActive = pathname === "/import-attendance";
+  const isRecordsActive = pathname === "/attendance-records";
+
   return (
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
+      {/* Brand */}
       <div className="sidebar-brand">
         <div className="brand-mark">
           <GraduationCap size={27} strokeWidth={2.2} />
@@ -74,60 +85,61 @@ function Sidebar({ open = false, onClose = () => {} }) {
         </button>
       </div>
 
+      {/* Navigation */}
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {mainItems.map(({ label, icon: Icon }) => {
-          const destination =
-            label === "Dashboard"
-              ? "/dashboard"
-              : label === "Students"
-                ? "/students"
-                : `/${label.toLowerCase()}`;
+        {mainItems.map(({ label, icon: Icon, to }) => (
+          <div key={label} className="nav-group">
+            <NavLink
+              to={to}
+              className={({ isActive }) =>
+                `nav-item ${isActive ? "active" : ""}`
+              }
+              onClick={onClose}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </NavLink>
 
-          return (
-            <div key={label} className="nav-group">
-              <NavLink
-                to={destination}
-                className={({ isActive }) =>
-                  `nav-item ${isActive ? "active" : ""}`
-                }
-                onClick={onClose}
-              >
-                <Icon size={18} />
-                <span>{label}</span>
-              </NavLink>
-
-              {label === "Dashboard" && (
-                <div className="attendance-group">
-                  <div className="attendance-title">
-                    <ShieldCheck size={18} />
-                    <span>Attendance</span>
-                    <ChevronDown size={15} className="attendance-chevron" />
-                  </div>
-
-                  <NavLink
-                    to="/import-attendance"
-                    className="subnav-item"
-                    onClick={onClose}
-                  >
-                    <FileSpreadsheet size={16} />
-                    <span>Import Excel</span>
-                  </NavLink>
-
-                  <NavLink
-                    to="/dashboard"
-                    className="subnav-item"
-                    onClick={onClose}
-                  >
-                    <Bell size={16} />
-                    <span>Attendance Records</span>
-                  </NavLink>
+            {/* Attendance Section */}
+            {label === "Dashboard" && (
+              <div className="attendance-group">
+                <div className="attendance-title">
+                  <ShieldCheck size={18} />
+                  <span>Attendance</span>
+                  <ChevronDown
+                    size={15}
+                    className="attendance-chevron"
+                  />
                 </div>
-              )}
-            </div>
-          );
-        })}
+
+                <NavLink
+                  to="/import-attendance"
+                  className={`subnav-item ${
+                    isImportActive ? "active" : ""
+                  }`}
+                  onClick={onClose}
+                >
+                  <FileSpreadsheet size={16} />
+                  <span>Import Excel</span>
+                </NavLink>
+
+                <NavLink
+                  to="/attendance-records"
+                  className={`subnav-item ${
+                    isRecordsActive ? "active" : ""
+                  }`}
+                  onClick={onClose}
+                >
+                  <Bell size={16} />
+                  <span>Attendance Records</span>
+                </NavLink>
+              </div>
+            )}
+          </div>
+        ))}
       </nav>
 
+      {/* Help */}
       <div className="sidebar-help">
         <div className="help-icon">
           <Headphones size={20} />
@@ -149,6 +161,7 @@ function Sidebar({ open = false, onClose = () => {} }) {
         </button>
       </div>
 
+      {/* User */}
       <div className="sidebar-user">
         <div className="mini-avatar">
           <UserRound size={17} />

@@ -158,6 +158,11 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.subnav-item.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .sidebar-help {
   margin: auto 4px 15px;
 
