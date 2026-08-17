@@ -375,7 +375,7 @@ function StudentPage() {
                 </div>
 
                 <div>
-                  <span>Phone</span>
+                  <span>Parent's Number</span>
                   <strong>{selectedStudent.phone}</strong>
                 </div>
 
@@ -507,23 +507,21 @@ function StudentPage() {
 
                 <input
                   type="tel"
-                  placeholder="Phone Number"
+                  placeholder="Student Phone Number"
                   required
                 />
 
                 <input
-                  type="date"
+                  type="tel"
+                  placeholder="Parent's Number"
                   required
                 />
 
-                <select required defaultValue="">
-                  <option value="" disabled>
-                    Gender
-                  </option>
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
-                </select>
+                <input
+                  type="email"
+                  placeholder="Parent Email"
+                  required
+                />
 
                 <select required defaultValue="">
                   <option value="" disabled>
@@ -536,21 +534,10 @@ function StudentPage() {
 
                 <select required defaultValue="">
                   <option value="" disabled>
-                    Year
+                    Squad
                   </option>
-                  <option>I Year</option>
-                  <option>II Year</option>
-                  <option>III Year</option>
-                  <option>IV Year</option>
-                </select>
-
-                <select required defaultValue="">
-                  <option value="" disabled>
-                    Section
-                  </option>
-                  <option>A</option>
-                  <option>B</option>
-                  <option>C</option>
+                  <option>Squad 138</option>
+                  <option>Squad 139</option>
                 </select>
 
                 <select required defaultValue="">

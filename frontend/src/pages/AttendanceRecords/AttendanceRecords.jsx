@@ -59,7 +59,11 @@ const AttendanceRecords = () => {
   }, [statusFilter, dateFilter]);
 
   useEffect(() => {
-    fetchRecords();
+    const timer = window.setTimeout(() => {
+      void fetchRecords();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchRecords]);
 
   const filteredRecords = useMemo(() => {
