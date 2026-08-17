@@ -1140,4 +1140,175 @@
   .panel {
     border-radius: 10px;
   }
+}/* ================================
+   Filter + View All Buttons
+================================ */
+
+.attention-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Filter and View All common style */
+.outline-button {
+  height: 40px;
+  min-width: 87px;
+
+  padding: 0 15px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background: #ffffff;
+  color: #df1a22;
+
+  border: 1px solid #ef7479;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Filter icon */
+.outline-button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.2;
+}
+
+/* Hover */
+.outline-button:hover {
+  background: #fff5f5;
+  border-color: #df1a22;
+}
+
+/* Click */
+.outline-button:active {
+  transform: translateY(1px);
+}
+
+/* ================================
+   Filter Dropdown
+================================ */
+
+.filter-wrap {
+  position: relative;
+}
+
+.filter-menu {
+  position: absolute;
+
+  top: calc(100% + 8px);
+  left: 0;
+
+  width: 145px;
+
+  padding: 6px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  z-index: 1000;
+}
+
+.filter-menu button {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: none;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #26344d;
+
+  text-align: left;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.filter-menu button:hover {
+  background: #fff1f1;
+  color: #df1a22;
+}
+
+.filter-menu button.selected {
+  background: #fff1f1;
+  color: #df1a22;
+}/* =========================================
+   STUDENT AVATAR + NAME ALIGNMENT
+   ========================================= */
+
+.student-column {
+  min-width: 220px;
+}
+
+.student-name {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  width: 100%;
+}
+
+.student-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 0 34px !important;
+
+  border-radius: 50% !important;
+
+  background: #fff5f5 !important;
+  border: 1px solid #ffb3b3 !important;
+
+  color: #e31b23 !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+
+  line-height: 1 !important;
+
+  margin: 0 !important;
+}
+
+.student-name strong {
+  display: block !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  white-space: nowrap !important;
+
+  font-size: 15px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.2 !important;
 }
