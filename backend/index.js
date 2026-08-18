@@ -1,10 +1,11 @@
-const express = require("express");
-const cors = require("cors");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-const supabase = require("./src/config/supabase");
+const express = require("express");
+const cors = require("cors");
+
+const attendanceRoutes = require("./src/routes/attendanceRoutes");
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.get("/api/health", (req, res) => {
         message: "AESA Backend is running",
     });
 });
+
+app.use("/api/attendance", attendanceRoutes);
 
 const PORT = process.env.PORT || 5000;
 

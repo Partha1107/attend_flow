@@ -1,88 +1,78 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
+// Layout
+import DashboardLayout from "../layouts/DashboardLayout";
+
+// Protection
+import ProtectedRoute from "./ProtectedRoute";
+
+// Pages
 import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import AccessDenied from "../pages/AccessDenied/AccessDenied";
 import ImportAttendance from "../pages/ImportAttendance/ImportAttendance";
-
-import DashboardLayout from "../layouts/DashboardLayout";
-import ProtectedRoute from "./ProtectedRoute";
 import StudentPage from "../pages/student-page/StudentPage";
-import NotFound from "../pages/NotFound page/NotFound";
 import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHistory";
+import NotFound from "../pages/NotFound page/NotFound";
 
-const AppRoutes = () => { 
-  const isDev = import.meta.env.DEV;
-
+function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
 
-        {/* Public */}
-        <Route path="/login" element={<Login />} />
+      {/* ================= PUBLIC ================= */}
 
-        <Route
-          path="/access-denied"
-          element={<AccessDenied />}
-        />
+      <Route path="/login" element={<Login />} />
 
-        {/* Protected */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<DashboardLayout />}>
+      <Route
+        path="/access-denied"
+        element={<AccessDenied />}
+      />
 
-            <Route
-              path="/dashboard"
-              element={<Dashboard />}
-            />
 
-            <Route
-              path="/import-attendance"
-              element={<ImportAttendance />}
-            />
+      {/* ================= PROTECTED ================= */}
 
-            <Route 
-              path="/students" 
-              element={<StudentPage />} 
-            />
+      <Route element={<ProtectedRoute />}>
 
-            <Route
-               path="/communication-History"
-               element={<CommunicationHistory />}
-            />
+        <Route path="/" element={<DashboardLayout />}>
 
-          </Route>
+          {/* Dashboard */}
+          <Route index element={<Dashboard />} />
+
+          {/* Other Pages */}
+          <Route
+            path="dashboard"
+            element={<Dashboard />}
+          />
+
+          <Route
+            path="import-attendance"
+            element={<ImportAttendance />}
+          />
+
+          <Route
+            path="students"
+            element={<StudentPage />}
+          />
+
+          <Route
+            path="communication-history"
+            element={<CommunicationHistory />}
+          />
+
         </Route>
 
-        {/* Dev preview (no auth) */}
-        {isDev && (
-          <Route element={<DashboardLayout />}>
-            <Route
-              path="/dashboard-preview"
-              element={<Dashboard />}
-            />
-          </Route>
-        )}
+      </Route>
 
-        {/* Root */}
-        <Route
-          path="/"
-          element={<Navigate to="/dashboard" replace />}
-        />
 
-        {/* Not Found */}
-        <Route
-          path="*"
-          element={<NotFound />}
-        />
+      {/* ================= NOT FOUND ================= */}
 
-      </Routes>
-    </BrowserRouter>
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
+
+    </Routes>
   );
-};
+}
 
 export default AppRoutes;
