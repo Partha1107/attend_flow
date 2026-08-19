@@ -189,3 +189,120 @@
     gap: 9px;
   }
 }
+
+/* Date Picker Styles */
+.date-picker-container {
+  position: relative;
+}
+
+.calendar-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #e1e4e8;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 16px;
+  z-index: 1000;
+  min-width: 320px;
+}
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f6f8fa;
+  border-radius: 8px;
+}
+
+.year-nav {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e1e4e8;
+  background: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #0f172a;
+  transition: all 0.2s ease;
+}
+
+.year-nav:hover {
+  background: #8ecbff;
+  border-color: #5aa8f8;
+  color: #ffffff;
+}
+
+.year-display {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* React Calendar Customization */
+.calendar-dropdown .react-calendar {
+  width: 100%;
+  background: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.calendar-dropdown .react-calendar__navigation {
+  margin-bottom: 12px;
+}
+
+.calendar-dropdown .react-calendar__navigation button {
+  color: #0f172a;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+}
+
+.calendar-dropdown .react-calendar__navigation button:hover {
+  background-color: #f0f2f5;
+}
+
+.calendar-dropdown .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a617d;
+  padding: 8px 0;
+}
+
+.calendar-dropdown .react-calendar__tile {
+  height: 32px;
+  padding: 0;
+  font-size: 12px;
+  color: #0f172a;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.calendar-dropdown .react-calendar__tile:hover {
+  background-color: #edf7ff;
+  border-color: #8ecbff;
+}
+
+.calendar-dropdown .react-calendar__tile--active {
+  background: linear-gradient(135deg, #8ecbff, #5aa8f8);
+  color: #ffffff;
+  font-weight: 600;
+  border-color: #5aa8f8;
+}
+
+.calendar-dropdown .react-calendar__tile--now {
+  background-color: #f0f2f5;
+  border-color: #8ecbff;
+  color: #0f172a;
+}

@@ -40,6 +40,13 @@ const mainItems = [
     to: "/communication-history",
   },
   {
+    label: "EmailAutomation",
+    icon: Mail,
+    to: "/email-automation",
+  },
+
+
+  {
     label: "Analytics",
     icon: BarChart3,
     to: "/analytics",
@@ -51,11 +58,17 @@ const mainItems = [
   },
 ];
 
-function Sidebar({ open = false, onClose = () => {} }) {
+function Sidebar({ open = false, onClose = () => { } }) {
   const { pathname } = useLocation();
 
   const isImportActive = pathname === "/import-attendance";
   const isRecordsActive = pathname === "/attendance-records";
+
+  const isEmailAutomationActive =
+    pathname === "/email-automation";
+
+  const isCommunicationHistoryActive =
+    pathname === "/communication-history";
 
   return (
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
@@ -114,9 +127,8 @@ function Sidebar({ open = false, onClose = () => {} }) {
 
                 <NavLink
                   to="/import-attendance"
-                  className={`subnav-item ${
-                    isImportActive ? "active" : ""
-                  }`}
+                  className={`subnav-item ${isImportActive ? "active" : ""
+                    }`}
                   onClick={onClose}
                 >
                   <FileSpreadsheet size={16} />
@@ -125,14 +137,40 @@ function Sidebar({ open = false, onClose = () => {} }) {
 
                 <NavLink
                   to="/attendance-records"
-                  className={`subnav-item ${
-                    isRecordsActive ? "active" : ""
-                  }`}
+                  className={`subnav-item ${isRecordsActive ? "active" : ""
+                    }`}
                   onClick={onClose}
                 >
                   <Bell size={16} />
                   <span>Attendance Records</span>
                 </NavLink>
+              </div>
+            )}
+
+            {/* Communications Section */}
+            {label === "Communications" && (
+              <div className="attendance-group">
+
+                <NavLink
+                  to="/email-automation"
+                  className={`subnav-item ${isEmailAutomationActive ? "active" : ""
+                    }`}
+                  onClick={onClose}
+                >
+                  <Mail size={16} />
+                  <span>Email Automation</span>
+                </NavLink>
+
+                <NavLink
+                  to="/communication-history"
+                  className={`subnav-item ${isCommunicationHistoryActive ? "active" : ""
+                    }`}
+                  onClick={onClose}
+                >
+                  <Mail size={16} />
+                  <span>Communication History</span>
+                </NavLink>
+
               </div>
             )}
           </div>

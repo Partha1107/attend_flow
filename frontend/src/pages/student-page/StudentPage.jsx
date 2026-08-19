@@ -245,11 +245,7 @@ function StudentPage() {
       <div className="student-table-container">
         <div className="student-table-header">
           <span>Student</span>
-          <span>Department</span>
-          <span>Year</span>
-          <span>Section</span>
           <span>Attendance %</span>
-          <span>Status</span>
           <span>Action</span>
         </div>
 
@@ -260,12 +256,6 @@ function StudentPage() {
                 <strong>{student.name}</strong>
                 <small>{student.id}</small>
               </div>
-
-              <div>{student.department}</div>
-
-              <div>{student.year}</div>
-
-              <div>{student.section}</div>
 
               <div>
                 <span className="attendance-badge">
@@ -285,15 +275,7 @@ function StudentPage() {
                   {student.status}
                 </span>
               </div>
-
-              <div>
-                <button
-                  className="view-profile-btn"
-                  onClick={() => setSelectedStudent(student)}
-                >
-                  View Profile
-                </button>
-              </div>
+              
             </div>
           ))
         ) : (
