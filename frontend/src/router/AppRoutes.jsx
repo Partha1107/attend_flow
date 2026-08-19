@@ -13,6 +13,7 @@ import AccessDenied from "../pages/AccessDenied/AccessDenied";
 import ImportAttendance from "../pages/ImportAttendance/ImportAttendance";
 import StudentPage from "../pages/student-page/StudentPage";
 import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHistory";
+import EmailAutomation from "../pages/EmailAutomation/EmailAutomation";
 import NotFound from "../pages/NotFound page/NotFound";
 
 function AppRoutes() {
@@ -57,6 +58,11 @@ function AppRoutes() {
           <Route
             path="communication-history"
             element={<CommunicationHistory />}
+          />
+
+          <Route
+            path="email-automation"
+            element={<EmailAutomation />}
           />
 
         </Route>
