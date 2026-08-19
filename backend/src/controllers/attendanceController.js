@@ -35,6 +35,9 @@ const importAttendance = async (req, res) => {
         let attendanceCreated = 0;
         let attendanceUpdated = 0;
 
+        let growthHourCreated = 0;
+        let growthHourUpdated = 0;
+
         let skippedStudents = 0;
         let skippedSubjects = 0;
 
@@ -51,13 +54,17 @@ const importAttendance = async (req, res) => {
             } = student;
 
             if (!email || !name || !squad) {
-                console.warn("Skipping invalid student:", student);
+                console.warn(
+                    "Skipping invalid student:",
+                    student
+                );
+
                 skippedStudents++;
                 continue;
             }
 
             // ---------------------------------------
-            // 3. Find existing student
+            // 3. Find student by EMAIL
             // ---------------------------------------
 
             const {
@@ -67,8 +74,6 @@ const importAttendance = async (req, res) => {
                 .from("students")
                 .select("id")
                 .eq("email", email)
-                .eq("name", name)
-                .eq("squad", squad)
                 .maybeSingle();
 
             if (studentFindError) {
@@ -78,19 +83,17 @@ const importAttendance = async (req, res) => {
             let studentId;
 
             // ---------------------------------------
-            // 4. Create or reuse student
+            // 4. Create or update student
             // ---------------------------------------
 
             if (existingStudent) {
                 studentId = existingStudent.id;
 
-                // Keep student information updated
                 const {
                     error: studentUpdateError,
                 } = await supabase
                     .from("students")
                     .update({
-                        email,
                         name,
                         squad,
                     })
@@ -124,7 +127,7 @@ const importAttendance = async (req, res) => {
             }
 
             // ---------------------------------------
-            // 5. Process ALL subjects
+            // 5. Process subjects
             // ---------------------------------------
 
             if (!Array.isArray(subjects)) {
@@ -145,133 +148,206 @@ const importAttendance = async (req, res) => {
                     sessionsAppliedLeave,
                 } = subject;
 
-                let subjectDbId;
+                const cleanSubjectName =
+                    subjectName?.trim() || "";
 
                 // =======================================
                 // GROWTH HOUR
                 // =======================================
 
                 const isGrowthHour =
-                    !excelSubjectId &&
-                    subjectName?.trim().toLowerCase() ===
-                        "growth hour";
+                    cleanSubjectName.toLowerCase() ===
+                    "growth hour";
 
                 if (isGrowthHour) {
+                    const growthHourData = {
+                        student_id: studentId,
+                        academic_year: academicYear,
+
+                        sessions_conducted:
+                            Number(sessionsConducted) || 0,
+
+                        sessions_attended:
+                            Number(sessionsAttended) || 0,
+
+                        sessions_absent:
+                            Number(sessionsAbsent) || 0,
+
+                        attendance_percentage:
+                            Number(attendancePercentage) || 0,
+
+                        sessions_marked_od:
+                            Number(sessionsMarkedOD) || 0,
+
+                        sessions_medical_leave:
+                            Number(sessionsMedicalLeave) || 0,
+
+                        sessions_applied_leave:
+                            Number(sessionsAppliedLeave) || 0,
+                    };
+
+                    // ---------------------------------------
+                    // Check existing Growth Hour record
+                    // ---------------------------------------
+
                     const {
-                        data: growthHour,
-                        error: growthHourError,
+                        data: existingGrowthHour,
+                        error: growthHourFindError,
                     } = await supabase
-                        .from("subjects")
+                        .from("growth_hour_attendance")
                         .select("id")
-                        .eq("subject_type", "GROWTH_HOUR")
+                        .eq("student_id", studentId)
+                        .eq("academic_year", academicYear)
                         .maybeSingle();
 
-                    if (growthHourError) {
-                        throw growthHourError;
+                    if (growthHourFindError) {
+                        throw growthHourFindError;
                     }
 
-                    if (!growthHour) {
+                    // ---------------------------------------
+                    // Update Growth Hour
+                    // ---------------------------------------
+
+                    if (existingGrowthHour) {
                         const {
-                            data: newGrowthHour,
+                            error: growthHourUpdateError,
+                        } = await supabase
+                            .from("growth_hour_attendance")
+                            .update(growthHourData)
+                            .eq("id", existingGrowthHour.id);
+
+                        if (growthHourUpdateError) {
+                            throw growthHourUpdateError;
+                        }
+
+                        growthHourUpdated++;
+                    }
+
+                    // ---------------------------------------
+                    // Create Growth Hour
+                    // ---------------------------------------
+
+                    else {
+                        const {
                             error: growthHourInsertError,
                         } = await supabase
-                            .from("subjects")
-                            .insert({
-                                subject_id: null,
-                                subject_name: "Growth Hour",
-                                subject_type: "GROWTH_HOUR",
-                            })
-                            .select("id")
-                            .single();
+                            .from("growth_hour_attendance")
+                            .insert(growthHourData);
 
                         if (growthHourInsertError) {
                             throw growthHourInsertError;
                         }
 
-                        subjectDbId = newGrowthHour.id;
-                        subjectsCreated++;
-                    } else {
-                        subjectDbId = growthHour.id;
-                        subjectsExisting++;
+                        growthHourCreated++;
                     }
+
+                    // IMPORTANT:
+                    // Do NOT continue processing Growth Hour
+                    // as a normal subject.
+                    continue;
                 }
 
                 // =======================================
                 // NORMAL SUBJECT
                 // =======================================
 
-                else {
-                    if (!excelSubjectId || !subjectName) {
-                        console.warn(
-                            "Skipping invalid subject:",
-                            subject
-                        );
+                if (!excelSubjectId || !cleanSubjectName) {
+                    console.warn(
+                        "Skipping invalid subject:",
+                        subject
+                    );
 
-                        skippedSubjects++;
-                        continue;
-                    }
+                    skippedSubjects++;
+                    continue;
+                }
+
+                // ---------------------------------------
+                // Find subject
+                // ---------------------------------------
+
+                const {
+                    data: existingSubject,
+                    error: subjectFindError,
+                } = await supabase
+                    .from("subjects")
+                    .select("id")
+                    .eq(
+                        "subject_id",
+                        String(excelSubjectId)
+                    )
+                    .maybeSingle();
+
+                if (subjectFindError) {
+                    throw subjectFindError;
+                }
+
+                let subjectDbId;
+
+                // ---------------------------------------
+                // Existing subject
+                // ---------------------------------------
+
+                if (existingSubject) {
+                    subjectDbId = existingSubject.id;
+
+                    subjectsExisting++;
 
                     const {
-                        data: existingSubject,
-                        error: subjectFindError,
+                        error: subjectUpdateError,
                     } = await supabase
                         .from("subjects")
-                        .select("id")
-                        .eq("subject_id", String(excelSubjectId))
-                        .maybeSingle();
+                        .update({
+                            subject_name: cleanSubjectName,
+                            subject_type: "SUBJECT",
+                        })
+                        .eq("id", subjectDbId);
 
-                    if (subjectFindError) {
-                        throw subjectFindError;
-                    }
-
-                    if (existingSubject) {
-                        subjectDbId = existingSubject.id;
-                        subjectsExisting++;
-
-                        // Keep subject name updated
-                        const {
-                            error: subjectUpdateError,
-                        } = await supabase
-                            .from("subjects")
-                            .update({
-                                subject_name: subjectName,
-                                subject_type: "SUBJECT",
-                            })
-                            .eq("id", subjectDbId);
-
-                        if (subjectUpdateError) {
-                            throw subjectUpdateError;
-                        }
-                    } else {
-                        const {
-                            data: newSubject,
-                            error: subjectInsertError,
-                        } = await supabase
-                            .from("subjects")
-                            .insert({
-                                subject_id: String(excelSubjectId),
-                                subject_name: subjectName,
-                                subject_type: "SUBJECT",
-                            })
-                            .select("id")
-                            .single();
-
-                        if (subjectInsertError) {
-                            throw subjectInsertError;
-                        }
-
-                        subjectDbId = newSubject.id;
-                        subjectsCreated++;
+                    if (subjectUpdateError) {
+                        throw subjectUpdateError;
                     }
                 }
 
                 // ---------------------------------------
-                // 6. Prepare attendance
+                // New subject
+                // ---------------------------------------
+
+                else {
+                    const {
+                        data: newSubject,
+                        error: subjectInsertError,
+                    } = await supabase
+                        .from("subjects")
+                        .insert({
+                            subject_id:
+                                String(excelSubjectId),
+
+                            subject_name:
+                                cleanSubjectName,
+
+                            subject_type:
+                                "SUBJECT",
+                        })
+                        .select("id")
+                        .single();
+
+                    if (subjectInsertError) {
+                        throw subjectInsertError;
+                    }
+
+                    subjectDbId = newSubject.id;
+
+                    subjectsCreated++;
+                }
+
+                // ---------------------------------------
+                // Prepare attendance
                 // ---------------------------------------
 
                 const attendanceData = {
                     student_id: studentId,
+
                     subject_id: subjectDbId,
+
                     academic_year: academicYear,
 
                     sessions_conducted:
@@ -297,7 +373,7 @@ const importAttendance = async (req, res) => {
                 };
 
                 // ---------------------------------------
-                // 7. Upsert attendance
+                // Upsert normal attendance
                 // ---------------------------------------
 
                 const {
@@ -310,7 +386,6 @@ const importAttendance = async (req, res) => {
                         {
                             onConflict:
                                 "student_id,subject_id,academic_year",
-                            ignoreDuplicates: false,
                         }
                     )
                     .select("id");
@@ -320,8 +395,6 @@ const importAttendance = async (req, res) => {
                 }
 
                 if (attendanceResult?.length > 0) {
-                    // We can't reliably distinguish INSERT vs UPDATE
-                    // from Supabase upsert alone.
                     attendanceUpdated++;
                 } else {
                     attendanceCreated++;
@@ -330,7 +403,7 @@ const importAttendance = async (req, res) => {
         }
 
         // ---------------------------------------
-        // 8. Return result
+        // 6. Return summary
         // ---------------------------------------
 
         return res.status(200).json({
@@ -351,6 +424,9 @@ const importAttendance = async (req, res) => {
                 attendanceCreated,
                 attendanceUpdated,
 
+                growthHourCreated,
+                growthHourUpdated,
+
                 skippedStudents,
                 skippedSubjects,
             },
@@ -363,6 +439,7 @@ const importAttendance = async (req, res) => {
 
         return res.status(500).json({
             success: false,
+
             message:
                 "Failed to import attendance data.",
 
