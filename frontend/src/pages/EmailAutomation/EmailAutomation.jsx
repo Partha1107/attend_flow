@@ -1,74 +1,273 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./EmailAutomation.css";
 
-const emailData = [
+/*
+  TEMPORARY ATTENDANCE DATA
+
+  Later this data will come from:
+  Excel → Backend → Database/API → Email Automation
+*/
+const attendanceData = [
   {
-    id: 1,
+    id: "STU001",
     name: "Rahul Kumar",
     email: "rahul@student.edu",
     attendance: 62,
-    status: "Critical",
-    subject: "Attendance Alert - Immediate Attention Required",
-    message:
-      "Your current attendance is 62%. Please improve your attendance to meet the required attendance percentage.",
   },
   {
-    id: 2,
+    id: "STU002",
     name: "Priya Sharma",
     email: "priya@student.edu",
     attendance: 68,
-    status: "Warning",
-    subject: "Attendance Warning",
-    message:
-      "Your current attendance is 68%. Please make sure to attend your upcoming classes regularly.",
   },
   {
-    id: 3,
+    id: "STU003",
     name: "Arun Kumar",
     email: "arun@student.edu",
     attendance: 72,
-    status: "Warning",
-    subject: "Attendance Reminder",
-    message:
-      "Your current attendance is 72%. Please maintain regular attendance to avoid falling below the required level.",
+  },
+  {
+    id: "STU004",
+    name: "Karthik Raj",
+    email: "karthik@student.edu",
+    attendance: 58,
+  },
+  {
+    id: "STU005",
+    name: "Divya Sri",
+    email: "divya@student.edu",
+    attendance: 84,
   },
 ];
 
+/*
+  Attendance rules
+*/
+const getAttendanceStatus = (attendance) => {
+  if (attendance >= 75) {
+    return "Good";
+  }
+
+  if (attendance >= 65) {
+    return "Warning";
+  }
+
+  return "Critical";
+};
+
+/*
+  Generate email content
+*/
+const generateEmail = (student) => {
+  const status = getAttendanceStatus(student.attendance);
+
+  let subject = "";
+  let message = "";
+
+  if (status === "Critical") {
+    subject = "Attendance Alert - Immediate Attention Required";
+
+    message = `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`;
+  } else {
+    subject = "Attendance Warning";
+
+    message = `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`;
+  }
+
+  return {
+    ...student,
+    status,
+    subject,
+    message,
+  };
+};
+
 function EmailAutomation() {
-  const [selectedEmail, setSelectedEmail] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
+  /*
+    Today's date
+  */
+  const today = new Date()
+    .toISOString()
+    .split("T")[0];
 
-  const [emails, setEmails] = useState(emailData);
+  /*
+    Selected attendance date
+  */
+  const [attendanceDate, setAttendanceDate] =
+    useState(today);
 
-  const today = new Date().toISOString().split("T")[0];
+  /*
+    Email drafts
+  */
+  const [emailDrafts, setEmailDrafts] =
+    useState([]);
 
+  /*
+    Currently selected email
+  */
+  const [selectedEmail, setSelectedEmail] =
+    useState(null);
+
+  /*
+    Preview / Edit modal
+  */
+  const [modalMode, setModalMode] =
+    useState(null);
+
+  /*
+    Editable subject
+  */
+  const [editSubject, setEditSubject] =
+    useState("");
+
+  /*
+    Editable message
+  */
+  const [editMessage, setEditMessage] =
+    useState("");
+
+  /*
+    Generate drafts
+  */
+  const handleGenerateDrafts = () => {
+    const studentsNeedingEmail =
+      attendanceData.filter(
+        (student) =>
+          student.attendance < 75
+      );
+
+    const generatedEmails =
+      studentsNeedingEmail.map(
+        (student) =>
+          generateEmail(student)
+      );
+
+    setEmailDrafts(generatedEmails);
+
+    setSelectedEmail(null);
+    setModalMode(null);
+  };
+
+  /*
+    Open Preview
+  */
   const handlePreview = (email) => {
     setSelectedEmail(email);
-    setShowPreview(true);
+    setModalMode("preview");
   };
 
-  const handleSend = (id) => {
-    setEmails((prevEmails) =>
-      prevEmails.filter((email) => email.id !== id)
+  /*
+    Open Edit
+  */
+  const handleEdit = (email) => {
+    setSelectedEmail(email);
+
+    setEditSubject(email.subject);
+    setEditMessage(email.message);
+
+    setModalMode("edit");
+  };
+
+  /*
+    Save edited email
+  */
+  const handleSaveEdit = () => {
+    const updatedEmails =
+      emailDrafts.map((email) =>
+        email.id === selectedEmail.id
+          ? {
+              ...email,
+              subject: editSubject,
+              message: editMessage,
+            }
+          : email
+      );
+
+    setEmailDrafts(updatedEmails);
+
+    const updatedSelectedEmail =
+      updatedEmails.find(
+        (email) =>
+          email.id === selectedEmail.id
+      );
+
+    setSelectedEmail(
+      updatedSelectedEmail
     );
 
-    alert("Email sent successfully!");
+    setModalMode("preview");
   };
 
-  return (
-    <div className="email-automation-page">
+  /*
+    Send email
 
-      {/* Page Header */}
+    For now this only simulates sending.
+    Later this will call the backend.
+  */
+  const handleSend = (id) => {
+    const student = emailDrafts.find(
+      (email) => email.id === id
+    );
+
+    if (!student) return;
+
+    alert(
+      `Email sent successfully to ${student.email}`
+    );
+
+    setEmailDrafts((currentEmails) =>
+      currentEmails.filter(
+        (email) => email.id !== id
+      )
+    );
+
+    setSelectedEmail(null);
+    setModalMode(null);
+  };
+
+  /*
+    Calculate statistics
+  */
+  const criticalCount =
+    emailDrafts.filter(
+      (email) =>
+        email.status === "Critical"
+    ).length;
+
+  const warningCount =
+    emailDrafts.filter(
+      (email) =>
+        email.status === "Warning"
+    ).length;
+
+  return (
+    <section className="email-automation-page">
+
+      {/* =====================================
+          HEADER
+      ====================================== */}
+
       <div className="email-page-header">
+
         <div>
-          <p className="page-label">COMMUNICATIONS</p>
-          <h1>Email Automation</h1>
+          <div className="page-label">
+            COMMUNICATIONS
+          </div>
+
+          <h1>
+            Email Automation
+          </h1>
+
           <p>
-            Generate, review and send attendance alert emails to students.
+            Generate, review and send
+            attendance alert emails.
           </p>
         </div>
 
+        {/* DATE */}
+
         <div className="date-section">
+
           <label htmlFor="attendance-date">
             Attendance Date
           </label>
@@ -76,122 +275,235 @@ function EmailAutomation() {
           <input
             id="attendance-date"
             type="date"
-            defaultValue={today}
+            value={attendanceDate}
+            onChange={(event) =>
+              setAttendanceDate(
+                event.target.value
+              )
+            }
           />
+
         </div>
+
       </div>
 
-      {/* Summary Cards */}
+      {/* =====================================
+          SUMMARY
+      ====================================== */}
+
       <div className="email-summary">
 
         <div className="email-summary-card">
-          <span className="summary-icon">✉</span>
-          <div>
-            <p>Students Requiring Alerts</p>
-            <h2>{emails.length}</h2>
+
+          <div className="summary-icon">
+            👥
           </div>
+
+          <div>
+            <p>
+              Students Requiring Alerts
+            </p>
+
+            <h2>
+              {emailDrafts.length}
+            </h2>
+          </div>
+
         </div>
 
         <div className="email-summary-card">
-          <span className="summary-icon">⚠</span>
-          <div>
-            <p>Draft Emails</p>
-            <h2>{emails.length}</h2>
+
+          <div className="summary-icon">
+            ⚠️
           </div>
+
+          <div>
+            <p>
+              Critical Students
+            </p>
+
+            <h2>
+              {criticalCount}
+            </h2>
+          </div>
+
         </div>
 
         <div className="email-summary-card">
-          <span className="summary-icon">✓</span>
-          <div>
-            <p>Ready to Send</p>
-            <h2>{emails.length}</h2>
+
+          <div className="summary-icon">
+            ✉️
           </div>
+
+          <div>
+            <p>
+              Warning Students
+            </p>
+
+            <h2>
+              {warningCount}
+            </h2>
+          </div>
+
         </div>
 
       </div>
 
-      {/* Generate Section */}
+      {/* =====================================
+          GENERATE SECTION
+      ====================================== */}
+
       <div className="generate-section">
 
         <div>
-          <h2>Attendance Alert Emails</h2>
+          <h2>
+            Attendance Alert Emails
+          </h2>
+
           <p>
-            Review the automatically generated emails before sending them.
+            Generate emails for students
+            below the required attendance.
           </p>
         </div>
 
-        <button className="generate-button">
-          + Generate Email Drafts
+        <button
+          type="button"
+          className="generate-button"
+          onClick={
+            handleGenerateDrafts
+          }
+        >
+          Generate Email Drafts
         </button>
 
       </div>
 
-      {/* Email List */}
+      {/* =====================================
+          EMAIL LIST
+      ====================================== */}
+
       <div className="email-list">
 
-        {emails.length === 0 ? (
-          <div className="empty-email">
-            <h3>No emails pending</h3>
-            <p>
-              All attendance alert emails have been processed.
-            </p>
-          </div>
-        ) : (
-          emails.map((email) => (
-            <div className="email-card" key={email.id}>
+        {emailDrafts.length === 0 ? (
 
-              {/* Student Information */}
+          <div className="empty-email">
+
+            <h3>
+              No email drafts generated
+            </h3>
+
+            <p>
+              Select the attendance date
+              and click "Generate Email
+              Drafts".
+            </p>
+
+          </div>
+
+        ) : (
+
+          emailDrafts.map((email) => (
+
+            <div
+              className="email-card"
+              key={email.id}
+            >
+
+              {/* STUDENT */}
+
               <div className="student-email-info">
 
                 <div className="student-avatar">
-                  {email.name.charAt(0)}
+                  {email.name
+                    .split(" ")
+                    .map(
+                      (word) =>
+                        word[0]
+                    )
+                    .join("")
+                    .toUpperCase()}
                 </div>
 
                 <div>
-                  <h3>{email.name}</h3>
-                  <p>{email.email}</p>
+
+                  <h3>
+                    {email.name}
+                  </h3>
+
+                  <p>
+                    {email.email}
+                  </p>
+
                 </div>
 
               </div>
 
-              {/* Attendance */}
-              <div className="attendance-info">
-                <span>Attendance</span>
+              {/* ATTENDANCE */}
 
-                <strong>{email.attendance}%</strong>
+              <div className="attendance-info">
+
+                <span>
+                  Attendance
+                </span>
+
+                <strong>
+                  {email.attendance}%
+                </strong>
+
               </div>
 
-              {/* Status */}
-              <div className={`email-status ${email.status.toLowerCase()}`}>
+              {/* STATUS */}
+
+              <div
+                className={`email-status ${email.status.toLowerCase()}`}
+              >
                 {email.status}
               </div>
 
-              {/* Subject */}
+              {/* SUBJECT */}
+
               <div className="email-subject">
-                <span>Subject</span>
-                <p>{email.subject}</p>
+
+                <span>
+                  Subject
+                </span>
+
+                <p>
+                  {email.subject}
+                </p>
+
               </div>
 
-              {/* Actions */}
+              {/* ACTIONS */}
+
               <div className="email-actions">
 
                 <button
+                  type="button"
                   className="preview-button"
-                  onClick={() => handlePreview(email)}
+                  onClick={() =>
+                    handlePreview(email)
+                  }
                 >
                   Preview
                 </button>
 
                 <button
+                  type="button"
                   className="edit-button"
-                  onClick={() => handlePreview(email)}
+                  onClick={() =>
+                    handleEdit(email)
+                  }
                 >
                   Edit
                 </button>
 
                 <button
+                  type="button"
                   className="send-button"
-                  onClick={() => handleSend(email.id)}
+                  onClick={() =>
+                    handleSend(email.id)
+                  }
                 >
                   Send
                 </button>
@@ -199,100 +511,216 @@ function EmailAutomation() {
               </div>
 
             </div>
+
           ))
+
         )}
 
       </div>
 
-      {/* Preview Modal */}
-      {showPreview && selectedEmail && (
+      {/* =====================================
+          PREVIEW / EDIT MODAL
+      ====================================== */}
+
+      {selectedEmail && modalMode && (
+
         <div className="modal-overlay">
 
           <div className="email-modal">
 
+            {/* MODAL HEADER */}
+
             <div className="modal-header">
+
               <div>
-                <p className="page-label">EMAIL PREVIEW</p>
-                <h2>Attendance Alert</h2>
+
+                <div className="page-label">
+                  {modalMode === "edit"
+                    ? "EDIT EMAIL"
+                    : "EMAIL PREVIEW"}
+                </div>
+
+                <h2>
+                  Attendance Alert
+                </h2>
+
               </div>
 
               <button
+                type="button"
                 className="close-button"
-                onClick={() => setShowPreview(false)}
+                onClick={() => {
+                  setSelectedEmail(null);
+                  setModalMode(null);
+                }}
               >
                 ×
               </button>
+
             </div>
+
+            {/* RECIPIENT */}
 
             <div className="email-details">
 
               <div>
-                <span>To</span>
-                <p>{selectedEmail.email}</p>
+
+                <span>
+                  To
+                </span>
+
+                <p>
+                  {selectedEmail.email}
+                </p>
+
               </div>
 
               <div>
-                <span>Student</span>
-                <p>{selectedEmail.name}</p>
+
+                <span>
+                  Student
+                </span>
+
+                <p>
+                  {selectedEmail.name}
+                </p>
+
               </div>
 
+              {/* SUBJECT */}
+
               <div>
-                <span>Subject</span>
-                <p>{selectedEmail.subject}</p>
+
+                <span>
+                  Subject
+                </span>
+
+                {modalMode === "edit" ? (
+
+                  <input
+                    className="edit-input"
+                    value={editSubject}
+                    onChange={(event) =>
+                      setEditSubject(
+                        event.target.value
+                      )
+                    }
+                  />
+
+                ) : (
+
+                  <p>
+                    {selectedEmail.subject}
+                  </p>
+
+                )}
+
               </div>
 
             </div>
+
+            {/* MESSAGE */}
 
             <div className="email-message">
 
-              <p>Dear {selectedEmail.name},</p>
-
               <p>
-                {selectedEmail.message}
+                Dear{" "}
+                {selectedEmail.name},
               </p>
 
-              <p>
-                Please take the necessary steps to improve your
-                attendance.
-              </p>
+              {modalMode === "edit" ? (
 
-              <p>
-                Regards,
-                <br />
-                Mentor
-                <br />
-                AESA
-              </p>
+                <textarea
+                  className="edit-textarea"
+                  value={editMessage}
+                  onChange={(event) =>
+                    setEditMessage(
+                      event.target.value
+                    )
+                  }
+                />
+
+              ) : (
+
+                <p>
+                  {selectedEmail.message}
+                </p>
+
+              )}
+
+              {modalMode === "preview" && (
+                <>
+                  <p>
+                    Please take the
+                    necessary steps to
+                    improve your
+                    attendance.
+                  </p>
+
+                  <p>
+                    Regards,
+                    <br />
+                    Mentor
+                    <br />
+                    AESA
+                  </p>
+                </>
+              )}
 
             </div>
+
+            {/* MODAL ACTIONS */}
 
             <div className="modal-actions">
 
               <button
+                type="button"
                 className="cancel-button"
-                onClick={() => setShowPreview(false)}
+                onClick={() => {
+                  setSelectedEmail(null);
+                  setModalMode(null);
+                }}
               >
                 Close
               </button>
 
-              <button
-                className="modal-send-button"
-                onClick={() => {
-                  handleSend(selectedEmail.id);
-                  setShowPreview(false);
-                }}
-              >
-                Send Email
-              </button>
+              {modalMode === "edit" ? (
+
+                <button
+                  type="button"
+                  className="modal-send-button"
+                  onClick={
+                    handleSaveEdit
+                  }
+                >
+                  Save Changes
+                </button>
+
+              ) : (
+
+                <button
+                  type="button"
+                  className="modal-send-button"
+                  onClick={() =>
+                    handleSend(
+                      selectedEmail.id
+                    )
+                  }
+                >
+                  Send Email
+                </button>
+
+              )}
 
             </div>
 
           </div>
 
         </div>
+
       )}
 
-    </div>
+    </section>
   );
 }
 
