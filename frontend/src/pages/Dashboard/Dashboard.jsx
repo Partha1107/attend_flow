@@ -20,7 +20,7 @@ import {
 } from "recharts";
 
 import "./Dashboard.css";
-import React, { useState } from "react";
+import { useState } from "react";
 
 const statCards = [
   {

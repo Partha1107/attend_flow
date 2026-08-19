@@ -1,13 +1,31 @@
+import { useState } from "react";
 import {
   Bell,
   CalendarDays,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Menu,
 } from "lucide-react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 import "./Navbar.css";
 
 function Navbar({ onMenuClick }) {
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setShowCalendar(false);
+  };
+
+  const handleYearChange = (direction) => {
+    setSelectedYear(selectedYear + direction);
+  };
+
   return (
     <header className="navbar">
       <button
@@ -20,18 +38,54 @@ function Navbar({ onMenuClick }) {
       </button>
 
       <div className="navbar-right">
-        <button
-          type="button"
-          className="top-date"
-        >
-          <CalendarDays size={16} />
+        <div className="date-picker-container">
+          <button
+            type="button"
+            className="top-date"
+            onClick={() => setShowCalendar(!showCalendar)}
+          >
+            <CalendarDays size={16} />
 
-          <span>
-            May 12 – May 18, 2024
-          </span>
+            <span>
+              {selectedDate.toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
 
-          <ChevronDown size={14} />
-        </button>
+            <ChevronDown size={14} />
+          </button>
+
+          {showCalendar && (
+            <div className="calendar-dropdown">
+              <div className="year-selector">
+                <button
+                  type="button"
+                  className="year-nav"
+                  onClick={() => handleYearChange(-1)}
+                  aria-label="Previous year"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <span className="year-display">{selectedYear}</span>
+                <button
+                  type="button"
+                  className="year-nav"
+                  onClick={() => handleYearChange(1)}
+                  aria-label="Next year"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+              <Calendar
+                value={selectedDate}
+                onChange={handleDateChange}
+                maxDate={new Date()}
+              />
+            </div>
+          )}
+        </div>
 
         <button
           type="button"
