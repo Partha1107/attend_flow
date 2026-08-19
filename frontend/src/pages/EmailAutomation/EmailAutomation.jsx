@@ -86,66 +86,116 @@ function EmailAutomation() {
   /*
     Today's date
   */
-  const today = new Date()
-    .toISOString()
-    .split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
   /*
     Selected attendance date
   */
-  const [attendanceDate, setAttendanceDate] =
-    useState(today);
+  const [attendanceDate, setAttendanceDate] = useState(today);
 
   /*
     Email drafts
   */
-  const [emailDrafts, setEmailDrafts] =
-    useState([]);
+  const [emailDrafts, setEmailDrafts] = useState([]);
+
+  /*
+    Communication method
+
+    {
+      STU001: "automatic",
+      STU002: "draft"
+    }
+  */
+  const [communicationMode, setCommunicationMode] = useState({});
 
   /*
     Currently selected email
   */
-  const [selectedEmail, setSelectedEmail] =
-    useState(null);
+  const [selectedEmail, setSelectedEmail] = useState(null);
 
   /*
     Preview / Edit modal
   */
-  const [modalMode, setModalMode] =
-    useState(null);
+  const [modalMode, setModalMode] = useState(null);
 
   /*
     Editable subject
   */
-  const [editSubject, setEditSubject] =
-    useState("");
+  const [editSubject, setEditSubject] = useState("");
 
   /*
     Editable message
   */
-  const [editMessage, setEditMessage] =
-    useState("");
+  const [editMessage, setEditMessage] = useState("");
 
   /*
     Generate drafts
   */
   const handleGenerateDrafts = () => {
-    const studentsNeedingEmail =
-      attendanceData.filter(
-        (student) =>
-          student.attendance < 75
-      );
+    const studentsNeedingEmail = attendanceData.filter(
+      (student) => student.attendance < 75
+    );
 
-    const generatedEmails =
-      studentsNeedingEmail.map(
-        (student) =>
-          generateEmail(student)
-      );
+    const generatedEmails = studentsNeedingEmail.map((student) =>
+      generateEmail(student)
+    );
 
     setEmailDrafts(generatedEmails);
 
+    /*
+      By default every generated email is set
+      to Automatic.
+
+      Mentor can change individual emails
+      to Draft later.
+    */
+    const defaultCommunication = {};
+
+    generatedEmails.forEach((email) => {
+      defaultCommunication[email.id] = "automatic";
+    });
+
+    setCommunicationMode(defaultCommunication);
+
     setSelectedEmail(null);
     setModalMode(null);
+  };
+
+  /*
+    Change communication method
+    for one student
+  */
+  const handleCommunicationChange = (studentId, mode) => {
+    setCommunicationMode((currentModes) => ({
+      ...currentModes,
+      [studentId]: mode,
+    }));
+  };
+
+  /*
+    Select all as Automatic
+  */
+  const handleSelectAllAutomatic = () => {
+    const automaticModes = {};
+
+    emailDrafts.forEach((email) => {
+      automaticModes[email.id] = "automatic";
+    });
+
+    setCommunicationMode(automaticModes);
+  };
+
+  /*
+    Select all as Draft
+  */
+  const handleSelectAllDraft = () => {
+    const draftModes = {};
+
+    emailDrafts.forEach((email) => {
+      draftModes[email.id] = "draft";
+    });
+
+    setCommunicationMode(draftModes);
   };
 
   /*
@@ -172,28 +222,23 @@ function EmailAutomation() {
     Save edited email
   */
   const handleSaveEdit = () => {
-    const updatedEmails =
-      emailDrafts.map((email) =>
-        email.id === selectedEmail.id
-          ? {
-              ...email,
-              subject: editSubject,
-              message: editMessage,
-            }
-          : email
-      );
+    const updatedEmails = emailDrafts.map((email) =>
+      email.id === selectedEmail.id
+        ? {
+            ...email,
+            subject: editSubject,
+            message: editMessage,
+          }
+        : email
+    );
 
     setEmailDrafts(updatedEmails);
 
-    const updatedSelectedEmail =
-      updatedEmails.find(
-        (email) =>
-          email.id === selectedEmail.id
-      );
-
-    setSelectedEmail(
-      updatedSelectedEmail
+    const updatedSelectedEmail = updatedEmails.find(
+      (email) => email.id === selectedEmail.id
     );
+
+    setSelectedEmail(updatedSelectedEmail);
 
     setModalMode("preview");
   };
@@ -221,6 +266,16 @@ function EmailAutomation() {
       )
     );
 
+    setCommunicationMode((currentModes) => {
+      const updatedModes = {
+        ...currentModes,
+      };
+
+      delete updatedModes[id];
+
+      return updatedModes;
+    });
+
     setSelectedEmail(null);
     setModalMode(null);
   };
@@ -228,17 +283,24 @@ function EmailAutomation() {
   /*
     Calculate statistics
   */
-  const criticalCount =
-    emailDrafts.filter(
-      (email) =>
-        email.status === "Critical"
-    ).length;
+  const criticalCount = emailDrafts.filter(
+    (email) => email.status === "Critical"
+  ).length;
 
-  const warningCount =
-    emailDrafts.filter(
-      (email) =>
-        email.status === "Warning"
-    ).length;
+  const warningCount = emailDrafts.filter(
+    (email) => email.status === "Warning"
+  ).length;
+
+  /*
+    Communication statistics
+  */
+  const automaticCount = emailDrafts.filter(
+    (email) => communicationMode[email.id] === "automatic"
+  ).length;
+
+  const draftCount = emailDrafts.filter(
+    (email) => communicationMode[email.id] === "draft"
+  ).length;
 
   return (
     <section className="email-automation-page">
@@ -254,9 +316,7 @@ function EmailAutomation() {
             COMMUNICATIONS
           </div>
 
-          <h1>
-            Email Automation
-          </h1>
+          <h1>Email Automation</h1>
 
           <p>
             Generate, review and send
@@ -277,9 +337,7 @@ function EmailAutomation() {
             type="date"
             value={attendanceDate}
             onChange={(event) =>
-              setAttendanceDate(
-                event.target.value
-              )
+              setAttendanceDate(event.target.value)
             }
           />
 
@@ -369,14 +427,71 @@ function EmailAutomation() {
         <button
           type="button"
           className="generate-button"
-          onClick={
-            handleGenerateDrafts
-          }
+          onClick={handleGenerateDrafts}
         >
           Generate Email Drafts
         </button>
 
       </div>
+
+      {/* =====================================
+          COMMUNICATION CONTROLS
+      ====================================== */}
+
+      {emailDrafts.length > 0 && (
+
+        <div className="communication-section">
+
+          <div className="communication-header">
+
+            <div>
+              <h2>
+                Communication Method
+              </h2>
+
+              <p>
+                Choose how each attendance
+                alert should be handled.
+              </p>
+            </div>
+
+            <div className="communication-counts">
+
+              <span className="automatic-count">
+                Automatic: {automaticCount}
+              </span>
+
+              <span className="draft-count">
+                Draft: {draftCount}
+              </span>
+
+            </div>
+
+          </div>
+
+          <div className="communication-actions">
+
+            <button
+              type="button"
+              className="select-automatic-button"
+              onClick={handleSelectAllAutomatic}
+            >
+              Select All as Automatic
+            </button>
+
+            <button
+              type="button"
+              className="select-draft-button"
+              onClick={handleSelectAllDraft}
+            >
+              Select All as Draft
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* =====================================
           EMAIL LIST
@@ -460,6 +575,39 @@ function EmailAutomation() {
                 {email.status}
               </div>
 
+              {/* COMMUNICATION */}
+
+              <div className="communication-method">
+
+                <span>
+                  Communication
+                </span>
+
+                <select
+                  value={
+                    communicationMode[email.id] ||
+                    "automatic"
+                  }
+                  onChange={(event) =>
+                    handleCommunicationChange(
+                      email.id,
+                      event.target.value
+                    )
+                  }
+                >
+
+                  <option value="automatic">
+                    Automatic
+                  </option>
+
+                  <option value="draft">
+                    Draft
+                  </option>
+
+                </select>
+
+              </div>
+
               {/* SUBJECT */}
 
               <div className="email-subject">
@@ -488,15 +636,23 @@ function EmailAutomation() {
                   Preview
                 </button>
 
-                <button
-                  type="button"
-                  className="edit-button"
-                  onClick={() =>
-                    handleEdit(email)
-                  }
-                >
-                  Edit
-                </button>
+                {/* Edit is most useful for Draft */}
+
+                {communicationMode[email.id] === "draft" && (
+
+                  <button
+                    type="button"
+                    className="edit-button"
+                    onClick={() =>
+                      handleEdit(email)
+                    }
+                  >
+                    Edit Draft
+                  </button>
+
+                )}
+
+                {/* Send button */}
 
                 <button
                   type="button"
@@ -689,9 +845,7 @@ function EmailAutomation() {
                 <button
                   type="button"
                   className="modal-send-button"
-                  onClick={
-                    handleSaveEdit
-                  }
+                  onClick={handleSaveEdit}
                 >
                   Save Changes
                 </button>

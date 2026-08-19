@@ -684,3 +684,114 @@
     width: 100%;
   }
 }
+/* =====================================
+   COMMUNICATION METHOD
+===================================== */
+
+.communication-section {
+  margin-bottom: 24px;
+  padding: 22px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.communication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.communication-header h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.communication-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.communication-counts {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.automatic-count,
+.draft-count {
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.automatic-count {
+  background: #e8f7ee;
+  color: #16834a;
+}
+
+.draft-count {
+  background: #fff4df;
+  color: #b76b00;
+}
+
+.communication-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.select-automatic-button,
+.select-draft-button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.select-automatic-button {
+  background: #e8f7ee;
+  color: #16834a;
+}
+
+.select-draft-button {
+  background: #fff4df;
+  color: #b76b00;
+}
+
+/* =====================================
+   COMMUNICATION SELECT
+===================================== */
+
+.communication-method {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 145px;
+}
+
+.communication-method span {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.communication-method select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.communication-method select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
