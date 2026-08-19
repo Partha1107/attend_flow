@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import "./ImportAttendance.css";
+import StudentAttendanceCard from "../../components/StudentAttendanceCard";
 
 const API_URL = "http://localhost:5000";
 
@@ -91,47 +92,47 @@ const transformAttendanceData = (data) => {
         subjects.push({
           id:
             row[
-              `Subject ${subjectNumber} ID`
+            `Subject ${subjectNumber} ID`
             ],
 
           name:
             row[
-              `Subject ${subjectNumber} Name`
+            `Subject ${subjectNumber} Name`
             ],
 
           sessionsConducted:
             row[
-              `Subject ${subjectNumber} Sessions Conducted`
+            `Subject ${subjectNumber} Sessions Conducted`
             ],
 
           sessionsAttended:
             row[
-              `Subject ${subjectNumber} Sessions Attended`
+            `Subject ${subjectNumber} Sessions Attended`
             ],
 
           sessionsAbsent:
             row[
-              `Subject ${subjectNumber} Sessions Absent`
+            `Subject ${subjectNumber} Sessions Absent`
             ],
 
           attendancePercentage:
             row[
-              `Subject ${subjectNumber} Attendance %`
+            `Subject ${subjectNumber} Attendance %`
             ],
 
           sessionsMarkedOD:
             row[
-              `Subject ${subjectNumber} Sessions Marked OD`
+            `Subject ${subjectNumber} Sessions Marked OD`
             ],
 
           sessionsMedicalLeave:
             row[
-              `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
+            `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
             ],
 
           sessionsAppliedLeave:
             row[
-              `Subject ${subjectNumber} Sessions Applied Leave`
+            `Subject ${subjectNumber} Sessions Applied Leave`
             ],
         });
       }
@@ -172,12 +173,12 @@ const transformAttendanceData = (data) => {
 
         sessionsMedicalLeave:
           row[
-            "Growth Hour Sessions on Approved Medical Leave (ML)"
+          "Growth Hour Sessions on Approved Medical Leave (ML)"
           ],
 
         sessionsAppliedLeave:
           row[
-            "Growth Hour Sessions Applied Leave"
+          "Growth Hour Sessions Applied Leave"
           ],
       });
     }
@@ -526,13 +527,13 @@ function ImportAttendance() {
       ) {
         throw new Error(
           result.message ||
-            "Attendance import failed."
+          "Attendance import failed."
         );
       }
 
       setSuccess(
         result.message ||
-          "Attendance imported successfully."
+        "Attendance imported successfully."
       );
 
       setImportSummary(
@@ -553,7 +554,7 @@ function ImportAttendance() {
       } else {
         setError(
           err.message ||
-            "Failed to import attendance."
+          "Failed to import attendance."
         );
       }
     } finally {
@@ -686,27 +687,27 @@ function ImportAttendance() {
 
         {attendanceData.length >
           0 && (
-          <button
-            type="button"
-            className="import-submit-button"
-            onClick={
-              handleImport
-            }
-            disabled={
-              isImporting
-            }
-          >
+            <button
+              type="button"
+              className="import-submit-button"
+              onClick={
+                handleImport
+              }
+              disabled={
+                isImporting
+              }
+            >
 
-            <Database
-              size={18}
-            />
+              <Database
+                size={18}
+              />
 
-            {isImporting
-              ? "Importing..."
-              : "Import Attendance"}
+              {isImporting
+                ? "Importing..."
+                : "Import Attendance"}
 
-          </button>
-        )}
+            </button>
+          )}
 
       </div>
 
@@ -872,33 +873,45 @@ function ImportAttendance() {
 
       {/* Preview */}
 
-      {attendanceData.length >
-        0 && (
+      {/* Excel Data Preview */}
+
+      {attendanceData.length > 0 && (
         <div className="import-preview">
 
-          <h2>
-            Excel Data Preview
-          </h2>
+          <div className="preview-header">
+            <div>
+              <h2>
+                Excel Data Preview
+              </h2>
 
-          <p>
-            Records found:{" "}
-            <strong>
-              {
-                attendanceData.length
-              }
-            </strong>
-          </p>
+              <p>
+                <strong>
+                  {attendanceData.length}
+                </strong>{" "}
+                Students
+              </p>
+            </div>
+          </div>
 
-          <pre>
-            {JSON.stringify(
-              attendanceData.slice(
-                0,
-                5
-              ),
-              null,
-              2
+          <div className="student-search">
+            <input
+              type="text"
+              placeholder="Search student..."
+            />
+          </div>
+
+          <div className="student-list">
+
+            {attendanceData.map(
+              (student) => (
+                <StudentAttendanceCard
+                  key={student.email}
+                  student={student}
+                />
+              )
             )}
-          </pre>
+
+          </div>
 
         </div>
       )}

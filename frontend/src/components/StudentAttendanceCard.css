@@ -1,0 +1,265 @@
+/* =======================================
+   Student Attendance Card
+======================================= */
+
+.student-attendance-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d9dee7;
+  border-radius: 12px;
+  padding: 24px;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.student-attendance-card:hover {
+  border-color: #cbd2dc;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* =======================================
+   Student Header
+======================================= */
+
+.student-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.student-info h3 {
+  margin: 0;
+
+  color: #111827;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.student-info span {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* =======================================
+   Overall Attendance
+======================================= */
+
+.overall-attendance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.overall-attendance span {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.overall-attendance strong {
+  color: #111827;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* =======================================
+   Details Button
+======================================= */
+
+.attendance-details-button {
+  width: 100%;
+  height: 46px;
+
+  margin-top: 24px;
+  padding: 0 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background: #f8fafc;
+  border: 1px solid #dce1e8;
+  border-radius: 9px;
+
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.attendance-details-button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.attendance-details-button svg {
+  transition: transform 0.2s ease;
+}
+
+.attendance-details-button
+  .chevron-expanded {
+  transform: rotate(180deg);
+}
+
+/* =======================================
+   Attendance Details
+======================================= */
+
+/* =======================================
+   Attendance Details
+======================================= */
+
+.attendance-details {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* =======================================
+   Table Wrapper
+======================================= */
+
+.attendance-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+/* =======================================
+   Attendance Table
+======================================= */
+
+.attendance-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* =======================================
+   Table Header
+======================================= */
+
+.attendance-table th {
+  padding: 14px 16px;
+
+  background: #f8fafc;
+
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+
+  text-align: left;
+  white-space: nowrap;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* =======================================
+   Table Cells
+======================================= */
+
+.attendance-table td {
+  padding: 15px 16px;
+
+  color: #374151;
+  font-size: 14px;
+
+  border-bottom: 1px solid #f1f5f9;
+
+  vertical-align: middle;
+}
+
+/* Remove border from last row */
+
+.attendance-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =======================================
+   Row Hover
+======================================= */
+
+.attendance-table tbody tr:hover {
+  background: #fafafa;
+}
+
+/* =======================================
+   Subject Name
+======================================= */
+
+.attendance-table .subject-name {
+  min-width: 240px;
+
+  color: #111827;
+  font-weight: 600;
+
+  white-space: normal;
+  line-height: 1.4;
+}
+
+/* =======================================
+   Numbers
+======================================= */
+
+.attendance-table td:not(.subject-name) {
+  white-space: nowrap;
+}
+
+/* =======================================
+   Attendance Percentage
+======================================= */
+
+.attendance-percentage {
+  color: #111827 !important;
+  font-weight: 600;
+}
+
+/* =======================================
+   Mobile / Tablet
+======================================= */
+
+@media (max-width: 700px) {
+  .attendance-table-wrapper {
+    border-radius: 8px;
+  }
+
+  .attendance-table {
+    min-width: 600px;
+  }
+
+  .attendance-table th,
+  .attendance-table td {
+    padding: 12px;
+  }
+
+  .attendance-table th {
+    font-size: 12px;
+  }
+
+  .attendance-table td {
+    font-size: 13px;
+  }
+}
