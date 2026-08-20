@@ -66,128 +66,118 @@ const detectSubjects = (columns) => {
 const detectGrowthHour = (columns) => {
   return columns.some(
     (column) =>
-      column === "Growth Hour Name"
+      column.includes("Growth Hour")
   );
 };
 
 // ---------------------------------------
 // Transform Excel data
 // ---------------------------------------
-
 const transformAttendanceData = (data) => {
   return data.map((row) => {
     const columns = Object.keys(row);
 
-    const subjectNumbers =
-      detectSubjects(columns);
+    const subjectNumbers = detectSubjects(columns);
 
     const subjects = [];
+    let growthHour = null;
 
-    // ---------------------------------------
-    // Normal Subjects
-    // ---------------------------------------
+    subjectNumbers.forEach((subjectNumber) => {
+      const id =
+        row[`Subject ${subjectNumber} ID`];
 
-    subjectNumbers.forEach(
-      (subjectNumber) => {
-        subjects.push({
-          id:
-            row[
-            `Subject ${subjectNumber} ID`
-            ],
+      const name =
+        row[`Subject ${subjectNumber} Name`];
 
-          name:
-            row[
-            `Subject ${subjectNumber} Name`
-            ],
-
-          sessionsConducted:
-            row[
-            `Subject ${subjectNumber} Sessions Conducted`
-            ],
-
-          sessionsAttended:
-            row[
-            `Subject ${subjectNumber} Sessions Attended`
-            ],
-
-          sessionsAbsent:
-            row[
-            `Subject ${subjectNumber} Sessions Absent`
-            ],
-
-          attendancePercentage:
-            row[
-            `Subject ${subjectNumber} Attendance %`
-            ],
-
-          sessionsMarkedOD:
-            row[
-            `Subject ${subjectNumber} Sessions Marked OD`
-            ],
-
-          sessionsMedicalLeave:
-            row[
-            `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
-            ],
-
-          sessionsAppliedLeave:
-            row[
-            `Subject ${subjectNumber} Sessions Applied Leave`
-            ],
-        });
-      }
-    );
-
-    // ---------------------------------------
-    // Growth Hour
-    // ---------------------------------------
-
-    const hasGrowthHour =
-      detectGrowthHour(columns);
-
-    if (hasGrowthHour) {
-      subjects.push({
-        // IMPORTANT:
-        // Growth Hour has NO ID
-
-        id: null,
-
-        name:
-          row["Growth Hour Name"] ||
-          "Growth Hour",
-
+      const subjectData = {
+        id,
+        name,
         sessionsConducted:
-          row["Growth Hour Sessions Conducted"],
-
+          row[
+            `Subject ${subjectNumber} Sessions Conducted`
+          ],
         sessionsAttended:
-          row["Growth Hour Sessions Attended"],
-
+          row[
+            `Subject ${subjectNumber} Sessions Attended`
+          ],
         sessionsAbsent:
-          row["Growth Hour Sessions Absent"],
-
+          row[
+            `Subject ${subjectNumber} Sessions Absent`
+          ],
         attendancePercentage:
-          row["Growth Hour Attendance %"],
-
+          row[
+            `Subject ${subjectNumber} Attendance %`
+          ],
         sessionsMarkedOD:
-          row["Growth Hour Sessions Marked OD"],
-
+          row[
+            `Subject ${subjectNumber} Sessions Marked OD`
+          ],
         sessionsMedicalLeave:
           row[
-          "Growth Hour Sessions on Approved Medical Leave (ML)"
+            `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
           ],
-
         sessionsAppliedLeave:
           row[
-          "Growth Hour Sessions Applied Leave"
+            `Subject ${subjectNumber} Sessions Applied Leave`
           ],
-      });
-    }
+      };
+
+      // ---------------------------------------
+      // Detect Growth Hour
+      // ---------------------------------------
+
+      const isGrowthHour =
+        (!id ||
+          String(id).trim() === "") &&
+        String(name || "")
+          .toLowerCase()
+          .includes("growth_hour");
+
+      if (isGrowthHour) {
+        growthHour = {
+          name:
+            name || "Growth Hour",
+
+          sessionsConducted:
+            subjectData.sessionsConducted,
+
+          sessionsAttended:
+            subjectData.sessionsAttended,
+
+          sessionsAbsent:
+            subjectData.sessionsAbsent,
+
+          attendancePercentage:
+            subjectData.attendancePercentage,
+
+          sessionsMarkedOD:
+            subjectData.sessionsMarkedOD,
+
+          sessionsMedicalLeave:
+            subjectData.sessionsMedicalLeave,
+
+          sessionsAppliedLeave:
+            subjectData.sessionsAppliedLeave,
+        };
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Normal Subject
+      // ---------------------------------------
+
+      if (id && name) {
+        subjects.push(subjectData);
+      }
+    });
 
     return {
       email: row.email,
       name: row.Name,
       squad: row.Squad,
       subjects,
+      growthHour,
     };
   });
 };
@@ -430,6 +420,11 @@ function ImportAttendance() {
         transformedData
       );
 
+      console.log(
+        "FIRST STUDENT:",
+        JSON.stringify(transformedData[0], null, 2)
+      );
+
       setAttendanceData(
         transformedData
       );
@@ -536,9 +531,8 @@ function ImportAttendance() {
         "Attendance imported successfully."
       );
 
-      setImportSummary(
-        result.summary || null
-      );
+      setImportSummary(result);
+
     } catch (err) {
       console.error(
         "Import error:",
@@ -771,9 +765,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .subjectsExisting ??
-                  0
+                  importSummary.subjectsFound ?? 0
                 }
               </strong>
             </div>
