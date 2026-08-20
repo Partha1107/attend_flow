@@ -5,10 +5,7 @@ const students = [
   {
     id: "STU001",
     name: "Arun Kumar",
-    department: "CS",
-    departmentFull: "Computer Science",
-    year: "II",
-    section: "A",
+    squad: "138",
     attendance: 92,
     status: "Present",
     email: "arun.kumar@example.com",
@@ -20,10 +17,7 @@ const students = [
   {
     id: "STU045",
     name: "Priya Sharma",
-    department: "IT",
-    departmentFull: "Information Technology",
-    year: "II",
-    section: "A",
+    squad: "138",
     attendance: 88,
     status: "Present",
     email: "priya.sharma@example.com",
@@ -35,10 +29,7 @@ const students = [
   {
     id: "STU089",
     name: "Rahul Kumar",
-    department: "Electronics",
-    departmentFull: "Electronics and Communication",
-    year: "III",
-    section: "B",
+    squad: "139",
     attendance: 76,
     status: "Absent",
     email: "rahul.kumar@example.com",
@@ -50,10 +41,7 @@ const students = [
   {
     id: "STU112",
     name: "Divya S",
-    department: "CS",
-    departmentFull: "Computer Science",
-    year: "I",
-    section: "A",
+    squad: "138",
     attendance: 95,
     status: "Present",
     email: "divya.s@example.com",
@@ -65,10 +53,7 @@ const students = [
   {
     id: "STU134",
     name: "Karthik R",
-    department: "IT",
-    departmentFull: "Information Technology",
-    year: "III",
-    section: "B",
+    squad: "139",
     attendance: 81,
     status: "Present",
     email: "karthik.r@example.com",
@@ -81,9 +66,7 @@ const students = [
 
 function StudentPage() {
   const [search, setSearch] = useState("");
-  const [department, setDepartment] = useState("");
-  const [year, setYear] = useState("");
-  const [section, setSection] = useState("");
+  const [squad, setSquad] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -94,13 +77,8 @@ function StudentPage() {
       student.name.toLowerCase().includes(search.toLowerCase()) ||
       student.id.toLowerCase().includes(search.toLowerCase());
 
-    const matchesDepartment =
-      !department || student.department === department;
-
-    const matchesYear = !year || student.year === year;
-
-    const matchesSection =
-      !section || student.section === section;
+    const matchesSquad =
+      !squad || student.squad === squad;
 
     const matchesStatus =
       !attendanceStatus ||
@@ -108,18 +86,14 @@ function StudentPage() {
 
     return (
       matchesSearch &&
-      matchesDepartment &&
-      matchesYear &&
-      matchesSection &&
+      matchesSquad &&
       matchesStatus
     );
   });
 
   const clearFilters = () => {
     setSearch("");
-    setDepartment("");
-    setYear("");
-    setSection("");
+    setSquad("");
     setAttendanceStatus("");
   };
 
@@ -162,34 +136,12 @@ function StudentPage() {
         </div>
 
         <select
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
+          value={squad}
+          onChange={(e) => setSquad(e.target.value)}
         >
-          <option value="">Department</option>
-          <option value="CS">CS</option>
-          <option value="IT">IT</option>
-          <option value="Electronics">Electronics</option>
-        </select>
-
-        <select
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-        >
-          <option value="">Year</option>
-          <option value="I">I</option>
-          <option value="II">II</option>
-          <option value="III">III</option>
-          <option value="IV">IV</option>
-        </select>
-
-        <select
-          value={section}
-          onChange={(e) => setSection(e.target.value)}
-        >
-          <option value="">Section</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
+          <option value="">Squad</option>
+          <option value="138">138</option>
+          <option value="139">139</option>
         </select>
 
         <select
@@ -245,7 +197,9 @@ function StudentPage() {
       <div className="student-table-container">
         <div className="student-table-header">
           <span>Student</span>
+          <span>Squad</span>
           <span>Attendance %</span>
+          <span>Status</span>
           <span>Action</span>
         </div>
 
@@ -256,6 +210,8 @@ function StudentPage() {
                 <strong>{student.name}</strong>
                 <small>{student.id}</small>
               </div>
+
+              <div>{student.squad}</div>
 
               <div>
                 <span className="attendance-badge">
@@ -274,6 +230,15 @@ function StudentPage() {
                   <span className="status-dot"></span>
                   {student.status}
                 </span>
+              </div>
+
+              <div>
+                <button
+                  className="view-profile-btn"
+                  onClick={() => setSelectedStudent(student)}
+                >
+                  View Profile
+                </button>
               </div>
               
             </div>
@@ -378,18 +343,8 @@ function StudentPage() {
 
               <div className="profile-grid">
                 <div>
-                  <span>Department</span>
-                  <strong>{selectedStudent.departmentFull}</strong>
-                </div>
-
-                <div>
-                  <span>Year</span>
-                  <strong>{selectedStudent.year} Year</strong>
-                </div>
-
-                <div>
-                  <span>Section</span>
-                  <strong>{selectedStudent.section}</strong>
+                  <span>Squad</span>
+                  <strong>{selectedStudent.squad}</strong>
                 </div>
 
                 <div>
@@ -507,20 +462,12 @@ function StudentPage() {
 
                 <select required defaultValue="">
                   <option value="" disabled>
-                    Department
-                  </option>
-                  <option>Computer Science</option>
-                  <option>Information Technology</option>
-                  <option>Electronics</option>
-                </select>
-
-                <select required defaultValue="">
-                  <option value="" disabled>
                     Squad
                   </option>
-                  <option>Squad 138</option>
-                  <option>Squad 139</option>
+                  <option value="138">138</option>
+                  <option value="139">139</option>
                 </select>
+                
 
                 <select required defaultValue="">
                   <option value="" disabled>
