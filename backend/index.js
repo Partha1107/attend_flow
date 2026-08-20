@@ -5,7 +5,7 @@ dotenv.config();
 const express = require("express");
 const cors = require("cors");
 
-const attendanceRoutes = require("./src/routes/attendanceRoutes");
+// const attendanceRoutes = require("./src/routes/attendanceRoutes");
 
 const app = express();
 
@@ -19,7 +19,7 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-app.use("/api/attendance", attendanceRoutes);
+// app.use("/api/attendance", attendanceRoutes);
 
 const PORT = process.env.PORT || 5000;
 

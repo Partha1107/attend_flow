@@ -1,26 +1,21 @@
 import { useState } from "react";
-import { FileSpreadsheet, Upload, CheckCircle2 } from "lucide-react";
+import {
+  FileSpreadsheet,
+  Upload,
+  Database,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 import "./ImportAttendance.css";
+import StudentAttendanceCard from "../../components/StudentAttendanceCard";
 
-/*
- * --------------------------------------------------
- * CONSTANT COLUMNS
- * --------------------------------------------------
- *
- * These columns exist for every student.
- */
-const CONSTANT_COLUMNS = ["email", "Name", "Squad"];
+const API_URL = "http://localhost:5000";
 
-/*
- * --------------------------------------------------
- * SUBJECT FIELDS
- * --------------------------------------------------
- *
- * Every detected subject must contain these fields.
- *
- * The number of subjects can change every academic year.
- */
+const CONSTANT_COLUMNS = [
+  "email",
+  "Name",
+  "Squad",
+];
+
 const SUBJECT_FIELDS = [
   "Name",
   "ID",
@@ -33,36 +28,21 @@ const SUBJECT_FIELDS = [
   "Sessions Applied Leave",
 ];
 
-/*
- * --------------------------------------------------
- * API URL
- * --------------------------------------------------
- *
- * Falls back to localhost for local dev. Set
- * VITE_API_URL in your .env for other environments.
- */
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
+const GROWTH_HOUR_FIELDS = [
+  "Name",
+  "Sessions Conducted",
+  "Sessions Attended",
+  "Sessions Absent",
+  "Attendance %",
+  "Sessions Marked OD",
+  "Sessions on Approved Medical Leave (ML)",
+  "Sessions Applied Leave",
+];
 
-/*
- * --------------------------------------------------
- * DETECT SUBJECTS
- * --------------------------------------------------
- *
- * Example Excel columns:
- *
- * Subject 1 Name
- * Subject 1 ID
- * Subject 2 Name
- * Subject 2 ID
- *
- * Returns:
- *
- * [1, 2]
- *
- * This allows the number of subjects to change
- * every academic year.
- */
+// ---------------------------------------
+// Detect normal Subject N columns
+// ---------------------------------------
+
 const detectSubjects = (columns) => {
   const subjectNumbers = new Set();
 
@@ -74,476 +54,586 @@ const detectSubjects = (columns) => {
     }
   });
 
-  return [...subjectNumbers].sort((a, b) => a - b);
+  return [...subjectNumbers].sort(
+    (a, b) => a - b
+  );
 };
 
-/*
- * --------------------------------------------------
- * TRANSFORM EXCEL DATA
- * --------------------------------------------------
- *
- * Converts Excel rows into the structure expected
- * by our backend.
- *
- * Excel:
- *
- * email
- * Name
- * Squad
- * Subject 1 Name
- * Subject 1 ID
- * ...
- *
- * Becomes:
- *
- * {
- *   email,
- *   name,
- *   squad,
- *   subjects: [...]
- * }
- *
- * NOTE: "Growth Hour" is allowed through even though
- * it has no Subject ID, since the backend treats a
- * nameless-ID subject named "Growth Hour" as a special
- * case. Every other subject without an ID is dropped.
- */
-const transformAttendanceData = (data, subjectNumbers) => {
+// ---------------------------------------
+// Detect Growth Hour columns
+// ---------------------------------------
+
+const detectGrowthHour = (columns) => {
+  return columns.some(
+    (column) =>
+      column === "Growth Hour Name"
+  );
+};
+
+// ---------------------------------------
+// Transform Excel data
+// ---------------------------------------
+
+const transformAttendanceData = (data) => {
   return data.map((row) => {
-    const subjects = subjectNumbers
-      .map((subjectNumber) => {
-        const prefix = `Subject ${subjectNumber}`;
+    const columns = Object.keys(row);
 
-        const subjectId = row[`${prefix} ID`];
-        const subjectName = String(
-          row[`${prefix} Name`] || ""
-        ).trim();
+    const subjectNumbers =
+      detectSubjects(columns);
 
-        const hasNoId =
-          subjectId === undefined ||
-          subjectId === null ||
-          String(subjectId).trim() === "";
+    const subjects = [];
 
-        const isGrowthHour =
-          subjectName.toLowerCase() === "growth hour";
+    // ---------------------------------------
+    // Normal Subjects
+    // ---------------------------------------
 
-        /*
-         * If the subject doesn't have an ID and isn't
-         * Growth Hour, don't send it to the backend.
-         */
-        if (hasNoId && !isGrowthHour) {
-          return null;
-        }
+    subjectNumbers.forEach(
+      (subjectNumber) => {
+        subjects.push({
+          id:
+            row[
+            `Subject ${subjectNumber} ID`
+            ],
 
-        return {
-          name: subjectName,
-
-          id: hasNoId ? null : String(subjectId).trim(),
+          name:
+            row[
+            `Subject ${subjectNumber} Name`
+            ],
 
           sessionsConducted:
-            Number(row[`${prefix} Sessions Conducted`]) || 0,
+            row[
+            `Subject ${subjectNumber} Sessions Conducted`
+            ],
 
           sessionsAttended:
-            Number(row[`${prefix} Sessions Attended`]) || 0,
+            row[
+            `Subject ${subjectNumber} Sessions Attended`
+            ],
 
           sessionsAbsent:
-            Number(row[`${prefix} Sessions Absent`]) || 0,
+            row[
+            `Subject ${subjectNumber} Sessions Absent`
+            ],
 
           attendancePercentage:
-            Number(row[`${prefix} Attendance %`]) || 0,
+            row[
+            `Subject ${subjectNumber} Attendance %`
+            ],
 
           sessionsMarkedOD:
-            Number(row[`${prefix} Sessions Marked OD`]) || 0,
+            row[
+            `Subject ${subjectNumber} Sessions Marked OD`
+            ],
 
           sessionsMedicalLeave:
-            Number(
-              row[
-                `${prefix} Sessions on Approved Medical Leave (ML)`
-              ]
-            ) || 0,
+            row[
+            `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
+            ],
 
           sessionsAppliedLeave:
-            Number(row[`${prefix} Sessions Applied Leave`]) || 0,
-        };
-      })
-      .filter(Boolean);
+            row[
+            `Subject ${subjectNumber} Sessions Applied Leave`
+            ],
+        });
+      }
+    );
+
+    // ---------------------------------------
+    // Growth Hour
+    // ---------------------------------------
+
+    const hasGrowthHour =
+      detectGrowthHour(columns);
+
+    if (hasGrowthHour) {
+      subjects.push({
+        // IMPORTANT:
+        // Growth Hour has NO ID
+
+        id: null,
+
+        name:
+          row["Growth Hour Name"] ||
+          "Growth Hour",
+
+        sessionsConducted:
+          row["Growth Hour Sessions Conducted"],
+
+        sessionsAttended:
+          row["Growth Hour Sessions Attended"],
+
+        sessionsAbsent:
+          row["Growth Hour Sessions Absent"],
+
+        attendancePercentage:
+          row["Growth Hour Attendance %"],
+
+        sessionsMarkedOD:
+          row["Growth Hour Sessions Marked OD"],
+
+        sessionsMedicalLeave:
+          row[
+          "Growth Hour Sessions on Approved Medical Leave (ML)"
+          ],
+
+        sessionsAppliedLeave:
+          row[
+          "Growth Hour Sessions Applied Leave"
+          ],
+      });
+    }
 
     return {
-      email: String(row.email || "").trim(),
-      name: String(row.Name || "").trim(),
-      squad: String(row.Squad || "").trim(),
+      email: row.email,
+      name: row.Name,
+      squad: row.Squad,
       subjects,
     };
   });
 };
 
+// ---------------------------------------
+// Component
+// ---------------------------------------
+
 function ImportAttendance() {
-  const [fileName, setFileName] = useState("");
-  const [academicYear, setAcademicYear] = useState("");
+  const [fileName, setFileName] =
+    useState("");
 
-  // Data parsed from the file, awaiting confirmation.
-  const [previewData, setPreviewData] = useState([]);
+  const [attendanceData, setAttendanceData] =
+    useState([]);
 
-  // Set to true once the user has reviewed the preview
-  // and the data is ready to send.
-  const [isReadyToImport, setIsReadyToImport] =
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+  const [academicYear, setAcademicYear] =
+    useState("2026-2027");
+
+  const [isImporting, setIsImporting] =
     useState(false);
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [importSummary, setImportSummary] =
+    useState(null);
 
-  const [isParsing, setIsParsing] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+  // ---------------------------------------
+  // Select Excel
+  // ---------------------------------------
 
-  /*
-   * --------------------------------------------------
-   * RESET STATE
-   * --------------------------------------------------
-   */
-  const resetImportState = () => {
-    setPreviewData([]);
-    setIsReadyToImport(false);
-    setError("");
-    setSuccess("");
-  };
-
-  /*
-   * --------------------------------------------------
-   * HANDLE FILE CHANGE
-   * --------------------------------------------------
-   *
-   * STEP 1 of 2: parse + validate the file and show a
-   * preview. This does NOT talk to the backend/Supabase.
-   * Nothing is written until the user clicks "Import Now".
-   */
   const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
+    const file =
+      event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     setFileName(file.name);
-    resetImportState();
-
-    /*
-     * Academic year is required because the backend
-     * uses it to determine whether attendance should
-     * be inserted or updated.
-     */
-    if (!academicYear) {
-      setError(
-        "Please select an academic year before uploading."
-      );
-
-      return;
-    }
-
-    setIsParsing(true);
+    setError("");
+    setSuccess("");
+    setImportSummary(null);
+    setAttendanceData([]);
 
     try {
-      /*
-       * --------------------------------------------------
-       * STEP A: READ EXCEL FILE
-       * --------------------------------------------------
-       */
+      const arrayBuffer =
+        await file.arrayBuffer();
 
-      const arrayBuffer = await file.arrayBuffer();
-
-      const workbook = XLSX.read(arrayBuffer, {
-        type: "array",
-      });
-
-      /*
-       * --------------------------------------------------
-       * STEP B: CHECK SHEETS
-       * --------------------------------------------------
-       */
-
-      if (!workbook.SheetNames.length) {
-        setError("The Excel file does not contain any sheets.");
-        return;
-      }
-
-      /*
-       * --------------------------------------------------
-       * STEP C: GET FIRST SHEET
-       * --------------------------------------------------
-       */
-
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-
-      /*
-       * --------------------------------------------------
-       * STEP D: CONVERT EXCEL → JAVASCRIPT
-       * --------------------------------------------------
-       */
-
-      const data = XLSX.utils.sheet_to_json(worksheet, {
-        defval: "",
-      });
-
-      /*
-       * --------------------------------------------------
-       * STEP E: CHECK EMPTY SHEET
-       * --------------------------------------------------
-       */
-
-      if (data.length === 0) {
-        setError("The Excel sheet is empty.");
-        return;
-      }
-
-      /*
-       * --------------------------------------------------
-       * STEP F: GET EXCEL COLUMNS
-       * --------------------------------------------------
-       */
-
-      const actualColumns = Object.keys(data[0]);
-
-      console.log("Excel columns:", actualColumns);
-
-      /*
-       * --------------------------------------------------
-       * STEP G: VALIDATE CONSTANT COLUMNS
-       * --------------------------------------------------
-       */
-
-      const missingConstantColumns = CONSTANT_COLUMNS.filter(
-        (column) => !actualColumns.includes(column)
+      const workbook = XLSX.read(
+        arrayBuffer,
+        {
+          type: "array",
+        }
       );
 
-      if (missingConstantColumns.length > 0) {
+      if (!workbook.SheetNames.length) {
+        setError(
+          "The Excel file does not contain any sheets."
+        );
+        return;
+      }
+
+      const firstSheetName =
+        workbook.SheetNames[0];
+
+      const worksheet =
+        workbook.Sheets[firstSheetName];
+
+      const data =
+        XLSX.utils.sheet_to_json(
+          worksheet,
+          {
+            defval: "",
+          }
+        );
+
+      if (data.length === 0) {
+        setError(
+          "The Excel sheet is empty."
+        );
+        return;
+      }
+
+      const actualColumns =
+        Object.keys(data[0]);
+
+      console.log(
+        "Excel columns:",
+        actualColumns
+      );
+
+      // ---------------------------------------
+      // Validate constant columns
+      // ---------------------------------------
+
+      const missingConstantColumns =
+        CONSTANT_COLUMNS.filter(
+          (column) =>
+            !actualColumns.includes(column)
+        );
+
+      if (
+        missingConstantColumns.length > 0
+      ) {
         setError(
           `Invalid Excel file. Missing required column(s): ${missingConstantColumns.join(
             ", "
           )}`
         );
 
-        console.error(
-          "Missing constant columns:",
-          missingConstantColumns
+        return;
+      }
+
+      // ---------------------------------------
+      // Detect normal subjects
+      // ---------------------------------------
+
+      const subjectNumbers =
+        detectSubjects(
+          actualColumns
         );
 
-        return;
-      }
+      // ---------------------------------------
+      // Detect Growth Hour
+      // ---------------------------------------
 
-      /*
-       * --------------------------------------------------
-       * STEP H: DETECT SUBJECTS
-       * --------------------------------------------------
-       */
+      const hasGrowthHour =
+        detectGrowthHour(
+          actualColumns
+        );
 
-      const subjectNumbers = detectSubjects(actualColumns);
-
-      console.log("Detected subject numbers:", subjectNumbers);
-
-      if (subjectNumbers.length === 0) {
-        setError("Invalid Excel file. No subjects were detected.");
-        return;
-      }
-
-      /*
-       * --------------------------------------------------
-       * STEP I: VALIDATE SUBJECT COLUMNS
-       * --------------------------------------------------
-       */
-
-      const missingSubjectColumns = [];
-
-      subjectNumbers.forEach((subjectNumber) => {
-        SUBJECT_FIELDS.forEach((field) => {
-          const columnName = `Subject ${subjectNumber} ${field}`;
-
-          if (!actualColumns.includes(columnName)) {
-            missingSubjectColumns.push(columnName);
-          }
-        });
-      });
-
-      if (missingSubjectColumns.length > 0) {
+      if (
+        subjectNumbers.length === 0 &&
+        !hasGrowthHour
+      ) {
         setError(
-          `Invalid Excel file. Missing ${missingSubjectColumns.length} subject column(s).`
-        );
-
-        console.error(
-          "Missing subject columns:",
-          missingSubjectColumns
+          "Invalid Excel file. No subjects or Growth Hour were detected."
         );
 
         return;
       }
 
-      /*
-       * --------------------------------------------------
-       * STEP J: TRANSFORM DATA
-       * --------------------------------------------------
-       */
-
-      const transformedData = transformAttendanceData(
-        data,
+      console.log(
+        "Detected subjects:",
         subjectNumbers
       );
 
-      console.log("Transformed attendance data:", transformedData);
+      console.log(
+        "Growth Hour detected:",
+        hasGrowthHour
+      );
 
-      /*
-       * --------------------------------------------------
-       * STEP K: SHOW PREVIEW — WAIT FOR CONFIRMATION
-       * --------------------------------------------------
-       *
-       * No network call yet. The user must review this
-       * preview and click "Import Now" before anything
-       * is written to Supabase.
-       */
+      // ---------------------------------------
+      // Validate normal subjects
+      // ---------------------------------------
 
-      setPreviewData(transformedData);
-      setIsReadyToImport(true);
+      const missingSubjectColumns =
+        [];
+
+      subjectNumbers.forEach(
+        (subjectNumber) => {
+          SUBJECT_FIELDS.forEach(
+            (field) => {
+              const columnName =
+                `Subject ${subjectNumber} ${field}`;
+
+              if (
+                !actualColumns.includes(
+                  columnName
+                )
+              ) {
+                missingSubjectColumns.push(
+                  columnName
+                );
+              }
+            }
+          );
+        }
+      );
+
+      // ---------------------------------------
+      // Validate Growth Hour
+      // ---------------------------------------
+
+      const missingGrowthHourColumns =
+        [];
+
+      if (hasGrowthHour) {
+        GROWTH_HOUR_FIELDS.forEach(
+          (field) => {
+            const columnName =
+              `Growth Hour ${field}`;
+
+            if (
+              !actualColumns.includes(
+                columnName
+              )
+            ) {
+              missingGrowthHourColumns.push(
+                columnName
+              );
+            }
+          }
+        );
+      }
+
+      // ---------------------------------------
+      // Combined validation
+      // ---------------------------------------
+
+      const missingColumns = [
+        ...missingSubjectColumns,
+        ...missingGrowthHourColumns,
+      ];
+
+      if (missingColumns.length > 0) {
+        setError(
+          `Invalid Excel file. Missing ${missingColumns.length} required column(s).`
+        );
+
+        console.error(
+          "Missing columns:",
+          missingColumns
+        );
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Transform
+      // ---------------------------------------
+
+      const transformedData =
+        transformAttendanceData(data);
+
+      console.log(
+        "Transformed attendance data:",
+        transformedData
+      );
+
+      setAttendanceData(
+        transformedData
+      );
+
+      const detectedCount =
+        subjectNumbers.length +
+        (hasGrowthHour ? 1 : 0);
+
+      setSuccess(
+        `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`
+      );
     } catch (err) {
-      console.error("Attendance parsing error:", err);
-      setError(err.message || "Unable to read the Excel file.");
-    } finally {
-      setIsParsing(false);
+      console.error(
+        "Excel parsing error:",
+        err
+      );
+
+      setError(
+        "Unable to read the Excel file. Please check the file format."
+      );
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * HANDLE CONFIRM IMPORT
-   * --------------------------------------------------
-   *
-   * STEP 2 of 2: only runs when the user explicitly
-   * clicks "Import Now" after reviewing the preview.
-   */
-  const handleConfirmImport = async () => {
-    if (!previewData.length) {
+  // ---------------------------------------
+  // Import to backend
+  // ---------------------------------------
+
+  const handleImport = async () => {
+    if (
+      attendanceData.length === 0
+    ) {
+      setError(
+        "Please select and validate an Excel file first."
+      );
+
+      return;
+    }
+
+    if (!academicYear) {
+      setError(
+        "Please enter the academic year."
+      );
+
       return;
     }
 
     setIsImporting(true);
     setError("");
     setSuccess("");
+    setImportSummary(null);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/attendance/import`,
+      console.log(
+        "Sending attendance data to backend..."
+      );
+
+      console.log(
+        "Payload:",
         {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            academicYear,
-            students: previewData,
-          }),
+          academicYear,
+          students: attendanceData,
         }
       );
 
-      const result = await response.json();
+      const response =
+        await fetch(
+          `${API_URL}/api/attendance/import`,
+          {
+            method: "POST",
 
-      if (!response.ok || !result.success) {
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              academicYear,
+              students:
+                attendanceData,
+            }),
+          }
+        );
+
+      const result =
+        await response.json();
+
+      console.log(
+        "Backend response:",
+        result
+      );
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         throw new Error(
-          result.message || "Attendance import failed."
+          result.message ||
+          "Attendance import failed."
         );
       }
 
       setSuccess(
-        `Import successful! ${result.summary.attendanceCreated} attendance records created and ${result.summary.attendanceUpdated} updated.`
+        result.message ||
+        "Attendance imported successfully."
       );
 
-      // Lock the preview so a stray double-click of
-      // "Import Now" can't re-submit the same data.
-      setIsReadyToImport(false);
-
-      console.log("Import result:", result);
+      setImportSummary(
+        result.summary || null
+      );
     } catch (err) {
-      console.error("Attendance import error:", err);
-      setError(err.message || "Unable to import attendance data.");
+      console.error(
+        "Import error:",
+        err
+      );
+
+      if (
+        err instanceof TypeError
+      ) {
+        setError(
+          "Cannot connect to the AESA backend. Make sure the server is running on port 5000."
+        );
+      } else {
+        setError(
+          err.message ||
+          "Failed to import attendance."
+        );
+      }
     } finally {
       setIsImporting(false);
     }
   };
 
-  /*
-   * --------------------------------------------------
-   * HANDLE CANCEL
-   * --------------------------------------------------
-   *
-   * Discards the parsed preview without importing.
-   */
-  const handleCancel = () => {
-    setFileName("");
-    resetImportState();
-  };
-
   return (
     <div className="import-attendance-page">
-      {/* ------------------------------------------- */}
-      {/* PAGE HEADER */}
-      {/* ------------------------------------------- */}
+
+      {/* Header */}
 
       <div className="page-header">
         <div>
-          <h1>Import Attendance</h1>
+          <h1>
+            Import Attendance
+          </h1>
 
           <p>
-            Upload an Excel file to import student attendance
+            Upload an Excel file to
+            import student attendance
             records.
           </p>
         </div>
       </div>
 
-      {/* ------------------------------------------- */}
-      {/* IMPORT CARD */}
-      {/* ------------------------------------------- */}
+      {/* Upload Card */}
 
       <div className="import-card">
+
         <div className="import-icon">
-          <FileSpreadsheet size={32} />
+          <FileSpreadsheet
+            size={32}
+          />
         </div>
 
-        <h2>Upload Attendance Excel</h2>
+        <h2>
+          Upload Attendance Excel
+        </h2>
 
-        <p>Select an Excel file containing the attendance data.</p>
+        <p>
+          Select an Excel file
+          containing the attendance
+          data.
+        </p>
 
-        {/* ------------------------------------------- */}
-        {/* ACADEMIC YEAR */}
-        {/* ------------------------------------------- */}
+        {/* Academic Year */}
 
         <div className="academic-year-field">
-          <label htmlFor="academic-year">Academic Year</label>
 
-          <select
-            id="academic-year"
+          <label htmlFor="academicYear">
+            Academic Year
+          </label>
+
+          <input
+            id="academicYear"
+            type="text"
             value={academicYear}
-            disabled={isReadyToImport}
             onChange={(event) =>
-              setAcademicYear(event.target.value)
+              setAcademicYear(
+                event.target.value
+              )
             }
-          >
-            <option value="">Select Academic Year</option>
-            <option value="2025-2026">2025-2026</option>
-            <option value="2026-2027">2026-2027</option>
-            <option value="2027-2028">2027-2028</option>
-            <option value="2028-2029">2028-2029</option>
-          </select>
+            placeholder="2026-2027"
+            disabled={
+              isImporting
+            }
+          />
+
         </div>
 
-        {/* ------------------------------------------- */}
-        {/* UPLOAD BUTTON */}
-        {/* ------------------------------------------- */}
+        {/* Upload */}
 
         <label className="upload-button">
+
           <Upload size={18} />
 
           <span>
-            {isParsing
-              ? "Reading file..."
-              : fileName
+            {fileName
               ? "Change Excel File"
               : "Select Excel File"}
           </span>
@@ -552,97 +642,280 @@ function ImportAttendance() {
             type="file"
             accept=".xlsx,.xls"
             hidden
-            disabled={isParsing || isImporting}
-            onChange={handleFileChange}
+            onChange={
+              handleFileChange
+            }
+            disabled={
+              isImporting
+            }
           />
+
         </label>
 
         <span className="supported-format">
           Supported formats: .xlsx, .xls
         </span>
 
-        {/* ------------------------------------------- */}
-        {/* SELECTED FILE */}
-        {/* ------------------------------------------- */}
+        {/* Selected File */}
 
         {fileName && (
           <p className="selected-file">
-            Selected: <strong>{fileName}</strong>
+            Selected:{" "}
+            <strong>
+              {fileName}
+            </strong>
           </p>
         )}
 
-        {/* ------------------------------------------- */}
-        {/* ERROR */}
-        {/* ------------------------------------------- */}
+        {/* Error */}
 
-        {error && <p className="import-error">{error}</p>}
+        {error && (
+          <p className="import-error">
+            {error}
+          </p>
+        )}
 
-        {/* ------------------------------------------- */}
-        {/* SUCCESS */}
-        {/* ------------------------------------------- */}
+        {/* Success */}
 
         {success && (
           <p className="import-success">
-            <CheckCircle2 size={16} /> {success}
+            {success}
           </p>
         )}
 
-        {/* ------------------------------------------- */}
-        {/* CONFIRM / CANCEL — only shown once a file   */}
-        {/* has been parsed and is awaiting confirmation */}
-        {/* ------------------------------------------- */}
+        {/* Import Button */}
 
-        {isReadyToImport && (
-          <div className="import-confirm-actions">
+        {attendanceData.length >
+          0 && (
             <button
               type="button"
-              className="import-confirm-button"
-              disabled={isImporting}
-              onClick={handleConfirmImport}
+              className="import-submit-button"
+              onClick={
+                handleImport
+              }
+              disabled={
+                isImporting
+              }
             >
+
+              <Database
+                size={18}
+              />
+
               {isImporting
                 ? "Importing..."
-                : `Import Now (${previewData.length} student${
-                    previewData.length === 1 ? "" : "s"
-                  })`}
-            </button>
+                : "Import Attendance"}
 
-            <button
-              type="button"
-              className="import-cancel-button"
-              disabled={isImporting}
-              onClick={handleCancel}
-            >
-              Cancel
             </button>
-          </div>
-        )}
+          )}
+
       </div>
 
-      {/* ------------------------------------------- */}
-      {/* PREVIEW */}
-      {/* ------------------------------------------- */}
+      {/* Import Summary */}
 
-      {previewData.length > 0 && (
-        <div className="import-preview">
-          <h2>Excel Data Preview</h2>
+      {importSummary && (
+        <div className="import-summary">
 
-          <p>
-            Records found: <strong>{previewData.length}</strong>
-            {isReadyToImport && (
-              <>
-                {" "}
-                — review below, then click{" "}
-                <strong>Import Now</strong> to write this data.
-              </>
-            )}
-          </p>
+          <h2>
+            Import Summary
+          </h2>
 
-          <pre>
-            {JSON.stringify(previewData.slice(0, 5), null, 2)}
-          </pre>
+          <div className="summary-grid">
+
+            <div className="summary-item">
+              <span>
+                Students Created
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .studentsCreated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Students Updated
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .studentsUpdated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Subjects Created
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .subjectsCreated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Existing Subjects
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .subjectsExisting ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Attendance Created
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .attendanceCreated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Attendance Updated
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .attendanceUpdated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            {/* Growth Hour */}
+
+            <div className="summary-item">
+              <span>
+                Growth Hour Created
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .growthHourCreated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Growth Hour Updated
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .growthHourUpdated ??
+                  0
+                }
+              </strong>
+            </div>
+
+            {/* Skipped */}
+
+            <div className="summary-item">
+              <span>
+                Skipped Students
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .skippedStudents ??
+                  0
+                }
+              </strong>
+            </div>
+
+            <div className="summary-item">
+              <span>
+                Skipped Subjects
+              </span>
+
+              <strong>
+                {
+                  importSummary
+                    .skippedSubjects ??
+                  0
+                }
+              </strong>
+            </div>
+
+          </div>
+
         </div>
       )}
+
+      {/* Preview */}
+
+      {/* Excel Data Preview */}
+
+      {attendanceData.length > 0 && (
+        <div className="import-preview">
+
+          <div className="preview-header">
+            <div>
+              <h2>
+                Excel Data Preview
+              </h2>
+
+              <p>
+                <strong>
+                  {attendanceData.length}
+                </strong>{" "}
+                Students
+              </p>
+            </div>
+          </div>
+
+          <div className="student-search">
+            <input
+              type="text"
+              placeholder="Search student..."
+            />
+          </div>
+
+          <div className="student-list">
+
+            {attendanceData.map(
+              (student) => (
+                <StudentAttendanceCard
+                  key={student.email}
+                  student={student}
+                />
+              )
+            )}
+
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }
