@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./EmailAutomation.css";
 
 /*
@@ -111,6 +111,8 @@ function EmailAutomation() {
   const [sentEmails, setSentEmails] = useState([]);
   const [showDraftOnly, setShowDraftOnly] = useState(false);
 
+  const [reviewedDrafts, setReviewedDrafts] = useState({});
+
   /*
     Currently selected email
   */
@@ -130,6 +132,23 @@ function EmailAutomation() {
     Editable message
   */
   const [editMessage, setEditMessage] = useState("");
+
+  useEffect(() => {
+    const storedHistory = localStorage.getItem(
+      "communicationHistory"
+    );
+
+    if (storedHistory) {
+      setSentEmails(JSON.parse(storedHistory));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "communicationHistory",
+      JSON.stringify(sentEmails)
+    );
+  }, [sentEmails]);
 
   /*
     Generate drafts
@@ -187,7 +206,6 @@ function EmailAutomation() {
 
     setCommunicationMode(automaticModes);
   };
-
   /*
     Select all as Draft
   */
@@ -213,7 +231,12 @@ function EmailAutomation() {
 
     setSentEmails((current) => [
       ...current,
-      ...automaticEmails,
+      ...automaticEmails.map((email) => ({
+        ...email,
+        sentAt: new Date().toLocaleString(),
+        communicationType: "automatic",
+        sendStatus: "Sent",
+      })),
     ]);
 
     setEmailDrafts((currentEmails) =>
@@ -240,6 +263,52 @@ function EmailAutomation() {
 
   const handleReviewDrafts = () => {
     setShowDraftOnly(true);
+  };
+
+  const handleSendReviewedDrafts = () => {
+    const reviewedEmails = emailDrafts.filter(
+      (email) =>
+        communicationMode[email.id] === "draft" &&
+        reviewedDrafts[email.id]
+    );
+
+    if (reviewedEmails.length === 0) {
+      alert("There are no reviewed drafts to send.");
+      return;
+    }
+
+    setSentEmails((current) => [
+      ...current,
+      ...reviewedEmails.map((email) => ({
+        ...email,
+        sentAt: new Date().toLocaleString(),
+        communicationType: "draft",
+        sendStatus: "Sent",
+      })),
+    ]);
+    setEmailDrafts((currentEmails) =>
+      currentEmails.filter(
+        (email) => !reviewedEmails.some((reviewed) => reviewed.id === email.id)
+      )
+    );
+    setCommunicationMode((currentModes) => {
+      const updatedModes = { ...currentModes };
+
+      reviewedEmails.forEach((email) => {
+        delete updatedModes[email.id];
+      });
+
+      return updatedModes;
+    });
+    setReviewedDrafts((current) => {
+      const updatedReviews = { ...current };
+
+      reviewedEmails.forEach((email) => {
+        delete updatedReviews[email.id];
+      });
+
+      return updatedReviews;
+    });
   };
 
 
@@ -284,7 +353,14 @@ function EmailAutomation() {
       (email) => email.id === selectedEmail.id
     );
 
-    setSelectedEmail(updatedSelectedEmail);
+    setSelectedEmail(
+      updatedSelectedEmail
+    );
+
+    setReviewedDrafts((current) => ({
+      ...current,
+      [selectedEmail.id]: true,
+    }));
 
     setModalMode("preview");
   };
@@ -301,6 +377,17 @@ function EmailAutomation() {
     );
 
     if (!student) return;
+
+    setSentEmails((current) => [
+      ...current,
+      {
+        ...student,
+        sentAt: new Date().toLocaleString(),
+        communicationType:
+          communicationMode[student.id] || "automatic",
+        sendStatus: "Sent",
+      },
+    ]);
 
     alert(
       `Email sent successfully to ${student.email}`
@@ -719,17 +806,23 @@ function EmailAutomation() {
                   {/* Edit is most useful for Draft */}
 
                   {communicationMode[email.id] === "draft" && (
+                    <>
+                      <button
+                        type="button"
+                        className="edit-button"
+                        onClick={() =>
+                          handleEdit(email)
+                        }
+                      >
+                        Edit Draft
+                      </button>
 
-                    <button
-                      type="button"
-                      className="edit-button"
-                      onClick={() =>
-                        handleEdit(email)
-                      }
-                    >
-                      Edit Draft
-                    </button>
-
+                      {reviewedDrafts[email.id] && (
+                        <span className="reviewed-badge">
+                          ✓ Reviewed
+                        </span>
+                      )}
+                    </>
                   )}
 
                   {/* Send button */}

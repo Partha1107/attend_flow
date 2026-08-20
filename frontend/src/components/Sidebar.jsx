@@ -35,17 +35,15 @@ const mainItems = [
     to: "/alerts",
   },
   {
-    label: "Communications",
+    label: "Communication History",
     icon: Mail,
     to: "/communication-history",
   },
   {
-    label: "EmailAutomation",
+    label: "Email Automation",
     icon: Mail,
     to: "/email-automation",
   },
-
-
   {
     label: "Analytics",
     icon: BarChart3,
@@ -63,12 +61,6 @@ function Sidebar({ open = false, onClose = () => { } }) {
 
   const isImportActive = pathname === "/import-attendance";
   const isRecordsActive = pathname === "/attendance-records";
-
-  const isEmailAutomationActive =
-    pathname === "/email-automation";
-
-  const isCommunicationHistoryActive =
-    pathname === "/communication-history";
 
   return (
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
@@ -147,32 +139,6 @@ function Sidebar({ open = false, onClose = () => { } }) {
               </div>
             )}
 
-            {/* Communications Section */}
-            {label === "Communications" && (
-              <div className="attendance-group">
-
-                <NavLink
-                  to="/email-automation"
-                  className={`subnav-item ${isEmailAutomationActive ? "active" : ""
-                    }`}
-                  onClick={onClose}
-                >
-                  <Mail size={16} />
-                  <span>Email Automation</span>
-                </NavLink>
-
-                <NavLink
-                  to="/communication-history"
-                  className={`subnav-item ${isCommunicationHistoryActive ? "active" : ""
-                    }`}
-                  onClick={onClose}
-                >
-                  <Mail size={16} />
-                  <span>Communication History</span>
-                </NavLink>
-
-              </div>
-            )}
           </div>
         ))}
       </nav>

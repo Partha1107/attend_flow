@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Send,
@@ -56,6 +56,18 @@ const communicationData = [
 ];
 
 function CommunicationHistory() {
+  const [history, setHistory] = useState([]);
+  
+useEffect(() => {
+  const storedHistory = localStorage.getItem(
+    "communicationHistory"
+  );
+
+  if (storedHistory) {
+    setHistory(JSON.parse(storedHistory));
+  }
+}, []);
+
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
