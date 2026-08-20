@@ -660,7 +660,7 @@ const importAttendance = async (req, res) => {
                 error: attendanceUpsertError,
             } = await supabase
                 .from("attendance")
-
+                .insert(attendanceRows);
 
             if (attendanceUpsertError) {
                 throw attendanceUpsertError;
