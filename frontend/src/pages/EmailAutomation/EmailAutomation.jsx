@@ -232,11 +232,25 @@ function EmailAutomation() {
     setSentEmails((current) => [
       ...current,
       ...automaticEmails.map((email) => ({
-        ...email,
-        sentAt: new Date().toLocaleString(),
-        communicationType: "automatic",
-        sendStatus: "Sent",
-      })),
+  ...email,
+  id: `MSG-${Date.now()}-${email.id}`,
+  date: new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }),
+  time: new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+  type: "Email",
+  recipient: email.email,
+  name: email.name,
+  message: email.message,
+  status: "Sent",
+  communicationType: "automatic",
+}))
+
     ]);
 
     setEmailDrafts((currentEmails) =>
@@ -280,11 +294,25 @@ function EmailAutomation() {
     setSentEmails((current) => [
       ...current,
       ...reviewedEmails.map((email) => ({
-        ...email,
-        sentAt: new Date().toLocaleString(),
-        communicationType: "draft",
-        sendStatus: "Sent",
-      })),
+  ...email,
+  id: `MSG-${Date.now()}-${email.id}`,
+  date: new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }),
+  time: new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+  type: "Email",
+  recipient: email.email,
+  name: email.name,
+  message: email.message,
+  status: "Sent",
+  communicationType: "draft",
+}))
+
     ]);
     setEmailDrafts((currentEmails) =>
       currentEmails.filter(
@@ -382,10 +410,23 @@ function EmailAutomation() {
       ...current,
       {
         ...student,
-        sentAt: new Date().toLocaleString(),
+        id: `MSG-${Date.now()}-${student.id}`,
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        time: new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        type: "Email",
+        recipient: student.email,
+        name: student.name,
+        message: student.message,
+        status: "Sent",
         communicationType:
           communicationMode[student.id] || "automatic",
-        sendStatus: "Sent",
       },
     ]);
 
