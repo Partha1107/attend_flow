@@ -108,6 +108,9 @@ function EmailAutomation() {
   */
   const [communicationMode, setCommunicationMode] = useState({});
 
+  const [sentEmails, setSentEmails] = useState([]);
+  const [showDraftOnly, setShowDraftOnly] = useState(false);
+
   /*
     Currently selected email
   */
@@ -198,6 +201,49 @@ function EmailAutomation() {
     setCommunicationMode(draftModes);
   };
 
+  const handleSendAutomaticEmails = () => {
+    const automaticEmails = emailDrafts.filter(
+      (email) => communicationMode[email.id] === "automatic"
+    );
+
+    if (automaticEmails.length === 0) {
+      alert("There are no automatic emails to send.");
+      return;
+    }
+
+    setSentEmails((current) => [
+      ...current,
+      ...automaticEmails,
+    ]);
+
+    setEmailDrafts((currentEmails) =>
+      currentEmails.filter(
+        (email) =>
+          communicationMode[email.id] !== "automatic"
+      )
+    );
+
+    setCommunicationMode((currentModes) => {
+      const updatedModes = { ...currentModes };
+
+      automaticEmails.forEach((email) => {
+        delete updatedModes[email.id];
+      });
+
+      return updatedModes;
+    });
+
+    alert(
+      `${automaticEmails.length} automatic emails sent successfully.`
+    );
+  };
+
+  const handleReviewDrafts = () => {
+    setShowDraftOnly(true);
+  };
+
+
+
   /*
     Open Preview
   */
@@ -225,10 +271,10 @@ function EmailAutomation() {
     const updatedEmails = emailDrafts.map((email) =>
       email.id === selectedEmail.id
         ? {
-            ...email,
-            subject: editSubject,
-            message: editMessage,
-          }
+          ...email,
+          subject: editSubject,
+          message: editMessage,
+        }
         : email
     );
 
@@ -489,6 +535,34 @@ function EmailAutomation() {
 
           </div>
 
+          <div className="automation-actions">
+
+            <button
+              type="button"
+              className="send-automatic-button"
+              onClick={handleSendAutomaticEmails}
+            >
+              Send Automatic Emails
+            </button>
+
+            <button
+              type="button"
+              className="review-drafts-button"
+              onClick={handleReviewDrafts}
+            >
+              Review Drafts
+            </button>
+
+            <button
+              type="button"
+              className="show-all-button"
+              onClick={() => setShowDraftOnly(false)}
+            >
+              Show All Emails
+            </button>
+
+          </div>
+
         </div>
 
       )}
@@ -517,158 +591,164 @@ function EmailAutomation() {
 
         ) : (
 
-          emailDrafts.map((email) => (
+          emailDrafts
+            .filter((email) => {
+              if (!showDraftOnly) return true;
 
-            <div
-              className="email-card"
-              key={email.id}
-            >
+              return communicationMode[email.id] === "draft";
+            })
+            .map((email) => (
 
-              {/* STUDENT */}
+              <div
+                className="email-card"
+                key={email.id}
+              >
 
-              <div className="student-email-info">
+                {/* STUDENT */}
 
-                <div className="student-avatar">
-                  {email.name
-                    .split(" ")
-                    .map(
-                      (word) =>
-                        word[0]
-                    )
-                    .join("")
-                    .toUpperCase()}
+                <div className="student-email-info">
+
+                  <div className="student-avatar">
+                    {email.name
+                      .split(" ")
+                      .map(
+                        (word) =>
+                          word[0]
+                      )
+                      .join("")
+                      .toUpperCase()}
+                  </div>
+
+                  <div>
+
+                    <h3>
+                      {email.name}
+                    </h3>
+
+                    <p>
+                      {email.email}
+                    </p>
+
+                  </div>
+
                 </div>
 
-                <div>
+                {/* ATTENDANCE */}
 
-                  <h3>
-                    {email.name}
-                  </h3>
+                <div className="attendance-info">
+
+                  <span>
+                    Attendance
+                  </span>
+
+                  <strong>
+                    {email.attendance}%
+                  </strong>
+
+                </div>
+
+                {/* STATUS */}
+
+                <div
+                  className={`email-status ${email.status.toLowerCase()}`}
+                >
+                  {email.status}
+                </div>
+
+                {/* COMMUNICATION */}
+
+                <div className="communication-method">
+
+                  <span>
+                    Communication
+                  </span>
+
+                  <select
+                    value={
+                      communicationMode[email.id] ||
+                      "automatic"
+                    }
+                    onChange={(event) =>
+                      handleCommunicationChange(
+                        email.id,
+                        event.target.value
+                      )
+                    }
+                  >
+
+                    <option value="automatic">
+                      Automatic
+                    </option>
+
+                    <option value="draft">
+                      Draft
+                    </option>
+
+                  </select>
+
+                </div>
+
+                {/* SUBJECT */}
+
+                <div className="email-subject">
+
+                  <span>
+                    Subject
+                  </span>
 
                   <p>
-                    {email.email}
+                    {email.subject}
                   </p>
 
                 </div>
 
-              </div>
+                {/* ACTIONS */}
 
-              {/* ATTENDANCE */}
-
-              <div className="attendance-info">
-
-                <span>
-                  Attendance
-                </span>
-
-                <strong>
-                  {email.attendance}%
-                </strong>
-
-              </div>
-
-              {/* STATUS */}
-
-              <div
-                className={`email-status ${email.status.toLowerCase()}`}
-              >
-                {email.status}
-              </div>
-
-              {/* COMMUNICATION */}
-
-              <div className="communication-method">
-
-                <span>
-                  Communication
-                </span>
-
-                <select
-                  value={
-                    communicationMode[email.id] ||
-                    "automatic"
-                  }
-                  onChange={(event) =>
-                    handleCommunicationChange(
-                      email.id,
-                      event.target.value
-                    )
-                  }
-                >
-
-                  <option value="automatic">
-                    Automatic
-                  </option>
-
-                  <option value="draft">
-                    Draft
-                  </option>
-
-                </select>
-
-              </div>
-
-              {/* SUBJECT */}
-
-              <div className="email-subject">
-
-                <span>
-                  Subject
-                </span>
-
-                <p>
-                  {email.subject}
-                </p>
-
-              </div>
-
-              {/* ACTIONS */}
-
-              <div className="email-actions">
-
-                <button
-                  type="button"
-                  className="preview-button"
-                  onClick={() =>
-                    handlePreview(email)
-                  }
-                >
-                  Preview
-                </button>
-
-                {/* Edit is most useful for Draft */}
-
-                {communicationMode[email.id] === "draft" && (
+                <div className="email-actions">
 
                   <button
                     type="button"
-                    className="edit-button"
+                    className="preview-button"
                     onClick={() =>
-                      handleEdit(email)
+                      handlePreview(email)
                     }
                   >
-                    Edit Draft
+                    Preview
                   </button>
 
-                )}
+                  {/* Edit is most useful for Draft */}
 
-                {/* Send button */}
+                  {communicationMode[email.id] === "draft" && (
 
-                <button
-                  type="button"
-                  className="send-button"
-                  onClick={() =>
-                    handleSend(email.id)
-                  }
-                >
-                  Send
-                </button>
+                    <button
+                      type="button"
+                      className="edit-button"
+                      onClick={() =>
+                        handleEdit(email)
+                      }
+                    >
+                      Edit Draft
+                    </button>
+
+                  )}
+
+                  {/* Send button */}
+
+                  <button
+                    type="button"
+                    className="send-button"
+                    onClick={() =>
+                      handleSend(email.id)
+                    }
+                  >
+                    Send
+                  </button>
+
+                </div>
 
               </div>
 
-            </div>
-
-          ))
+            ))
 
         )}
 

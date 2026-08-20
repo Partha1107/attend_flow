@@ -795,3 +795,39 @@
   outline: none;
   border-color: #2563eb;
 }
+/* =====================================
+   AUTOMATION ACTIONS
+===================================== */
+
+.automation-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.send-automatic-button,
+.review-drafts-button,
+.show-all-button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.send-automatic-button {
+  background: #e8f7ee;
+  color: #16834a;
+}
+
+.review-drafts-button {
+  background: #fff4df;
+  color: #b76b00;
+}
+
+.show-all-button {
+  background: #eef2f7;
+  color: #374151;
+}
