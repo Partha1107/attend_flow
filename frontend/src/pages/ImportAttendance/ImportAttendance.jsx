@@ -94,31 +94,31 @@ const transformAttendanceData = (data) => {
         name,
         sessionsConducted:
           row[
-            `Subject ${subjectNumber} Sessions Conducted`
+          `Subject ${subjectNumber} Sessions Conducted`
           ],
         sessionsAttended:
           row[
-            `Subject ${subjectNumber} Sessions Attended`
+          `Subject ${subjectNumber} Sessions Attended`
           ],
         sessionsAbsent:
           row[
-            `Subject ${subjectNumber} Sessions Absent`
+          `Subject ${subjectNumber} Sessions Absent`
           ],
         attendancePercentage:
           row[
-            `Subject ${subjectNumber} Attendance %`
+          `Subject ${subjectNumber} Attendance %`
           ],
         sessionsMarkedOD:
           row[
-            `Subject ${subjectNumber} Sessions Marked OD`
+          `Subject ${subjectNumber} Sessions Marked OD`
           ],
         sessionsMedicalLeave:
           row[
-            `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
+          `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
           ],
         sessionsAppliedLeave:
           row[
-            `Subject ${subjectNumber} Sessions Applied Leave`
+          `Subject ${subjectNumber} Sessions Applied Leave`
           ],
       };
 
@@ -192,6 +192,9 @@ function ImportAttendance() {
 
   const [attendanceData, setAttendanceData] =
     useState([]);
+
+  const [studentSearch, setStudentSearch] =
+    useState("");
 
   const [error, setError] =
     useState("");
@@ -885,25 +888,81 @@ function ImportAttendance() {
             </div>
           </div>
 
+
           <div className="student-search">
             <input
               type="text"
               placeholder="Search student..."
+              value={studentSearch}
+              onChange={(event) =>
+                setStudentSearch(event.target.value)
+              }
             />
           </div>
 
           <div className="student-list">
 
-            {attendanceData.map(
-              (student) => (
+            {attendanceData
+              .filter((student) => {
+                const searchValue =
+                  studentSearch.toLowerCase().trim();
+
+                if (!searchValue) {
+                  return true;
+                }
+
+                return (
+                  student.name
+                    ?.toLowerCase()
+                    .includes(searchValue) ||
+                  student.email
+                    ?.toLowerCase()
+                    .includes(searchValue) ||
+                  student.squad
+                    ?.toLowerCase()
+                    .includes(searchValue)
+                );
+              })
+              .map((student) => (
                 <StudentAttendanceCard
                   key={student.email}
                   student={student}
                 />
-              )
-            )}
+              ))}
+
+            {attendanceData.filter((student) => {
+              const searchValue =
+                studentSearch.toLowerCase().trim();
+
+              if (!searchValue) {
+                return true;
+              }
+
+              return (
+                student.name
+                  ?.toLowerCase()
+                  .includes(searchValue) ||
+                student.email
+                  ?.toLowerCase()
+                  .includes(searchValue) ||
+                student.squad
+                  ?.toLowerCase()
+                  .includes(searchValue)
+              );
+            }).length === 0 && (
+                <div className="empty-search">
+                  <h3>No students found</h3>
+                  <p>
+                    Try searching with a different name,
+                    email, or squad.
+                  </p>
+                </div>
+              )}
 
           </div>
+
+
+
 
         </div>
       )}

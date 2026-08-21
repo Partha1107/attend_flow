@@ -330,3 +330,432 @@
     padding: 18px;
   }
 }
+
+/* =========================================================
+   IMPORT ATTENDANCE - NEW UI LAYOUT
+========================================================= */
+
+/* Main page */
+.import-attendance-page {
+  padding: 32px 40px;
+  min-height: 100%;
+  background: #f8fafc;
+}
+
+/* Keep content centered */
+.page-header,
+.import-card,
+.import-summary,
+.import-preview {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* =========================================================
+   UPLOAD CARD
+========================================================= */
+
+.import-card {
+  padding: 38px 50px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.import-card h2 {
+  margin-bottom: 8px;
+}
+
+.import-card p {
+  margin-bottom: 18px;
+}
+
+
+/* =========================================================
+   UPLOAD BUTTON
+========================================================= */
+
+.upload-button {
+  min-width: 210px;
+  padding: 13px 24px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  background: #111827;
+  color: #ffffff;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.upload-button:hover {
+  background: #1f2937;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(17, 24, 39, 0.18);
+}
+
+
+/* =========================================================
+   IMPORT ATTENDANCE BUTTON
+========================================================= */
+
+.import-submit-button {
+  margin-top: 20px;
+
+  min-width: 220px;
+  padding: 13px 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.20);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.import-submit-button:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+}
+
+.import-submit-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SUCCESS MESSAGE
+========================================================= */
+
+.import-success {
+  width: min(100%, 760px);
+}
+
+
+/* =========================================================
+   IMPORT SUMMARY
+========================================================= */
+
+.import-summary {
+  margin-top: 28px;
+
+  padding: 26px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+}
+
+.import-summary h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+
+/* Summary becomes a dashboard grid */
+.summary-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+
+/* Individual summary boxes */
+.summary-item {
+  min-height: 105px;
+
+  padding: 18px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+
+  border-color: #bfdbfe;
+
+  box-shadow:
+    0 8px 18px rgba(37, 99, 235, 0.08);
+}
+
+.summary-item span {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.summary-item strong {
+  font-size: 27px;
+  color: #111827;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   EXCEL PREVIEW
+========================================================= */
+
+.import-preview {
+  margin-top: 28px;
+
+  padding: 26px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 6px 20px rgba(15, 23, 42, 0.05);
+}
+
+.import-preview h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.import-preview > p {
+  margin-top: 6px;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.student-search {
+  width: 100%;
+  margin: 18px 0;
+}
+
+.student-search input {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 12px 15px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.student-search input:focus {
+  outline: none;
+
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* =========================================================
+   STUDENT LIST
+========================================================= */
+
+/*
+  This is the main change.
+
+  Instead of:
+  Student 1
+  Student 2
+  Student 3
+  Student 4
+
+  it becomes:
+  Student 1 | Student 2
+  Student 3 | Student 4
+*/
+
+.student-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+
+  width: 100%;
+
+  max-height: 680px;
+
+  overflow-y: auto;
+
+  padding: 4px;
+}
+
+
+/* Student cards */
+.student-list > * {
+  width: 100%;
+  box-sizing: border-box;
+
+  min-height: 0;
+}
+
+
+/* =========================================================
+   SCROLL BAR
+========================================================= */
+
+.student-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.student-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.student-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.student-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .summary-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .student-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .import-attendance-page {
+    padding: 20px;
+  }
+
+  .import-card {
+    padding: 30px 20px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-list {
+    grid-template-columns: 1fr;
+    max-height: 550px;
+  }
+
+  .import-preview,
+  .import-summary {
+    padding: 20px;
+  }
+}
+
+.empty-search {
+  grid-column: 1 / -1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 180px;
+  padding: 30px;
+
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+
+  background: #f8fafc;
+
+  text-align: center;
+}
+
+.empty-search h3 {
+  margin: 0 0 8px;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #111827;
+}
+
+.empty-search p {
+  margin: 0;
+
+  font-size: 14px;
+  color: #6b7280;
+}
