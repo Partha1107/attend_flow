@@ -125,6 +125,33 @@ function StudentAttendanceCard({ student }) {
                                         );
                                     }
                                 )}
+
+                                {student.growthHour && (
+                                    <tr className="growth-hour-row">
+                                        <td className="subject-name">
+                                            Growth Hour
+                                        </td>
+
+                                        <td>
+                                            {Number(
+                                                student.growthHour.sessionsAttended
+                                            ) || 0}
+                                        </td>
+
+                                        <td>
+                                            {Number(
+                                                student.growthHour.sessionsConducted
+                                            ) || 0}
+                                        </td>
+
+                                        <td className="attendance-percentage">
+                                            {parseFloat(
+                                                student.growthHour.attendancePercentage
+                                            ).toFixed(2)}
+                                            %
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
 
                         </table>
