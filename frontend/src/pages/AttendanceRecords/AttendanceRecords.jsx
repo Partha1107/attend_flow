@@ -3,22 +3,12 @@ import { RefreshCw, Search } from "lucide-react";
 import { supabase, supabaseConfigError } from "../../lib/supabase";
 import "./AttendanceRecords.css";
 
-const STATUS_LABELS = {
-  present: "Present",
-  absent: "Absent",
-  late: "Late",
-  OD: "On Duty",
-  ML: "Medical Leave",
-  LI: "Leave",
-};
-
 const AttendanceRecords = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
+  const [attendanceFilter, setAttendanceFilter] = useState("all");
 
   const fetchRecords = useCallback(async () => {
     if (!supabase) {
@@ -31,32 +21,40 @@ const AttendanceRecords = () => {
     setError("");
 
     try {
-      let query = supabase
-        .from("attendance_records")
-        .select("*, sessions(*)")
-        .order("created_at", { ascending: false })
-        .limit(300);
+      const [attendanceResult, growthHourResult] = await Promise.all([
+        supabase
+          .from("attendance")
+          .select("*, students(name, email), subjects(name)")
+          .order("updated_at", { ascending: false })
+          .limit(300),
+        supabase
+          .from("growth_hour_attendance")
+          .select("*, students(name, email)")
+          .order("updated_at", { ascending: false })
+          .limit(300),
+      ]);
 
-      if (statusFilter !== "all") {
-        query = query.eq("attendance", statusFilter);
+      if (attendanceResult.error) {
+        throw new Error(attendanceResult.error.message);
       }
 
-      if (dateFilter) {
-        query = query.eq("sessions.date", dateFilter);
+      if (growthHourResult.error) {
+        throw new Error(growthHourResult.error.message);
       }
 
-      const { data, error: queryError } = await query;
+      const growthHourRecords = (growthHourResult.data || []).map((record) => ({
+        ...record,
+        subjects: { name: "Growth Hour" },
+      }));
 
-      if (queryError) throw new Error(queryError.message);
-
-      setRecords(data || []);
+      setRecords([...(attendanceResult.data || []), ...growthHourRecords]);
     } catch (err) {
       console.error("Failed to fetch attendance records:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, dateFilter]);
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -68,16 +66,31 @@ const AttendanceRecords = () => {
 
   const filteredRecords = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return records;
-    return records.filter((r) =>
-      r.student_email.toLowerCase().includes(q)
-    );
-  }, [records, search]);
+    return records.filter((record) => {
+      const searchableText = [
+        record.students?.email,
+        record.students?.name,
+        record.subjects?.name,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const percentage = Number(record.attendance_percentage) || 0;
+      const matchesAttendance =
+        attendanceFilter === "all" ||
+        (attendanceFilter === "below-75"
+          ? percentage < 75
+          : percentage >= 75);
+
+      return searchableText.includes(q) && matchesAttendance;
+    });
+  }, [records, search, attendanceFilter]);
 
   const stats = useMemo(() => {
     const counts = { total: filteredRecords.length };
     filteredRecords.forEach((r) => {
-      const status = (r.attendance || "unknown").toLowerCase();
+      const status =
+        Number(r.attendance_percentage) < 75 ? "below75" : "above75";
       counts[status] = (counts[status] || 0) + 1;
     });
     return counts;
@@ -86,15 +99,6 @@ const AttendanceRecords = () => {
   const formatDate = (value) => {
     if (!value) return "—";
     return new Date(value).toLocaleDateString();
-  };
-
-  const formatTime = (value) => {
-    if (!value) return "—";
-    const [h, m] = String(value).split(":");
-    const hour = parseInt(h, 10);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-    return `${displayHour}:${m} ${ampm}`;
   };
 
   return (
@@ -129,24 +133,13 @@ const AttendanceRecords = () => {
 
         <select
           className="status-select"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          value={attendanceFilter}
+          onChange={(e) => setAttendanceFilter(e.target.value)}
         >
-          <option value="all">All Statuses</option>
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-          <option value="late">Late</option>
-          <option value="OD">On Duty (OD)</option>
-          <option value="ML">Medical Leave (ML)</option>
-          <option value="LI">Leave (LI)</option>
+          <option value="all">All Attendance</option>
+          <option value="below-75">Below 75%</option>
+          <option value="above-75">75% and above</option>
         </select>
-
-        <input
-          type="date"
-          className="date-filter"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-        />
       </div>
 
       <div className="records-stats">
@@ -155,22 +148,16 @@ const AttendanceRecords = () => {
           <strong>{stats.total || 0}</strong>
         </div>
         <div className="stat-box present">
-          <span>Present</span>
-          <strong>{stats.present || 0}</strong>
+          <span>75% and above</span>
+          <strong>{stats.above75 || 0}</strong>
         </div>
         <div className="stat-box absent">
-          <span>Absent</span>
-          <strong>{stats.absent || 0}</strong>
-        </div>
-        <div className="stat-box late">
-          <span>Late</span>
-          <strong>{stats.late || 0}</strong>
+          <span>Below 75%</span>
+          <strong>{stats.below75 || 0}</strong>
         </div>
         <div className="stat-box flags">
-          <span>OD / ML / LI</span>
-          <strong>
-            {(stats.od || 0) + (stats.ml || 0) + (stats.li || 0)}
-          </strong>
+          <span>Imported Subjects</span>
+          <strong>{stats.total || 0}</strong>
         </div>
       </div>
 
@@ -187,55 +174,53 @@ const AttendanceRecords = () => {
           <table className="records-table">
             <thead>
               <tr>
-                <th>Student Email</th>
-                <th>Date</th>
+                <th>Student</th>
+                <th>Academic Year</th>
                 <th>Subject</th>
-                <th>Time</th>
-                <th>Status</th>
+                <th>Attendance</th>
+                <th>Sessions</th>
                 <th>Flags</th>
                 <th>Recorded At</th>
               </tr>
             </thead>
             <tbody>
               {filteredRecords.map((r) => {
-                const session = r.sessions;
-                const status = (r.attendance || "unknown").toLowerCase();
-                const badgeClass = status.replace(/[^a-z0-9]/gi, "");
+                const percentage = Number(r.attendance_percentage) || 0;
+                const status = percentage < 75 ? "below75" : "above75";
                 const flags = [];
-                if (r.is_OD) flags.push("OD");
-                if (r.is_ML) flags.push("ML");
-                if (r.is_LI) flags.push("LI");
+                if (r.sessions_marked_od) flags.push(`OD (${r.sessions_marked_od})`);
+                if (r.sessions_medical_leave) flags.push(`ML (${r.sessions_medical_leave})`);
+                if (r.sessions_applied_leave) flags.push(`LI (${r.sessions_applied_leave})`);
 
                 return (
                   <tr key={r.id}>
-                    <td className="email-cell">{r.student_email}</td>
-                    <td>{formatDate(session?.date)}</td>
-                    <td>{session?.subject_title || "—"}</td>
                     <td>
-                      {formatTime(session?.start_at)}
-                      {session?.end_at
-                        ? ` — ${formatTime(session.end_at)}`
-                        : ""}
+                      <strong>{r.students?.name || "—"}</strong>
+                      <br />
+                      <span className="email-cell">{r.students?.email || "—"}</span>
                     </td>
+                    <td>{r.academic_year || "—"}</td>
+                    <td>{r.subjects?.name || "—"}</td>
                     <td>
-                      <span className={`status-badge ${badgeClass}`}>
-                        {STATUS_LABELS[r.attendance] || r.attendance}
+                      <span className={`status-badge ${status}`}>
+                        {percentage.toFixed(2)}%
                       </span>
                     </td>
+                    <td>{r.sessions_attended || 0} / {r.sessions_conducted || 0}</td>
                     <td>
                       {flags.length === 0 ? (
                         <span className="no-flags">—</span>
                       ) : (
                         <div className="flag-list">
                           {flags.map((f) => (
-                            <span key={f} className={`flag-chip flag-${f.toLowerCase()}`}>
+                            <span key={f} className={`flag-chip flag-${f.slice(0, 2).toLowerCase()}`}>
                               {f}
                             </span>
                           ))}
                         </div>
                       )}
                     </td>
-                    <td>{new Date(r.created_at).toLocaleString()}</td>
+                    <td>{formatDate(r.updated_at)}</td>
                   </tr>
                 );
               })}

@@ -12,34 +12,44 @@ const attendanceData = [
   {
     id: "STU001",
     name: "Rahul Kumar",
-    email: "rahul@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 62,
   },
+
   {
     id: "STU002",
     name: "Priya Sharma",
-    email: "priya@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 68,
   },
+
   {
     id: "STU003",
     name: "Arun Kumar",
-    email: "arun@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 72,
   },
+
   {
     id: "STU004",
     name: "Karthik Raj",
-    email: "karthik@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 58,
   },
+
   {
     id: "STU005",
     name: "Divya Sri",
-    email: "divya@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 84,
   },
 ];
+
 
 /*
   Attendance rules
