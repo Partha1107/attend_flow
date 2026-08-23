@@ -660,7 +660,10 @@ const importAttendance = async (req, res) => {
                 error: attendanceUpsertError,
             } = await supabase
                 .from("attendance")
-                .insert(attendanceRows);
+                .upsert(attendanceRows, {
+                    onConflict:
+                        "student_id,subject_id,academic_year",
+                });
 
             if (attendanceUpsertError) {
                 throw attendanceUpsertError;
