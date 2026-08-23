@@ -1,14 +1,27 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { calculateOverallAttendance } from "../utils/attendanceUtils";
 import "./StudentAttendanceCard.css";
 
 function StudentAttendanceCard({ student }) {
-    const [isExpanded, setIsExpanded] =
+    const [isDetailsOpen, setIsDetailsOpen] =
         useState(false);
 
     const overallAttendance =
         calculateOverallAttendance(student);
+
+    useEffect(() => {
+        if (!isDetailsOpen) return undefined;
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                setIsDetailsOpen(false);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [isDetailsOpen]);
 
     return (
         <div className="student-attendance-card">
@@ -38,30 +51,42 @@ function StudentAttendanceCard({ student }) {
             <button
                 type="button"
                 className="attendance-details-button"
-                onClick={() =>
-                    setIsExpanded(!isExpanded)
-                }
+                onClick={() => setIsDetailsOpen(true)}
             >
-                <span>
-                    {isExpanded
-                        ? "Hide Attendance Details"
-                        : "View Attendance Details"}
-                </span>
-
-                <ChevronDown
-                    size={18}
-                    className={
-                        isExpanded
-                            ? "chevron-expanded"
-                            : ""
-                    }
-                />
+                View Attendance Details
             </button>
 
-            {isExpanded && (
-                <div className="attendance-details">
+            {isDetailsOpen && (
+                <div
+                    className="attendance-modal-overlay"
+                    onClick={() => setIsDetailsOpen(false)}
+                >
+                    <div
+                        className="attendance-details-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={`attendance-title-${student.email}`}
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="attendance-modal-header">
+                            <div>
+                                <h2 id={`attendance-title-${student.email}`}>
+                                    Attendance Details
+                                </h2>
+                                <p>{student.name} · Squad {student.squad}</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="attendance-modal-close"
+                                aria-label="Close attendance details"
+                                onClick={() => setIsDetailsOpen(false)}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
 
-                    <div className="attendance-table-wrapper">
+                        <div className="attendance-details">
+                            <div className="attendance-table-wrapper">
 
                         <table className="attendance-table">
 
@@ -156,8 +181,17 @@ function StudentAttendanceCard({ student }) {
 
                         </table>
 
-                    </div>
+                            </div>
+                        </div>
 
+                        <button
+                            type="button"
+                            className="attendance-modal-done"
+                            onClick={() => setIsDetailsOpen(false)}
+                        >
+                            Close
+                        </button>
+                    </div>
                 </div>
             )}
 
