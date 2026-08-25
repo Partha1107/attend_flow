@@ -15,6 +15,7 @@ import StudentPage from "../pages/student-page/StudentPage";
 import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHistory";
 import EmailAutomation from "../pages/EmailAutomation/EmailAutomation";
 import NotFound from "../pages/NotFound page/NotFound";
+import Settings from "../pages/Settingspage/Settingspage"
 
 function AppRoutes() {
   return (
@@ -48,6 +49,11 @@ function AppRoutes() {
           <Route
             path="import-attendance"
             element={<ImportAttendance />}
+          />
+
+          <Route
+            path="/settings"
+            element={<Settings />}
           />
 
           <Route

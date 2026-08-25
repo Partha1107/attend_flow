@@ -54,6 +54,7 @@ const mainItems = [
     icon: Settings,
     to: "/settings",
   },
+  
 ];
 
 function Sidebar({ open = false, onClose = () => { } }) {
