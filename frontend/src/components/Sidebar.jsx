@@ -1,6 +1,5 @@
 import {
   AlertTriangle,
-  BarChart3,
   Bell,
   ChevronDown,
   FileSpreadsheet,
@@ -43,11 +42,6 @@ const mainItems = [
     label: "Email Automation",
     icon: Mail,
     to: "/email-automation",
-  },
-  {
-    label: "Analytics",
-    icon: BarChart3,
-    to: "/analytics",
   },
   {
     label: "Settings",

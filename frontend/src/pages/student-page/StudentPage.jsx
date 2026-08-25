@@ -12,7 +12,6 @@ const students = [
     phone: "+91 98765 43210",
     dob: "15 March 2005",
     gender: "Male",
-    semester: "IV Semester",
   },
   {
     id: "STU045",
@@ -24,7 +23,6 @@ const students = [
     phone: "+91 98765 43211",
     dob: "20 July 2005",
     gender: "Female",
-    semester: "IV Semester",
   },
   {
     id: "STU089",
@@ -36,7 +34,6 @@ const students = [
     phone: "+91 98765 43212",
     dob: "12 January 2004",
     gender: "Male",
-    semester: "VI Semester",
   },
   {
     id: "STU112",
@@ -48,7 +45,6 @@ const students = [
     phone: "+91 98765 43213",
     dob: "5 September 2006",
     gender: "Female",
-    semester: "II Semester",
   },
   {
     id: "STU134",
@@ -60,7 +56,6 @@ const students = [
     phone: "+91 98765 43214",
     dob: "28 November 2004",
     gender: "Male",
-    semester: "VI Semester",
   },
 ];
 
@@ -347,10 +342,6 @@ function StudentPage() {
                   <strong>{selectedStudent.squad}</strong>
                 </div>
 
-                <div>
-                  <span>Semester</span>
-                  <strong>{selectedStudent.semester}</strong>
-                </div>
               </div>
             </div>
 
@@ -469,19 +460,6 @@ function StudentPage() {
                 </select>
                 
 
-                <select required defaultValue="">
-                  <option value="" disabled>
-                    Semester
-                  </option>
-                  <option>I Semester</option>
-                  <option>II Semester</option>
-                  <option>III Semester</option>
-                  <option>IV Semester</option>
-                  <option>V Semester</option>
-                  <option>VI Semester</option>
-                  <option>VII Semester</option>
-                  <option>VIII Semester</option>
-                </select>
               </div>
 
               <div className="modal-actions">

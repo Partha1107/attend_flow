@@ -7,6 +7,7 @@ import {
 import * as XLSX from "xlsx";
 import "./ImportAttendance.css";
 import StudentAttendanceCard from "../../components/StudentAttendanceCard";
+import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 
 const API_URL = "http://localhost:5000";
 
@@ -196,6 +197,9 @@ function ImportAttendance() {
   const [studentSearch, setStudentSearch] =
     useState("");
 
+  const [attendanceFilter, setAttendanceFilter] =
+    useState("");
+
   const [error, setError] =
     useState("");
 
@@ -210,6 +214,25 @@ function ImportAttendance() {
 
   const [importSummary, setImportSummary] =
     useState(null);
+
+  const filteredStudents = attendanceData.filter((student) => {
+    const searchValue = studentSearch.toLowerCase().trim();
+    const overallAttendance = calculateOverallAttendance(student);
+
+    const matchesSearch =
+      !searchValue ||
+      student.name?.toLowerCase().includes(searchValue) ||
+      student.email?.toLowerCase().includes(searchValue) ||
+      student.squad?.toLowerCase().includes(searchValue);
+
+    const matchesAttendance =
+      !attendanceFilter ||
+      (attendanceFilter === "below-75"
+        ? overallAttendance < 75
+        : overallAttendance >= 75);
+
+    return matchesSearch && matchesAttendance;
+  });
 
   // ---------------------------------------
   // Select Excel
@@ -898,31 +921,23 @@ function ImportAttendance() {
                 setStudentSearch(event.target.value)
               }
             />
+
+            <select
+              value={attendanceFilter}
+              onChange={(event) =>
+                setAttendanceFilter(event.target.value)
+              }
+              aria-label="Filter by attendance percentage"
+            >
+              <option value="">All Attendance</option>
+              <option value="below-75">Below 75%</option>
+              <option value="above-75">75% and above</option>
+            </select>
           </div>
 
           <div className="student-list">
 
-            {attendanceData
-              .filter((student) => {
-                const searchValue =
-                  studentSearch.toLowerCase().trim();
-
-                if (!searchValue) {
-                  return true;
-                }
-
-                return (
-                  student.name
-                    ?.toLowerCase()
-                    .includes(searchValue) ||
-                  student.email
-                    ?.toLowerCase()
-                    .includes(searchValue) ||
-                  student.squad
-                    ?.toLowerCase()
-                    .includes(searchValue)
-                );
-              })
+            {filteredStudents
               .map((student) => (
                 <StudentAttendanceCard
                   key={student.email}
@@ -930,26 +945,7 @@ function ImportAttendance() {
                 />
               ))}
 
-            {attendanceData.filter((student) => {
-              const searchValue =
-                studentSearch.toLowerCase().trim();
-
-              if (!searchValue) {
-                return true;
-              }
-
-              return (
-                student.name
-                  ?.toLowerCase()
-                  .includes(searchValue) ||
-                student.email
-                  ?.toLowerCase()
-                  .includes(searchValue) ||
-                student.squad
-                  ?.toLowerCase()
-                  .includes(searchValue)
-              );
-            }).length === 0 && (
+            {filteredStudents.length === 0 && (
                 <div className="empty-search">
                   <h3>No students found</h3>
                   <p>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 import "./EmailAutomation.css";
 
 /*
@@ -11,34 +12,44 @@ const attendanceData = [
   {
     id: "STU001",
     name: "Rahul Kumar",
-    email: "rahul@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 62,
   },
+
   {
     id: "STU002",
     name: "Priya Sharma",
-    email: "priya@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 68,
   },
+
   {
     id: "STU003",
     name: "Arun Kumar",
-    email: "arun@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 72,
   },
+
   {
     id: "STU004",
     name: "Karthik Raj",
-    email: "karthik@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 58,
   },
+
   {
     id: "STU005",
     name: "Divya Sri",
-    email: "divya@student.edu",
+    email: "karthikeyan9826@gmail.com",
+    parentEmail: "karthikeyan9826@gmail.com",
     attendance: 84,
   },
 ];
+
 
 /*
   Attendance rules
@@ -83,6 +94,8 @@ const generateEmail = (student) => {
 };
 
 function EmailAutomation() {
+  const [mentorName, setMentorName] = useState("Mentor");
+  const [mentorEmail, setMentorEmail] = useState("");
   /*
     Today's date
   */
@@ -141,6 +154,35 @@ function EmailAutomation() {
     if (storedHistory) {
       setSentEmails(JSON.parse(storedHistory));
     }
+  }, []);
+
+  useEffect(() => {
+    const getMentor = async () => {
+      if (!supabase) return;
+
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error("Failed to get mentor:", error.message);
+        return;
+      }
+
+      if (user) {
+        const name =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email?.split("@")[0] ||
+          "Mentor";
+
+        setMentorName(name);
+        setMentorEmail(user.email || "");
+      }
+    };
+
+    getMentor();
   }, []);
 
   useEffect(() => {
@@ -219,7 +261,7 @@ function EmailAutomation() {
     setCommunicationMode(draftModes);
   };
 
-  const handleSendAutomaticEmails = () => {
+  const handleSendAutomaticEmails = async () => {
     const automaticEmails = emailDrafts.filter(
       (email) => communicationMode[email.id] === "automatic"
     );
@@ -229,29 +271,72 @@ function EmailAutomation() {
       return;
     }
 
-    setSentEmails((current) => [
-      ...current,
-      ...automaticEmails.map((email) => ({
-  ...email,
-  id: `MSG-${Date.now()}-${email.id}`,
-  date: new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }),
-  time: new Date().toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }),
-  type: "Email",
-  recipient: email.email,
-  name: email.name,
-  message: email.message,
-  status: "Sent",
-  communicationType: "automatic",
-}))
+    let successCount = 0;
+    let failedCount = 0;
 
-    ]);
+    for (const email of automaticEmails) {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/email-automation/send",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              mentorName,
+              mentorEmail,
+              studentName: email.name,
+              studentEmail: email.email,
+              parentEmail: email.parentEmail,
+              attendancePercentage: email.attendance,
+              subject: email.subject,
+              message: email.message,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Email sending failed"
+          );
+        }
+
+        successCount++;
+
+        setSentEmails((current) => [
+          ...current,
+          {
+            ...email,
+            id: `MSG-${Date.now()}-${email.id}`,
+            date: new Date().toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }),
+            time: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            type: "Email",
+            recipient: email.email,
+            name: email.name,
+            message: email.message,
+            status: "Sent",
+            communicationType: "automatic",
+          },
+        ]);
+      } catch (error) {
+        console.error(
+          `Failed to send email to ${email.email}:`,
+          error
+        );
+
+        failedCount++;
+      }
+    }
 
     setEmailDrafts((currentEmails) =>
       currentEmails.filter(
@@ -271,9 +356,13 @@ function EmailAutomation() {
     });
 
     alert(
-      `${automaticEmails.length} automatic emails sent successfully.`
+      `${successCount} email(s) sent successfully. ${failedCount > 0
+        ? `${failedCount} email(s) failed.`
+        : ""
+      }`
     );
   };
+
 
   const handleReviewDrafts = () => {
     setShowDraftOnly(true);
@@ -294,24 +383,24 @@ function EmailAutomation() {
     setSentEmails((current) => [
       ...current,
       ...reviewedEmails.map((email) => ({
-  ...email,
-  id: `MSG-${Date.now()}-${email.id}`,
-  date: new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }),
-  time: new Date().toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }),
-  type: "Email",
-  recipient: email.email,
-  name: email.name,
-  message: email.message,
-  status: "Sent",
-  communicationType: "draft",
-}))
+        ...email,
+        id: `MSG-${Date.now()}-${email.id}`,
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        time: new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        type: "Email",
+        recipient: email.email,
+        name: email.name,
+        message: email.message,
+        status: "Sent",
+        communicationType: "draft",
+      }))
 
     ]);
     setEmailDrafts((currentEmails) =>
@@ -399,59 +488,94 @@ function EmailAutomation() {
     For now this only simulates sending.
     Later this will call the backend.
   */
-  const handleSend = (id) => {
+  const handleSend = async (id) => {
     const student = emailDrafts.find(
       (email) => email.id === id
     );
 
     if (!student) return;
 
-    setSentEmails((current) => [
-      ...current,
-      {
-        ...student,
-        id: `MSG-${Date.now()}-${student.id}`,
-        date: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        time: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        type: "Email",
-        recipient: student.email,
-        name: student.name,
-        message: student.message,
-        status: "Sent",
-        communicationType:
-          communicationMode[student.id] || "automatic",
-      },
-    ]);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/email-automation/send",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mentorName,
+            mentorEmail,
+            studentName: student.name,
+            studentEmail: student.email,
+            attendancePercentage: student.attendance,
+            subject: student.subject,
+            message: student.message,
+          }),
+        }
+      );
 
-    alert(
-      `Email sent successfully to ${student.email}`
-    );
+      const data = await response.json();
 
-    setEmailDrafts((currentEmails) =>
-      currentEmails.filter(
-        (email) => email.id !== id
-      )
-    );
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Failed to send email"
+        );
+      }
 
-    setCommunicationMode((currentModes) => {
-      const updatedModes = {
-        ...currentModes,
-      };
+      setSentEmails((current) => [
+        ...current,
+        {
+          ...student,
+          id: `MSG-${Date.now()}-${student.id}`,
+          date: new Date().toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
+          time: new Date().toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          type: "Email",
+          recipient: student.email,
+          name: student.name,
+          message: student.message,
+          status: "Sent",
+          communicationType:
+            communicationMode[student.id] || "automatic",
+        },
+      ]);
 
-      delete updatedModes[id];
+      setEmailDrafts((currentEmails) =>
+        currentEmails.filter(
+          (email) => email.id !== id
+        )
+      );
 
-      return updatedModes;
-    });
+      setCommunicationMode((currentModes) => {
+        const updatedModes = {
+          ...currentModes,
+        };
 
-    setSelectedEmail(null);
-    setModalMode(null);
+        delete updatedModes[id];
+
+        return updatedModes;
+      });
+
+      setSelectedEmail(null);
+      setModalMode(null);
+
+      alert(
+        `Email sent successfully to ${student.email}`
+      );
+    } catch (error) {
+      console.error("Email sending error:", error);
+
+      alert(
+        `Failed to send email: ${error.message}`
+      );
+    }
   };
 
   /*

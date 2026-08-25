@@ -95,7 +95,7 @@
 
 .search-box {
   position: relative;
-  flex: 1;
+  flex: 0 1 380px;
   min-width: 280px;
 }
 
@@ -745,6 +745,7 @@
 
   .search-box {
     width: 100%;
+    flex-basis: auto;
   }
 
   .filter-container select {

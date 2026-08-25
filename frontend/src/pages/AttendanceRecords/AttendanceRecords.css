@@ -165,6 +165,8 @@
 .status-badge.present { background: #dcfce7; color: #166534; }
 .status-badge.absent { background: #fee2e2; color: #b91c1c; }
 .status-badge.late { background: #fef3c7; color: #b45309; }
+.status-badge.above75 { background: #dcfce7; color: #166534; }
+.status-badge.below75 { background: #fee2e2; color: #b91c1c; }
 .status-badge.od { background: #dbeafe; color: #1d4ed8; }
 .status-badge.ml { background: #ede9fe; color: #6d28d9; }
 .status-badge.li { background: #f1f5f9; color: #334155; }
