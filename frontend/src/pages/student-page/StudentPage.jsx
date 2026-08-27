@@ -1,71 +1,106 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./StudentPage.css";
 
-const students = [
-  {
-    id: "STU001",
-    name: "Arun Kumar",
-    squad: "138",
-    attendance: 92,
-    status: "Present",
-    email: "arun.kumar@example.com",
-    phone: "+91 98765 43210",
-    dob: "15 March 2005",
-    gender: "Male",
-  },
-  {
-    id: "STU045",
-    name: "Priya Sharma",
-    squad: "138",
-    attendance: 88,
-    status: "Present",
-    email: "priya.sharma@example.com",
-    phone: "+91 98765 43211",
-    dob: "20 July 2005",
-    gender: "Female",
-  },
-  {
-    id: "STU089",
-    name: "Rahul Kumar",
-    squad: "139",
-    attendance: 76,
-    status: "Absent",
-    email: "rahul.kumar@example.com",
-    phone: "+91 98765 43212",
-    dob: "12 January 2004",
-    gender: "Male",
-  },
-  {
-    id: "STU112",
-    name: "Divya S",
-    squad: "138",
-    attendance: 95,
-    status: "Present",
-    email: "divya.s@example.com",
-    phone: "+91 98765 43213",
-    dob: "5 September 2006",
-    gender: "Female",
-  },
-  {
-    id: "STU134",
-    name: "Karthik R",
-    squad: "139",
-    attendance: 81,
-    status: "Present",
-    email: "karthik.r@example.com",
-    phone: "+91 98765 43214",
-    dob: "28 November 2004",
-    gender: "Male",
-  },
-];
+
 
 function StudentPage() {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [squad, setSquad] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAddStudent, setShowAddStudent] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [detailsStudent, setDetailsStudent] = useState(null);
+
+  const [parentName, setParentName] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+
+  const openDetailsModal = (student) => {
+    setDetailsStudent(student);
+
+    setParentName(student.parent_name || "");
+    setParentEmail(student.parent_email || "");
+    setParentPhone(student.parent_phone || "");
+
+    setShowDetailsModal(true);
+  };
+
+  const saveStudentDetails = async (e) => {
+    e.preventDefault();
+
+    if (!detailsStudent) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/attendance/students/${detailsStudent.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            parent_name: parentName,
+            parent_email: parentEmail,
+            parent_phone: parentPhone,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Failed to save details"
+        );
+      }
+
+      setStudents((currentStudents) =>
+        currentStudents.map((student) =>
+          student.id === detailsStudent.id
+            ? result.student
+            : student
+        )
+      );
+
+      setShowDetailsModal(false);
+      setDetailsStudent(null);
+
+      alert("Student details saved successfully.");
+    } catch (error) {
+      console.error("Save student details error:", error);
+      alert(error.message || "Failed to save student details.");
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        "http://localhost:5000/api/attendance/students"
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to fetch students");
+      }
+
+      setStudents(result.students || []);
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -103,12 +138,100 @@ function StudentPage() {
 
         <button
           className="add-student-btn"
-          onClick={() => setShowAddStudent(true)}
+          onClick={fetchStudents}
         >
-          <span>+</span>
-          Add Student
+          <span>↻</span>
+          Refresh Students
         </button>
       </div>
+
+      {showDetailsModal && detailsStudent && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowDetailsModal(false)}
+        >
+          <div
+            className="add-student-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              onClick={() => setShowDetailsModal(false)}
+            >
+              ×
+            </button>
+
+            <h2>
+              {detailsStudent.parent_email
+                ? "Edit Student Details"
+                : "Add Student Details"}
+            </h2>
+
+            <p>
+              {detailsStudent.name} · {detailsStudent.email}
+            </p>
+
+            <form onSubmit={saveStudentDetails}>
+              <div className="form-grid">
+
+                <input
+                  type="text"
+                  value={detailsStudent.name || ""}
+                  readOnly
+                  placeholder="Student Name"
+                />
+
+                <input
+                  type="email"
+                  value={detailsStudent.email || ""}
+                  readOnly
+                  placeholder="Student Email"
+                />
+
+                <input
+                  type="text"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  placeholder="Parent Name"
+                />
+
+                <input
+                  type="email"
+                  value={parentEmail}
+                  onChange={(e) => setParentEmail(e.target.value)}
+                  placeholder="Parent Email"
+                  required
+                />
+
+                <input
+                  type="tel"
+                  value={parentPhone}
+                  onChange={(e) => setParentPhone(e.target.value)}
+                  placeholder="Parent Phone"
+                />
+
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="close-profile-btn"
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="edit-profile-btn"
+                >
+                  Save Details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="filter-container">
@@ -198,7 +321,11 @@ function StudentPage() {
           <span>Action</span>
         </div>
 
-        {filteredStudents.length > 0 ? (
+        {loading ? (
+          <div className="empty-state">
+            <h3>Loading students...</h3>
+          </div>
+        ) : filteredStudents.length > 0 ? (
           filteredStudents.map((student) => (
             <div className="student-row" key={student.id}>
               <div className="student-name">
@@ -216,26 +343,32 @@ function StudentPage() {
 
               <div>
                 <span
-                  className={`status-badge ${
-                    student.status === "Present"
-                      ? "status-present"
-                      : "status-absent"
-                  }`}
+                  className={`status-badge ${student.status === "Present"
+                    ? "status-present"
+                    : "status-absent"
+                    }`}
                 >
                   <span className="status-dot"></span>
                   {student.status}
                 </span>
               </div>
 
-              <div>
+              <div className="student-actions">
                 <button
                   className="view-profile-btn"
                   onClick={() => setSelectedStudent(student)}
                 >
                   View Profile
                 </button>
+
+                <button
+                  className="add-details-btn"
+                  onClick={() => openDetailsModal(student)}
+                >
+                  {student.parent_email ? "Edit Details" : "Add Details"}
+                </button>
               </div>
-              
+
             </div>
           ))
         ) : (
@@ -458,7 +591,7 @@ function StudentPage() {
                   <option value="138">138</option>
                   <option value="139">139</option>
                 </select>
-                
+
 
               </div>
 
