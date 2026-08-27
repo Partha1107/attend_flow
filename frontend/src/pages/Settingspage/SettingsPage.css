@@ -1,0 +1,326 @@
+/* ==========================================================================
+   Settings Content Styles
+   ========================================================================== */
+
+.settings-container {
+  padding: 32px 40px 48px;
+  width: 100%;
+  box-sizing: border-box;
+  animation: settingsFadeIn 0.2s ease-in-out;
+  position: relative;
+}
+
+.settings-header {
+  margin-bottom: 24px;
+}
+
+.settings-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.settings-header p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.settings-card {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  max-width: 640px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settings-card h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.settings-sublabel {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Styled Input Box */
+.settings-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  color: #0f172a;
+  background-color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.settings-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.settings-input[type="number"]::-webkit-inner-spin-button,
+.settings-input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.6;
+}
+
+/* Squad Multi-Input Row */
+.squad-input-wrapper {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.squad-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.squad-add-btn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.squad-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Squad Tags / Chips Container */
+.squad-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.squad-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.squad-chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #3b82f6;
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.squad-chip-remove:hover {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Empty & Loading States */
+.settings-loading {
+  padding: 20px 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.no-squads-msg {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Save Button Styles */
+.settings-save-btn {
+  align-self: flex-start;
+  padding: 10px 20px;
+  background-color: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 8px;
+}
+
+.settings-save-btn:hover:not(:disabled) {
+  background-color: #1e293b;
+}
+
+.settings-save-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.settings-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Floating Toast Notification System
+   ========================================================================== */
+
+.error-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background-color: #ffffff;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.error-toast.success-toast {
+  border-color: #bbf7d0;
+  border-left-color: #22c55e;
+}
+
+.error-toast.slide-out {
+  animation: toastSlideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.error-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.success-toast .error-icon-box {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.error-message-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* Animations */
+@keyframes settingsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 20px 16px 32px;
+  }
+
+  .settings-card {
+    padding: 20px;
+  }
+
+  .settings-save-btn {
+    width: 100%;
+  }
+
+  .squad-input-wrapper {
+    flex-direction: row;
+  }
+
+  .error-toast {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+  }
+}
