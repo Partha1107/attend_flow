@@ -5,8 +5,8 @@ dotenv.config();
 const express = require("express");
 const cors = require("cors");
 
-const attendanceRoutes = require("./src/routes/attendanceRoutes");
-const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
+// const attendanceRoutes = require("./src/routes/attendanceRoutes");
+// const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
 
 const app = express();
 
@@ -20,8 +20,8 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/email-automation", emailAutomationRoutes);
+// app.use("/api/attendance", attendanceRoutes);
+// app.use("/api/email-automation", emailAutomationRoutes);
 
 const PORT = process.env.PORT || 5000;
 

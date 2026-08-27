@@ -784,3 +784,26 @@
     flex-direction: column;
   }
 }
+.student-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-details-btn {
+  background: #ffffff;
+  border: 1px solid rgba(90, 168, 248, 0.3);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  color: #0e8a5c;
+  transition: 0.2s ease;
+}
+
+.add-details-btn:hover {
+  background: #dff7ed;
+  border-color: #0e8a5c;
+}

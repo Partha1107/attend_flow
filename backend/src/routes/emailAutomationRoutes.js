@@ -14,4 +14,9 @@ router.post(
   emailAutomationController.sendAttendanceEmail
 );
 
+router.get(
+  "/records",
+  emailAutomationController.getEmailAutomationRecords
+);    
+
 module.exports = router;

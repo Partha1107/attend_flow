@@ -1057,12 +1057,78 @@ const importAttendance = async (
     }
 };
 
-// ============================================================
-// EXPORTS
-// ============================================================
+const getStudents = async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("students")
+            .select("*")
+            .order("name", { ascending: true });
+
+        if (error) {
+            throw error;
+        }
+
+        res.json({
+            success: true,
+            students: data || [],
+        });
+    } catch (error) {
+        console.error("Get students error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch students",
+            error: error.message,
+        });
+    }
+};
+
+const updateStudentDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const {
+            parent_name,
+            parent_email,
+            parent_phone,
+        } = req.body;
+
+        const { data, error } = await supabase
+            .from("students")
+            .update({
+                parent_name: parent_name || null,
+                parent_email: parent_email || null,
+                parent_phone: parent_phone || null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", id)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        res.json({
+            success: true,
+            message: "Student details updated successfully",
+            student: data,
+        });
+    } catch (error) {
+        console.error("Update student details error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update student details",
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
     testSupabase,
     testAttendanceInsert,
     importAttendance,
+    getStudents,
+    updateStudentDetails,
 };
