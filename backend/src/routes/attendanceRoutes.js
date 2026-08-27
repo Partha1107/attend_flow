@@ -19,4 +19,14 @@ router.post(
     attendanceController.importAttendance
 );
 
+router.get(
+    "/students",
+    attendanceController.getStudents
+);
+
+router.patch(
+    "/students/:id",
+    attendanceController.updateStudentDetails
+);
+
 module.exports = router;

@@ -1,4 +1,5 @@
 const { BrevoClient } = require("@getbrevo/brevo");
+const supabase = require("../config/supabase");
 
 const brevo = new BrevoClient({
   apiKey: process.env.BREVO_API_KEY,
@@ -186,10 +187,37 @@ const sendAttendanceEmail = async (req, res) => {
   }
 };
 
+const getEmailAutomationRecords = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("email_automation")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Get email automation records error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch email automation records",
+      error: error.message,
+    });
+  }
+};
+
 // ==========================================
 // EXPORT
 // ==========================================
 module.exports = {
   sendTestEmail,
   sendAttendanceEmail,
-};
+  getEmailAutomationRecords,
+};  
