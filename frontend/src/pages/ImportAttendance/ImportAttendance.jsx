@@ -3,6 +3,7 @@ import {
   FileSpreadsheet,
   Upload,
   Database,
+  CalendarDays,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import "./ImportAttendance.css";
@@ -11,11 +12,19 @@ import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 
 const API_URL = "http://localhost:5000";
 
+// ============================================================
+// CONSTANT COLUMNS
+// ============================================================
+
 const CONSTANT_COLUMNS = [
   "email",
   "Name",
   "Squad",
 ];
+
+// ============================================================
+// SUBJECT FIELDS
+// ============================================================
 
 const SUBJECT_FIELDS = [
   "Name",
@@ -29,6 +38,10 @@ const SUBJECT_FIELDS = [
   "Sessions Applied Leave",
 ];
 
+// ============================================================
+// GROWTH HOUR FIELDS
+// ============================================================
+
 const GROWTH_HOUR_FIELDS = [
   "Name",
   "Sessions Conducted",
@@ -40,9 +53,51 @@ const GROWTH_HOUR_FIELDS = [
   "Sessions Applied Leave",
 ];
 
-// ---------------------------------------
-// Detect normal Subject N columns
-// ---------------------------------------
+// ============================================================
+// SEMESTERS
+// ============================================================
+
+const SEMESTERS = [
+  {
+    value: "Sem 1",
+    label: "Semester 1",
+  },
+  {
+    value: "Sem 2",
+    label: "Semester 2",
+  },
+  {
+    value: "Sem 3",
+    label: "Semester 3",
+  },
+];
+
+// ============================================================
+// GET ACADEMIC YEAR FROM DATE
+// ============================================================
+
+const getAcademicYearFromDate = (date) => {
+  if (!date) return "";
+
+  const selectedDate = new Date(`${date}T00:00:00`);
+
+  if (Number.isNaN(selectedDate.getTime())) {
+    return "";
+  }
+
+  const year = selectedDate.getFullYear();
+
+  // Academic year starts in August
+  if (selectedDate.getMonth() >= 7) {
+    return `${year}-${year + 1}`;
+  }
+
+  return `${year - 1}-${year}`;
+};
+
+// ============================================================
+// DETECT SUBJECTS
+// ============================================================
 
 const detectSubjects = (columns) => {
   const subjectNumbers = new Set();
@@ -60,139 +115,167 @@ const detectSubjects = (columns) => {
   );
 };
 
-// ---------------------------------------
-// Detect Growth Hour columns
-// ---------------------------------------
+// ============================================================
+// DETECT GROWTH HOUR
+// ============================================================
 
 const detectGrowthHour = (columns) => {
-  return columns.some(
-    (column) =>
-      column.includes("Growth Hour")
+  return columns.some((column) =>
+    column.toLowerCase().includes("growth hour")
   );
 };
 
-// ---------------------------------------
-// Transform Excel data
-// ---------------------------------------
+// ============================================================
+// TRANSFORM EXCEL DATA
+// ============================================================
+
 const transformAttendanceData = (data) => {
   return data.map((row) => {
     const columns = Object.keys(row);
 
-    const subjectNumbers = detectSubjects(columns);
+    const subjectNumbers =
+      detectSubjects(columns);
 
     const subjects = [];
+
     let growthHour = null;
 
-    subjectNumbers.forEach((subjectNumber) => {
-      const id =
-        row[`Subject ${subjectNumber} ID`];
+    subjectNumbers.forEach(
+      (subjectNumber) => {
+        const id =
+          row[
+            `Subject ${subjectNumber} ID`
+          ];
 
-      const name =
-        row[`Subject ${subjectNumber} Name`];
+        const name =
+          row[
+            `Subject ${subjectNumber} Name`
+          ];
 
-      const subjectData = {
-        id,
-        name,
-        sessionsConducted:
-          row[
-          `Subject ${subjectNumber} Sessions Conducted`
-          ],
-        sessionsAttended:
-          row[
-          `Subject ${subjectNumber} Sessions Attended`
-          ],
-        sessionsAbsent:
-          row[
-          `Subject ${subjectNumber} Sessions Absent`
-          ],
-        attendancePercentage:
-          row[
-          `Subject ${subjectNumber} Attendance %`
-          ],
-        sessionsMarkedOD:
-          row[
-          `Subject ${subjectNumber} Sessions Marked OD`
-          ],
-        sessionsMedicalLeave:
-          row[
-          `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
-          ],
-        sessionsAppliedLeave:
-          row[
-          `Subject ${subjectNumber} Sessions Applied Leave`
-          ],
-      };
-
-      // ---------------------------------------
-      // Detect Growth Hour
-      // ---------------------------------------
-
-      const isGrowthHour =
-        (!id ||
-          String(id).trim() === "") &&
-        String(name || "")
-          .toLowerCase()
-          .includes("growth_hour");
-
-      if (isGrowthHour) {
-        growthHour = {
-          name:
-            name || "Growth Hour",
+        const subjectData = {
+          id,
+          name,
 
           sessionsConducted:
-            subjectData.sessionsConducted,
+            row[
+              `Subject ${subjectNumber} Sessions Conducted`
+            ],
 
           sessionsAttended:
-            subjectData.sessionsAttended,
+            row[
+              `Subject ${subjectNumber} Sessions Attended`
+            ],
 
           sessionsAbsent:
-            subjectData.sessionsAbsent,
+            row[
+              `Subject ${subjectNumber} Sessions Absent`
+            ],
 
           attendancePercentage:
-            subjectData.attendancePercentage,
+            row[
+              `Subject ${subjectNumber} Attendance %`
+            ],
 
           sessionsMarkedOD:
-            subjectData.sessionsMarkedOD,
+            row[
+              `Subject ${subjectNumber} Sessions Marked OD`
+            ],
 
           sessionsMedicalLeave:
-            subjectData.sessionsMedicalLeave,
+            row[
+              `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
+            ],
 
           sessionsAppliedLeave:
-            subjectData.sessionsAppliedLeave,
+            row[
+              `Subject ${subjectNumber} Sessions Applied Leave`
+            ],
         };
 
-        return;
-      }
+        // ======================================================
+        // GROWTH HOUR
+        // ======================================================
 
-      // ---------------------------------------
-      // Normal Subject
-      // ---------------------------------------
+        const isGrowthHour =
+          (!id ||
+            String(id).trim() === "") &&
+          String(name || "")
+            .toLowerCase()
+            .includes("growth_hour");
 
-      if (id && name) {
-        subjects.push(subjectData);
+        if (isGrowthHour) {
+          growthHour = {
+            name: name || "Growth Hour",
+
+            sessionsConducted:
+              subjectData.sessionsConducted,
+
+            sessionsAttended:
+              subjectData.sessionsAttended,
+
+            sessionsAbsent:
+              subjectData.sessionsAbsent,
+
+            attendancePercentage:
+              subjectData.attendancePercentage,
+
+            sessionsMarkedOD:
+              subjectData.sessionsMarkedOD,
+
+            sessionsMedicalLeave:
+              subjectData.sessionsMedicalLeave,
+
+            sessionsAppliedLeave:
+              subjectData.sessionsAppliedLeave,
+          };
+
+          return;
+        }
+
+        // ======================================================
+        // NORMAL SUBJECT
+        // ======================================================
+
+        if (id && name) {
+          subjects.push(subjectData);
+        }
       }
-    });
+    );
 
     return {
       email: row.email,
       name: row.Name,
       squad: row.Squad,
+
       subjects,
+
       growthHour,
     };
   });
 };
 
-// ---------------------------------------
-// Component
-// ---------------------------------------
+// ============================================================
+// COMPONENT
+// ============================================================
 
 function ImportAttendance() {
+  // ==========================================================
+  // FILE
+  // ==========================================================
+
   const [fileName, setFileName] =
     useState("");
 
+  // ==========================================================
+  // ATTENDANCE DATA
+  // ==========================================================
+
   const [attendanceData, setAttendanceData] =
     useState([]);
+
+  // ==========================================================
+  // SEARCH / FILTER
+  // ==========================================================
 
   const [studentSearch, setStudentSearch] =
     useState("");
@@ -200,14 +283,31 @@ function ImportAttendance() {
   const [attendanceFilter, setAttendanceFilter] =
     useState("");
 
+  // ==========================================================
+  // FORM DATA
+  // ==========================================================
+
+  const [academicYear, setAcademicYear] =
+    useState("");
+
+  const [semester, setSemester] =
+    useState("Sem 1");
+
+  const [periodStart, setPeriodStart] =
+    useState("");
+
+  const [periodEnd, setPeriodEnd] =
+    useState("");
+
+  // ==========================================================
+  // STATUS
+  // ==========================================================
+
   const [error, setError] =
     useState("");
 
   const [success, setSuccess] =
     useState("");
-
-  const [academicYear, setAcademicYear] =
-    useState("2026-2027");
 
   const [isImporting, setIsImporting] =
     useState(false);
@@ -215,30 +315,54 @@ function ImportAttendance() {
   const [importSummary, setImportSummary] =
     useState(null);
 
-  const filteredStudents = attendanceData.filter((student) => {
-    const searchValue = studentSearch.toLowerCase().trim();
-    const overallAttendance = calculateOverallAttendance(student);
+  // ==========================================================
+  // FILTER STUDENTS
+  // ==========================================================
 
-    const matchesSearch =
-      !searchValue ||
-      student.name?.toLowerCase().includes(searchValue) ||
-      student.email?.toLowerCase().includes(searchValue) ||
-      student.squad?.toLowerCase().includes(searchValue);
+  const filteredStudents =
+    attendanceData.filter((student) => {
+      const searchValue =
+        studentSearch
+          .toLowerCase()
+          .trim();
 
-    const matchesAttendance =
-      !attendanceFilter ||
-      (attendanceFilter === "below-75"
-        ? overallAttendance < 75
-        : overallAttendance >= 75);
+      const overallAttendance =
+        calculateOverallAttendance(
+          student
+        );
 
-    return matchesSearch && matchesAttendance;
-  });
+      const matchesSearch =
+        !searchValue ||
+        student.name
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        student.email
+          ?.toLowerCase()
+          .includes(searchValue) ||
+        String(student.squad || "")
+          .toLowerCase()
+          .includes(searchValue);
 
-  // ---------------------------------------
-  // Select Excel
-  // ---------------------------------------
+      const matchesAttendance =
+        !attendanceFilter ||
+        (attendanceFilter ===
+        "below-75"
+          ? overallAttendance < 75
+          : overallAttendance >= 75);
 
-  const handleFileChange = async (event) => {
+      return (
+        matchesSearch &&
+        matchesAttendance
+      );
+    });
+
+  // ==========================================================
+  // FILE CHANGE
+  // ==========================================================
+
+  const handleFileChange = async (
+    event
+  ) => {
     const file =
       event.target.files?.[0];
 
@@ -251,28 +375,42 @@ function ImportAttendance() {
     setAttendanceData([]);
 
     try {
+      // ======================================================
+      // READ FILE
+      // ======================================================
+
       const arrayBuffer =
         await file.arrayBuffer();
 
-      const workbook = XLSX.read(
-        arrayBuffer,
-        {
-          type: "array",
-        }
-      );
+      const workbook =
+        XLSX.read(
+          arrayBuffer,
+          {
+            type: "array",
+          }
+        );
 
-      if (!workbook.SheetNames.length) {
+      if (
+        !workbook.SheetNames.length
+      ) {
         setError(
           "The Excel file does not contain any sheets."
         );
+
         return;
       }
+
+      // ======================================================
+      // FIRST SHEET
+      // ======================================================
 
       const firstSheetName =
         workbook.SheetNames[0];
 
       const worksheet =
-        workbook.Sheets[firstSheetName];
+        workbook.Sheets[
+          firstSheetName
+        ];
 
       const data =
         XLSX.utils.sheet_to_json(
@@ -282,12 +420,21 @@ function ImportAttendance() {
           }
         );
 
+      // ======================================================
+      // EMPTY FILE
+      // ======================================================
+
       if (data.length === 0) {
         setError(
           "The Excel sheet is empty."
         );
+
         return;
       }
+
+      // ======================================================
+      // COLUMNS
+      // ======================================================
 
       const actualColumns =
         Object.keys(data[0]);
@@ -297,18 +444,21 @@ function ImportAttendance() {
         actualColumns
       );
 
-      // ---------------------------------------
-      // Validate constant columns
-      // ---------------------------------------
+      // ======================================================
+      // VALIDATE CONSTANT COLUMNS
+      // ======================================================
 
       const missingConstantColumns =
         CONSTANT_COLUMNS.filter(
           (column) =>
-            !actualColumns.includes(column)
+            !actualColumns.includes(
+              column
+            )
         );
 
       if (
-        missingConstantColumns.length > 0
+        missingConstantColumns.length >
+        0
       ) {
         setError(
           `Invalid Excel file. Missing required column(s): ${missingConstantColumns.join(
@@ -319,18 +469,18 @@ function ImportAttendance() {
         return;
       }
 
-      // ---------------------------------------
-      // Detect normal subjects
-      // ---------------------------------------
+      // ======================================================
+      // DETECT SUBJECTS
+      // ======================================================
 
       const subjectNumbers =
         detectSubjects(
           actualColumns
         );
 
-      // ---------------------------------------
-      // Detect Growth Hour
-      // ---------------------------------------
+      // ======================================================
+      // DETECT GROWTH HOUR
+      // ======================================================
 
       const hasGrowthHour =
         detectGrowthHour(
@@ -358,9 +508,9 @@ function ImportAttendance() {
         hasGrowthHour
       );
 
-      // ---------------------------------------
-      // Validate normal subjects
-      // ---------------------------------------
+      // ======================================================
+      // VALIDATE SUBJECT COLUMNS
+      // ======================================================
 
       const missingSubjectColumns =
         [];
@@ -386,9 +536,9 @@ function ImportAttendance() {
         }
       );
 
-      // ---------------------------------------
-      // Validate Growth Hour
-      // ---------------------------------------
+      // ======================================================
+      // VALIDATE GROWTH HOUR
+      // ======================================================
 
       const missingGrowthHourColumns =
         [];
@@ -412,16 +562,14 @@ function ImportAttendance() {
         );
       }
 
-      // ---------------------------------------
-      // Combined validation
-      // ---------------------------------------
-
       const missingColumns = [
         ...missingSubjectColumns,
         ...missingGrowthHourColumns,
       ];
 
-      if (missingColumns.length > 0) {
+      if (
+        missingColumns.length > 0
+      ) {
         setError(
           `Invalid Excel file. Missing ${missingColumns.length} required column(s).`
         );
@@ -434,26 +582,27 @@ function ImportAttendance() {
         return;
       }
 
-      // ---------------------------------------
-      // Transform
-      // ---------------------------------------
+      // ======================================================
+      // TRANSFORM DATA
+      // ======================================================
 
       const transformedData =
-        transformAttendanceData(data);
+        transformAttendanceData(
+          data
+        );
 
       console.log(
         "Transformed attendance data:",
         transformedData
       );
 
-      console.log(
-        "FIRST STUDENT:",
-        JSON.stringify(transformedData[0], null, 2)
-      );
-
       setAttendanceData(
         transformedData
       );
+
+      // ======================================================
+      // SUCCESS
+      // ======================================================
 
       const detectedCount =
         subjectNumbers.length +
@@ -474,11 +623,76 @@ function ImportAttendance() {
     }
   };
 
-  // ---------------------------------------
-  // Import to backend
-  // ---------------------------------------
+  // ==========================================================
+  // START DATE CHANGE
+  // ==========================================================
+
+  const handlePeriodStartChange = (
+    event
+  ) => {
+    const date =
+      event.target.value;
+
+    setPeriodStart(date);
+
+    // Automatically determine academic year
+    if (date) {
+      const year =
+        getAcademicYearFromDate(
+          date
+        );
+
+      setAcademicYear(year);
+    }
+
+    // Clear invalid end date
+    if (
+      periodEnd &&
+      date &&
+      new Date(
+        `${periodEnd}T00:00:00`
+      ) <
+        new Date(
+          `${date}T00:00:00`
+        )
+    ) {
+      setPeriodEnd("");
+    }
+  };
+
+  // ==========================================================
+  // END DATE CHANGE
+  // ==========================================================
+
+  const handlePeriodEndChange = (
+    event
+  ) => {
+    const date =
+      event.target.value;
+
+    setPeriodEnd(date);
+
+    // If start date is empty,
+    // use end date to determine academic year.
+    if (!periodStart && date) {
+      const year =
+        getAcademicYearFromDate(
+          date
+        );
+
+      setAcademicYear(year);
+    }
+  };
+
+  // ==========================================================
+  // IMPORT
+  // ==========================================================
 
   const handleImport = async () => {
+    // ========================================================
+    // VALIDATE FILE
+    // ========================================================
+
     if (
       attendanceData.length === 0
     ) {
@@ -489,13 +703,86 @@ function ImportAttendance() {
       return;
     }
 
-    if (!academicYear) {
+    // ========================================================
+    // VALIDATE SEMESTER
+    // ========================================================
+
+    if (!semester) {
       setError(
-        "Please enter the academic year."
+        "Please select a semester."
       );
 
       return;
     }
+
+    // ========================================================
+    // VALIDATE START DATE
+    // ========================================================
+
+    if (!periodStart) {
+      setError(
+        "Please select the attendance period start date."
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // VALIDATE END DATE
+    // ========================================================
+
+    if (!periodEnd) {
+      setError(
+        "Please select the attendance period end date."
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // CALCULATE ACADEMIC YEAR
+    // ========================================================
+
+    const calculatedAcademicYear =
+      getAcademicYearFromDate(
+        periodStart
+      );
+
+    if (!calculatedAcademicYear) {
+      setError(
+        "Unable to determine the academic year from the selected date."
+      );
+
+      return;
+    }
+
+    // Keep state synchronized
+    setAcademicYear(
+      calculatedAcademicYear
+    );
+
+    // ========================================================
+    // VALIDATE DATE ORDER
+    // ========================================================
+
+    if (
+      new Date(
+        `${periodStart}T00:00:00`
+      ) >
+        new Date(
+          `${periodEnd}T00:00:00`
+        )
+    ) {
+      setError(
+        "Attendance period start date cannot be after the end date."
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // START IMPORT
+    // ========================================================
 
     setIsImporting(true);
     setError("");
@@ -503,17 +790,36 @@ function ImportAttendance() {
     setImportSummary(null);
 
     try {
+      // ======================================================
+      // PAYLOAD
+      // ======================================================
+
+      const payload = {
+        academicYear:
+          calculatedAcademicYear,
+
+        semester,
+
+        periodStart,
+
+        periodEnd,
+
+        students:
+          attendanceData,
+      };
+
       console.log(
         "Sending attendance data to backend..."
       );
 
       console.log(
         "Payload:",
-        {
-          academicYear,
-          students: attendanceData,
-        }
+        payload
       );
+
+      // ======================================================
+      // API REQUEST
+      // ======================================================
 
       const response =
         await fetch(
@@ -526,13 +832,15 @@ function ImportAttendance() {
                 "application/json",
             },
 
-            body: JSON.stringify({
-              academicYear,
-              students:
-                attendanceData,
-            }),
+            body: JSON.stringify(
+              payload
+            ),
           }
         );
+
+      // ======================================================
+      // RESPONSE
+      // ======================================================
 
       const result =
         await response.json();
@@ -542,23 +850,33 @@ function ImportAttendance() {
         result
       );
 
+      // ======================================================
+      // ERROR
+      // ======================================================
+
       if (
         !response.ok ||
         !result.success
       ) {
         throw new Error(
-          result.message ||
-          "Attendance import failed."
+          result.error ||
+            result.message ||
+            "Attendance import failed."
         );
       }
 
+      // ======================================================
+      // SUCCESS
+      // ======================================================
+
       setSuccess(
         result.message ||
-        "Attendance imported successfully."
+          "Attendance imported successfully."
       );
 
-      setImportSummary(result);
-
+      setImportSummary(
+        result
+      );
     } catch (err) {
       console.error(
         "Import error:",
@@ -574,7 +892,7 @@ function ImportAttendance() {
       } else {
         setError(
           err.message ||
-          "Failed to import attendance."
+            "Failed to import attendance."
         );
       }
     } finally {
@@ -582,10 +900,16 @@ function ImportAttendance() {
     }
   };
 
+  // ==========================================================
+  // RENDER
+  // ==========================================================
+
   return (
     <div className="import-attendance-page">
 
-      {/* Header */}
+      {/* ================================================== */}
+      {/* HEADER */}
+      {/* ================================================== */}
 
       <div className="page-header">
         <div>
@@ -601,7 +925,9 @@ function ImportAttendance() {
         </div>
       </div>
 
-      {/* Upload Card */}
+      {/* ================================================== */}
+      {/* UPLOAD CARD */}
+      {/* ================================================== */}
 
       <div className="import-card">
 
@@ -621,32 +947,148 @@ function ImportAttendance() {
           data.
         </p>
 
-        {/* Academic Year */}
+        {/* ================================================ */}
+        {/* SEMESTER */}
+        {/* ================================================ */}
 
         <div className="academic-year-field">
 
-          <label htmlFor="academicYear">
-            Academic Year
+          <label htmlFor="semester">
+            Semester
           </label>
 
-          <input
-            id="academicYear"
-            type="text"
-            value={academicYear}
+          <select
+            id="semester"
+            value={semester}
             onChange={(event) =>
-              setAcademicYear(
+              setSemester(
                 event.target.value
               )
             }
-            placeholder="2026-2027"
-            disabled={
-              isImporting
-            }
-          />
+            disabled={isImporting}
+          >
+            {SEMESTERS.map(
+              (item) => (
+                <option
+                  key={item.value}
+                  value={item.value}
+                >
+                  {item.label}
+                </option>
+              )
+            )}
+          </select>
 
         </div>
 
-        {/* Upload */}
+        {/* ================================================ */}
+        {/* ATTENDANCE PERIOD */}
+        {/* ================================================ */}
+
+        <div className="attendance-period-fields">
+
+          {/* ---------------------------------------------- */}
+          {/* START DATE */}
+          {/* ---------------------------------------------- */}
+
+          <div className="academic-year-field">
+
+            <label htmlFor="periodStart">
+              <CalendarDays
+                size={16}
+              />
+
+              Attendance Period Start
+            </label>
+
+            <input
+              id="periodStart"
+              type="date"
+              value={periodStart}
+              onChange={
+                handlePeriodStartChange
+              }
+              disabled={isImporting}
+            />
+
+          </div>
+
+          {/* ---------------------------------------------- */}
+          {/* END DATE */}
+          {/* ---------------------------------------------- */}
+
+          <div className="academic-year-field">
+
+            <label htmlFor="periodEnd">
+              <CalendarDays
+                size={16}
+              />
+
+              Attendance Period End
+            </label>
+
+            <input
+              id="periodEnd"
+              type="date"
+              value={periodEnd}
+              min={
+                periodStart ||
+                undefined
+              }
+              onChange={
+                handlePeriodEndChange
+              }
+              disabled={isImporting}
+            />
+
+          </div>
+
+        </div>
+
+        {/* ================================================ */}
+        {/* ACADEMIC YEAR AUTO INFO */}
+        {/* ================================================ */}
+
+        {academicYear && (
+          <div className="academic-year-auto">
+
+            <span>
+              Academic Year
+            </span>
+
+            <strong>
+              {academicYear}
+            </strong>
+
+          </div>
+        )}
+
+        {/* ================================================ */}
+        {/* PERIOD PREVIEW */}
+        {/* ================================================ */}
+
+        {(periodStart ||
+          periodEnd) && (
+          <div className="attendance-period-preview">
+
+            <strong>
+              Attendance Period
+            </strong>
+
+            <span>
+              {periodStart ||
+                "Start date"}{" "}
+              →{" "}
+              {periodEnd ||
+                "End date"}
+            </span>
+
+          </div>
+        )}
+
+        {/* ================================================ */}
+        {/* FILE UPLOAD */}
+        {/* ================================================ */}
 
         <label className="upload-button">
 
@@ -665,18 +1107,22 @@ function ImportAttendance() {
             onChange={
               handleFileChange
             }
-            disabled={
-              isImporting
-            }
+            disabled={isImporting}
           />
 
         </label>
+
+        {/* ================================================ */}
+        {/* SUPPORTED FORMAT */}
+        {/* ================================================ */}
 
         <span className="supported-format">
           Supported formats: .xlsx, .xls
         </span>
 
-        {/* Selected File */}
+        {/* ================================================ */}
+        {/* SELECTED FILE */}
+        {/* ================================================ */}
 
         {fileName && (
           <p className="selected-file">
@@ -687,7 +1133,53 @@ function ImportAttendance() {
           </p>
         )}
 
-        {/* Error */}
+        {/* ================================================ */}
+        {/* IMPORT META */}
+        {/* ================================================ */}
+
+        {fileName &&
+          semester &&
+          periodStart &&
+          periodEnd && (
+          <div className="import-meta-preview">
+
+            <div>
+              <span>
+                Academic Year
+              </span>
+
+              <strong>
+                {academicYear}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Semester
+              </span>
+
+              <strong>
+                {semester}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Period
+              </span>
+
+              <strong>
+                {periodStart} →{" "}
+                {periodEnd}
+              </strong>
+            </div>
+
+          </div>
+        )}
+
+        {/* ================================================ */}
+        {/* ERROR */}
+        {/* ================================================ */}
 
         {error && (
           <p className="import-error">
@@ -695,7 +1187,9 @@ function ImportAttendance() {
           </p>
         )}
 
-        {/* Success */}
+        {/* ================================================ */}
+        {/* SUCCESS */}
+        {/* ================================================ */}
 
         {success && (
           <p className="import-success">
@@ -703,35 +1197,39 @@ function ImportAttendance() {
           </p>
         )}
 
-        {/* Import Button */}
+        {/* ================================================ */}
+        {/* IMPORT BUTTON */}
+        {/* ================================================ */}
 
         {attendanceData.length >
           0 && (
-            <button
-              type="button"
-              className="import-submit-button"
-              onClick={
-                handleImport
-              }
-              disabled={
-                isImporting
-              }
-            >
+          <button
+            type="button"
+            className="import-submit-button"
+            onClick={
+              handleImport
+            }
+            disabled={
+              isImporting
+            }
+          >
 
-              <Database
-                size={18}
-              />
+            <Database
+              size={18}
+            />
 
-              {isImporting
-                ? "Importing..."
-                : "Import Attendance"}
+            {isImporting
+              ? "Importing..."
+              : "Import Attendance"}
 
-            </button>
-          )}
+          </button>
+        )}
 
       </div>
 
-      {/* Import Summary */}
+      {/* ================================================== */}
+      {/* IMPORT SUMMARY */}
+      {/* ================================================== */}
 
       {importSummary && (
         <div className="import-summary">
@@ -739,6 +1237,54 @@ function ImportAttendance() {
           <h2>
             Import Summary
           </h2>
+
+          <div className="summary-period">
+
+            <div>
+              <span>
+                Academic Year
+              </span>
+
+              <strong>
+                {
+                  importSummary.academicYear ??
+                  academicYear
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Semester
+              </span>
+
+              <strong>
+                {
+                  importSummary.semester ??
+                  semester
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Attendance Period
+              </span>
+
+              <strong>
+                {
+                  importSummary.periodStart ??
+                  periodStart
+                }{" "}
+                →{" "}
+                {
+                  importSummary.periodEnd ??
+                  periodEnd
+                }
+              </strong>
+            </div>
+
+          </div>
 
           <div className="summary-grid">
 
@@ -749,8 +1295,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .studentsCreated ??
+                  importSummary.studentsCreated ??
                   0
                 }
               </strong>
@@ -763,8 +1308,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .studentsUpdated ??
+                  importSummary.studentsUpdated ??
                   0
                 }
               </strong>
@@ -777,8 +1321,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .subjectsCreated ??
+                  importSummary.subjectsCreated ??
                   0
                 }
               </strong>
@@ -791,7 +1334,8 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary.subjectsFound ?? 0
+                  importSummary.subjectsFound ??
+                  0
                 }
               </strong>
             </div>
@@ -803,8 +1347,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .attendanceCreated ??
+                  importSummary.attendanceCreated ??
                   0
                 }
               </strong>
@@ -817,14 +1360,11 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .attendanceUpdated ??
+                  importSummary.attendanceUpdated ??
                   0
                 }
               </strong>
             </div>
-
-            {/* Growth Hour */}
 
             <div className="summary-item">
               <span>
@@ -833,8 +1373,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .growthHourCreated ??
+                  importSummary.growthHourCreated ??
                   0
                 }
               </strong>
@@ -847,38 +1386,7 @@ function ImportAttendance() {
 
               <strong>
                 {
-                  importSummary
-                    .growthHourUpdated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            {/* Skipped */}
-
-            <div className="summary-item">
-              <span>
-                Skipped Students
-              </span>
-
-              <strong>
-                {
-                  importSummary
-                    .skippedStudents ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Skipped Subjects
-              </span>
-
-              <strong>
-                {
-                  importSummary
-                    .skippedSubjects ??
+                  importSummary.growthHourUpdated ??
                   0
                 }
               </strong>
@@ -889,14 +1397,16 @@ function ImportAttendance() {
         </div>
       )}
 
-      {/* Preview */}
+      {/* ================================================== */}
+      {/* EXCEL DATA PREVIEW */}
+      {/* ================================================== */}
 
-      {/* Excel Data Preview */}
-
-      {attendanceData.length > 0 && (
+      {attendanceData.length >
+        0 && (
         <div className="import-preview">
 
           <div className="preview-header">
+
             <div>
               <h2>
                 Excel Data Preview
@@ -904,61 +1414,98 @@ function ImportAttendance() {
 
               <p>
                 <strong>
-                  {attendanceData.length}
+                  {
+                    attendanceData.length
+                  }
                 </strong>{" "}
                 Students
               </p>
             </div>
+
           </div>
 
+          {/* ============================================== */}
+          {/* SEARCH / FILTER */}
+          {/* ============================================== */}
 
           <div className="student-search">
+
             <input
               type="text"
               placeholder="Search student..."
-              value={studentSearch}
+              value={
+                studentSearch
+              }
               onChange={(event) =>
-                setStudentSearch(event.target.value)
+                setStudentSearch(
+                  event.target.value
+                )
               }
             />
 
             <select
-              value={attendanceFilter}
+              value={
+                attendanceFilter
+              }
               onChange={(event) =>
-                setAttendanceFilter(event.target.value)
+                setAttendanceFilter(
+                  event.target.value
+                )
               }
               aria-label="Filter by attendance percentage"
             >
-              <option value="">All Attendance</option>
-              <option value="below-75">Below 75%</option>
-              <option value="above-75">75% and above</option>
+
+              <option value="">
+                All Attendance
+              </option>
+
+              <option value="below-75">
+                Below 75%
+              </option>
+
+              <option value="above-75">
+                75% and above
+              </option>
+
             </select>
+
           </div>
+
+          {/* ============================================== */}
+          {/* STUDENT LIST */}
+          {/* ============================================== */}
 
           <div className="student-list">
 
-            {filteredStudents
-              .map((student) => (
+            {filteredStudents.map(
+              (student) => (
                 <StudentAttendanceCard
-                  key={student.email}
+                  key={
+                    student.email
+                  }
                   student={student}
                 />
-              ))}
+              )
+            )}
 
-            {filteredStudents.length === 0 && (
-                <div className="empty-search">
-                  <h3>No students found</h3>
-                  <p>
-                    Try searching with a different name,
-                    email, or squad.
-                  </p>
-                </div>
-              )}
+            {filteredStudents.length ===
+              0 && (
+              <div className="empty-search">
+
+                <h3>
+                  No students found
+                </h3>
+
+                <p>
+                  Try searching with a
+                  different name, email,
+                  or squad.
+                </p>
+
+              </div>
+            )}
 
           </div>
-
-
-
 
         </div>
       )}
