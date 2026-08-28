@@ -31,6 +31,39 @@ const cleanString = (value) => {
     return String(value).trim();
 };
 
+const calculateAttendanceByStudent = (records) => {
+    const totals = new Map();
+
+    for (const record of records || []) {
+        if (!record.student_id) continue;
+
+        const current = totals.get(record.student_id) || {
+            conducted: 0,
+            attended: 0,
+        };
+
+        current.conducted += toNumber(record.sessions_conducted);
+        current.attended += toNumber(record.sessions_attended);
+        totals.set(record.student_id, current);
+    }
+
+    return totals;
+};
+
+const getAttendancePercentage = (total) => {
+    if (!total || total.conducted <= 0) return 0;
+    return Number(((total.attended / total.conducted) * 100).toFixed(2));
+};
+
+const getAttendanceTotals = async () => {
+    const { data, error } = await supabase
+        .from("attendance")
+        .select("student_id, sessions_conducted, sessions_attended");
+
+    if (error) throw error;
+    return calculateAttendanceByStudent(data);
+};
+
 // ============================================================
 // TEST SUPABASE
 // ============================================================
@@ -1075,9 +1108,19 @@ const getStudents = async (req, res) => {
             throw error;
         }
 
+        const totals = await getAttendanceTotals();
+        const students = (data || []).map((student) => {
+            const attendance = getAttendancePercentage(totals.get(student.id));
+            return {
+                ...student,
+                attendance,
+                status: attendance >= 75 ? "Present" : "Absent",
+            };
+        });
+
         res.json({
             success: true,
-            students: data || [],
+            students,
         });
     } catch (error) {
         console.error("Get students error:", error);
@@ -1085,6 +1128,57 @@ const getStudents = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to fetch students",
+            error: error.message,
+        });
+    }
+};
+
+const getAttendanceRecords = async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("attendance")
+            .select("*, students(name, email, squad), subjects(name)")
+            .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        res.json({ success: true, records: data || [] });
+    } catch (error) {
+        console.error("Get attendance records error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch attendance records",
+            error: error.message,
+        });
+    }
+};
+
+const getEmailAlerts = async (req, res) => {
+    try {
+        const [{ data: students, error: studentsError }, { data: attendance, error: attendanceError }] = await Promise.all([
+            supabase.from("students").select("id, name, email, squad, parent_email").order("name", { ascending: true }),
+            supabase.from("attendance").select("student_id, sessions_conducted, sessions_attended"),
+        ]);
+
+        if (studentsError) throw studentsError;
+        if (attendanceError) throw attendanceError;
+
+        const totals = calculateAttendanceByStudent(attendance);
+        const alerts = (students || []).map((student) => ({
+            id: student.id,
+            name: student.name,
+            email: student.email,
+            parentEmail: student.parent_email || "",
+            squad: student.squad,
+            attendance: getAttendancePercentage(totals.get(student.id)),
+        }));
+
+        res.json({ success: true, students: alerts });
+    } catch (error) {
+        console.error("Get email alerts error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch email alert data",
             error: error.message,
         });
     }
@@ -1137,5 +1231,7 @@ module.exports = {
     testAttendanceInsert,
     importAttendance,
     getStudents,
+    getAttendanceRecords,
+    getEmailAlerts,
     updateStudentDetails,
 };

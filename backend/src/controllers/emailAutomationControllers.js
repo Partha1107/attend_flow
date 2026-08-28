@@ -5,6 +5,9 @@ const brevo = new BrevoClient({
   apiKey: process.env.BREVO_API_KEY,
 });
 
+const isValidEmail = (value) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+
 // ==========================================
 // TEST EMAIL
 // ==========================================
@@ -75,6 +78,7 @@ const sendAttendanceEmail = async (req, res) => {
     const {
       mentorName,
       mentorEmail,
+      studentId,
       studentName,
       studentEmail,
       parentEmail,
@@ -84,16 +88,17 @@ const sendAttendanceEmail = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (
-      !mentorName ||
-      !studentName ||
-      !studentEmail ||
-      !parentEmail ||
-      attendancePercentage === undefined
-    ) {
+    if (!mentorName || !studentName || attendancePercentage === undefined) {
       return res.status(400).json({
         success: false,
         message: "Missing required email information",
+      });
+    }
+
+    if (!isValidEmail(process.env.BREVO_SENDER_EMAIL) || !isValidEmail(parentEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid sender and parent email are required.",
       });
     }
 
@@ -117,10 +122,6 @@ const sendAttendanceEmail = async (req, res) => {
         },
 
         to: [
-          {
-            email: studentEmail,
-            name: studentName,
-          },
           {
             email: parentEmail,
             name: "parent",
@@ -166,10 +167,53 @@ const sendAttendanceEmail = async (req, res) => {
         `,
       });
 
+    const historyRecord = {
+      student_id: studentId || null,
+      student_name: studentName,
+      student_email: studentEmail || null,
+      parent_email: parentEmail,
+      attendance_percentage: Number(attendancePercentage),
+      subject: subject || "Attendance Warning - Low Attendance",
+      message: message || "Please improve your attendance.",
+      communication_type: "Email",
+      status: "Sent",
+      message_id: result.messageId || null,
+      mentor_name: mentorName,
+      mentor_email: mentorEmail || null,
+      sent_at: new Date().toISOString(),
+    };
+
+    let { error: historyError } = await supabase
+      .from("communication_history")
+      .insert(historyRecord);
+
+    if (["42P01", "PGRST205"].includes(historyError?.code)) {
+      const fallbackRecord = {
+        student_id: studentId || null,
+        student_name: studentName,
+        student_email: studentEmail || null,
+        parent_email: parentEmail,
+        attendance_percentage: Number(attendancePercentage),
+        status: "Sent",
+        communication_type: "Email",
+        mentor_name: mentorName,
+        mentor_email: mentorEmail || null,
+        sent_at: new Date().toISOString(),
+      };
+
+      const fallbackResult = await supabase
+        .from("email_automation")
+        .insert(fallbackRecord);
+      historyError = fallbackResult.error;
+    }
+
+    if (historyError) throw historyError;
+
     return res.status(200).json({
       success: true,
       message: "Attendance email sent successfully",
       messageId: result.messageId,
+      history: historyRecord,
       sentBy: mentorName,
       mentorEmail,
     });
@@ -189,10 +233,19 @@ const sendAttendanceEmail = async (req, res) => {
 
 const getEmailAutomationRecords = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("email_automation")
+    let { data, error } = await supabase
+      .from("communication_history")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("sent_at", { ascending: false });
+
+    if (["42P01", "PGRST205"].includes(error?.code)) {
+      const fallbackResult = await supabase
+        .from("email_automation")
+        .select("*")
+        .order("created_at", { ascending: false });
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
 
     if (error) {
       throw error;
