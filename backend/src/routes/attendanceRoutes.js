@@ -24,6 +24,16 @@ router.get(
     attendanceController.getStudents
 );
 
+router.get(
+    "/records",
+    attendanceController.getAttendanceRecords
+);
+
+router.get(
+    "/email-alerts",
+    attendanceController.getEmailAlerts
+);
+
 router.patch(
     "/students/:id",
     attendanceController.updateStudentDetails
