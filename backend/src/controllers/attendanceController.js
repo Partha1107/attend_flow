@@ -1,547 +1,833 @@
 const supabase = require("../config/supabase");
 
+// ============================================================
+// HELPERS
+// ============================================================
+
+const toNumber = (value, defaultValue = 0) => {
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return defaultValue;
+    }
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+        ? number
+        : defaultValue;
+};
+
+const cleanString = (value) => {
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value).trim();
+};
+
+// ============================================================
+// TEST SUPABASE
+// ============================================================
+
 const testSupabase = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from("students")
-            .select("*")
+            .select("id")
             .limit(1);
 
         if (error) {
             return res.status(500).json({
                 success: false,
-                message: "Supabase connection failed",
                 error: error.message,
             });
         }
 
-        res.json({
+        return res.status(200).json({
             success: true,
             message: "Supabase connection working",
             data,
         });
     } catch (error) {
-        res.status(500).json({
+        console.error(
+            "testSupabase error:",
+            error
+        );
+
+        return res.status(500).json({
             success: false,
-            message: "Unexpected error",
             error: error.message,
         });
     }
 };
 
-const testAttendanceInsert = async (req, res) => {
-    try {
-        const {
-            email,
-            name,
-            squad,
-            subject_id,
-            subject_name,
-            academic_year,
-            sessions_conducted,
-            sessions_attended,
-        } = req.body;
+// ============================================================
+// TEST ATTENDANCE INSERT
+// ============================================================
 
-        // 1. Validate required fields
-        if (
-            !email ||
-            !name ||
-            !squad ||
-            !subject_id ||
-            !subject_name ||
-            !academic_year
-        ) {
-            return res.status(400).json({
+const testAttendanceInsert = async (
+    req,
+    res
+) => {
+    try {
+        // --------------------------------------------------------
+        // Find one student
+        // --------------------------------------------------------
+
+        const { data: student, error: studentError } =
+            await supabase
+                .from("students")
+                .select("id")
+                .limit(1)
+                .maybeSingle();
+
+        if (studentError) {
+            return res.status(500).json({
                 success: false,
-                message: "Missing required fields",
+                error: studentError.message,
             });
         }
 
-        // 2. Find or create student
-        let { data: student, error: studentError } = await supabase
-            .from("students")
-            .select("*")
-            .eq("email", email)
-            .maybeSingle();
-
-        if (studentError) {
-            throw studentError;
-        }
-
         if (!student) {
-            const { data: newStudent, error } = await supabase
-                .from("students")
-                .insert({
-                    email,
-                    name,
-                    squad,
-                })
-                .select()
-                .single();
-
-            if (error) {
-                throw error;
-            }
-
-            student = newStudent;
+            return res.status(404).json({
+                success: false,
+                error: "No student found.",
+            });
         }
 
-        // 3. Find or create subject
-        let { data: subject, error: subjectError } = await supabase
-            .from("subjects")
-            .select("*")
-            .eq("id", subject_id)
-            .maybeSingle();
+        // --------------------------------------------------------
+        // Insert test attendance
+        // --------------------------------------------------------
 
-        if (subjectError) {
-            throw subjectError;
-        }
-
-        if (!subject) {
-            const { data: newSubject, error } = await supabase
-                .from("subjects")
-                .insert({
-                    id: subject_id,
-                    name: subject_name,
-                })
-                .select()
-                .single();
-
-            if (error) {
-                throw error;
-            }
-
-            subject = newSubject;
-        }
-
-        /// 4. Insert attendance
-        const conducted = Number(sessions_conducted || 0);
-        const attended = Number(sessions_attended || 0);
-        const absent = Math.max(conducted - attended, 0);
-
-        const percentage =
-            conducted > 0
-                ? Number(((attended / conducted) * 100).toFixed(2))
-                : 0;
+        const testAttendance = {
+            student_id: student.id,
+            subject_id: "TEST-SUBJECT",
+            attendance_type: "subject",
+            academic_year: "2026-2027",
+            semester: "Sem 1",
+            period_start: "2026-08-01",
+            period_end: "2026-08-10",
+            sessions_conducted: 10,
+            sessions_attended: 8,
+            sessions_absent: 2,
+            attendance_percentage: 80,
+            sessions_marked_od: 0,
+            sessions_medical_leave: 0,
+            sessions_applied_leave: 0,
+        };
 
         const {
-            data: attendance,
-            error: attendanceError,
+            data,
+            error,
         } = await supabase
             .from("attendance")
-            .insert({
-                student_id: student.id,
-                subject_id: subject.id,
-                attendance_type: "subject",
-                academic_year: academic_year,
-
-                sessions_conducted: conducted,
-                sessions_attended: attended,
-                sessions_absent: absent,
-                attendance_percentage: percentage,
-
-                sessions_marked_od: 0,
-                sessions_medical_leave: 0,
-                sessions_applied_leave: 0,
-            })
+            .insert(testAttendance)
             .select()
             .single();
 
-        if (attendanceError) {
-            throw attendanceError;
+        if (error) {
+            return res.status(500).json({
+                success: false,
+                error: error.message,
+            });
         }
 
-        // 5. Return everything
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
-            message: "Test attendance inserted successfully",
-            student,
-            subject,
-            attendance,
+            message:
+                "Test attendance inserted successfully.",
+            data,
         });
-
     } catch (error) {
-        console.error("Test attendance error:", error);
+        console.error(
+            "testAttendanceInsert error:",
+            error
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            message: "Test attendance insert failed",
             error: error.message,
         });
     }
 };
 
-const importAttendance = async (req, res) => {
+// ============================================================
+// FIND STUDENT BY EMAIL
+// ============================================================
+
+const findStudentByEmail = async (
+    email
+) => {
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("students")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(
+            `Failed to find student ${email}: ${error.message}`
+        );
+    }
+
+    return data;
+};
+
+// ============================================================
+// CREATE / UPDATE STUDENT
+// ============================================================
+
+const createOrUpdateStudent = async (
+    student
+) => {
+    const email = cleanString(
+        student.email
+    );
+
+    const name = cleanString(
+        student.name
+    );
+
+    const squad = cleanString(
+        student.squad
+    );
+
+    if (!email) {
+        throw new Error(
+            "Student email is missing."
+        );
+    }
+
+    // ----------------------------------------------------------
+    // Check existing student
+    // ----------------------------------------------------------
+
+    const existingStudent =
+        await findStudentByEmail(email);
+
+    // ----------------------------------------------------------
+    // UPDATE
+    // ----------------------------------------------------------
+
+    if (existingStudent) {
+        const updateData = {
+            name,
+            squad,
+        };
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from("students")
+            .update(updateData)
+            .eq(
+                "id",
+                existingStudent.id
+            )
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(
+                `Failed to update student ${email}: ${error.message}`
+            );
+        }
+
+        return {
+            student: data,
+            created: false,
+            updated: true,
+        };
+    }
+
+    // ----------------------------------------------------------
+    // CREATE
+    // ----------------------------------------------------------
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("students")
+        .insert({
+            email,
+            name,
+            squad,
+        })
+        .select()
+        .single();
+
+    if (error) {
+        throw new Error(
+            `Failed to create student ${email}: ${error.message}`
+        );
+    }
+
+    return {
+        student: data,
+        created: true,
+        updated: false,
+    };
+};
+
+// ============================================================
+// FIND SUBJECT
+// ============================================================
+
+const findSubject = async (
+    subjectId
+) => {
+    if (!subjectId) {
+        return null;
+    }
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("subjects")
+        .select("*")
+        .eq("id", subjectId)
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(
+            `Failed to find subject ${subjectId}: ${error.message}`
+        );
+    }
+
+    return data;
+};
+
+// ============================================================
+// CREATE / UPDATE SUBJECT
+// ============================================================
+
+const createOrUpdateSubject = async ({
+    id,
+    name,
+    semester,
+}) => {
+    const subjectId =
+        cleanString(id);
+
+    const subjectName =
+        cleanString(name);
+
+    if (!subjectId) {
+        return {
+            subject: null,
+            created: false,
+            updated: false,
+        };
+    }
+
+    // ----------------------------------------------------------
+    // Find existing subject
+    // ----------------------------------------------------------
+
+    const existingSubject =
+        await findSubject(subjectId);
+
+    // ----------------------------------------------------------
+    // UPDATE
+    // ----------------------------------------------------------
+
+    if (existingSubject) {
+        const updateData = {
+            name: subjectName,
+            semester,
+        };
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from("subjects")
+            .update(updateData)
+            .eq(
+                "id",
+                subjectId
+            )
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(
+                `Failed to update subject ${subjectId}: ${error.message}`
+            );
+        }
+
+        return {
+            subject: data,
+            created: false,
+            updated: true,
+        };
+    }
+
+    // ----------------------------------------------------------
+    // CREATE
+    // ----------------------------------------------------------
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("subjects")
+        .insert({
+            id: subjectId,
+            name: subjectName,
+            semester,
+        })
+        .select()
+        .single();
+
+    if (error) {
+        throw new Error(
+            `Failed to create subject ${subjectId}: ${error.message}`
+        );
+    }
+
+    return {
+        subject: data,
+        created: true,
+        updated: false,
+    };
+};
+
+// ============================================================
+// FIND EXISTING ATTENDANCE
+// ============================================================
+
+const findExistingAttendance = async ({
+    studentId,
+    subjectId,
+    attendanceType,
+    academicYear,
+    semester,
+    periodStart,
+    periodEnd,
+}) => {
+    let query = supabase
+        .from("attendance")
+        .select("id")
+        .eq(
+            "student_id",
+            studentId
+        )
+        .eq(
+            "academic_year",
+            academicYear
+        )
+        .eq(
+            "semester",
+            semester
+        )
+        .eq(
+            "period_start",
+            periodStart
+        )
+        .eq(
+            "period_end",
+            periodEnd
+        )
+        .eq(
+            "attendance_type",
+            attendanceType
+        );
+
+    // ----------------------------------------------------------
+    // NORMAL SUBJECT
+    // ----------------------------------------------------------
+
+    if (
+        attendanceType === "subject"
+    ) {
+        query = query.eq(
+            "subject_id",
+            subjectId
+        );
+    }
+
+    // ----------------------------------------------------------
+    // GROWTH HOUR
+    // ----------------------------------------------------------
+
+    if (
+        attendanceType === "growth_hour"
+    ) {
+        query = query.is(
+            "subject_id",
+            null
+        );
+    }
+
+    const {
+        data,
+        error,
+    } = await query.maybeSingle();
+
+    if (error) {
+        throw new Error(
+            `Failed to find attendance: ${error.message}`
+        );
+    }
+
+    return data;
+};
+
+// ============================================================
+// CREATE / UPDATE ATTENDANCE
+// ============================================================
+
+const createOrUpdateAttendance = async ({
+    studentId,
+    subjectId,
+    attendanceType,
+    academicYear,
+    semester,
+    periodStart,
+    periodEnd,
+    attendance,
+}) => {
+    const attendanceData = {
+        student_id: studentId,
+
+        subject_id:
+            attendanceType ===
+                "growth_hour"
+                ? null
+                : subjectId,
+
+        attendance_type:
+            attendanceType,
+
+        academic_year:
+            academicYear,
+
+        semester,
+
+        period_start:
+            periodStart,
+
+        period_end:
+            periodEnd,
+
+        sessions_conducted:
+            toNumber(
+                attendance.sessionsConducted
+            ),
+
+        sessions_attended:
+            toNumber(
+                attendance.sessionsAttended
+            ),
+
+        sessions_absent:
+            toNumber(
+                attendance.sessionsAbsent
+            ),
+
+        attendance_percentage:
+            toNumber(
+                attendance.attendancePercentage
+            ),
+
+        sessions_marked_od:
+            toNumber(
+                attendance.sessionsMarkedOD
+            ),
+
+        sessions_medical_leave:
+            toNumber(
+                attendance.sessionsMedicalLeave
+            ),
+
+        sessions_applied_leave:
+            toNumber(
+                attendance.sessionsAppliedLeave
+            ),
+
+        updated_at:
+            new Date().toISOString(),
+    };
+
+    // ----------------------------------------------------------
+    // FIND EXISTING RECORD
+    // ----------------------------------------------------------
+
+    const existingAttendance =
+        await findExistingAttendance({
+            studentId,
+            subjectId,
+            attendanceType,
+            academicYear,
+            semester,
+            periodStart,
+            periodEnd,
+        });
+
+    // ----------------------------------------------------------
+    // UPDATE EXISTING
+    // ----------------------------------------------------------
+
+    if (existingAttendance) {
+        const {
+            data,
+            error,
+        } = await supabase
+            .from("attendance")
+            .update(attendanceData)
+            .eq(
+                "id",
+                existingAttendance.id
+            )
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(
+                `Failed to update attendance: ${error.message}`
+            );
+        }
+
+        return {
+            data,
+            created: false,
+            updated: true,
+        };
+    }
+
+    // ----------------------------------------------------------
+    // INSERT NEW
+    // ----------------------------------------------------------
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("attendance")
+        .insert({
+            ...attendanceData,
+            created_at:
+                new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+    if (error) {
+        throw new Error(
+            `Failed to insert attendance: ${error.message}`
+        );
+    }
+
+    return {
+        data,
+        created: true,
+        updated: false,
+    };
+};
+
+// ============================================================
+// IMPORT ATTENDANCE
+// ============================================================
+
+const importAttendance = async (
+    req,
+    res
+) => {
     try {
-        console.time("TOTAL IMPORT");
-        console.log("IMPORT STARTED");
+        console.log(
+            "================================================"
+        );
 
-        const { academicYear, students } = req.body;
+        console.log(
+            "ATTENDANCE IMPORT STARTED"
+        );
 
-        // ==========================================
+        console.log(
+            "================================================"
+        );
+
+        // ========================================================
+        // REQUEST DATA
+        // ========================================================
+
+        const {
+            academicYear,
+            semester,
+            periodStart,
+            periodEnd,
+            students,
+        } = req.body;
+
+        console.log(
+            "Academic Year:",
+            academicYear
+        );
+
+        console.log(
+            "Semester:",
+            semester
+        );
+
+        console.log(
+            "Period:",
+            periodStart,
+            "→",
+            periodEnd
+        );
+
+        console.log(
+            "Students:",
+            students?.length
+        );
+
+        // ========================================================
         // VALIDATION
-        // ==========================================
+        // ========================================================
 
         if (!academicYear) {
             return res.status(400).json({
                 success: false,
-                message: "Academic year is required",
+                error:
+                    "Academic year is required.",
             });
         }
 
-        if (!Array.isArray(students) || students.length === 0) {
+        if (!semester) {
             return res.status(400).json({
                 success: false,
-                message: "Students data is required",
+                error:
+                    "Semester is required.",
             });
         }
+
+        if (!periodStart) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Attendance period start is required.",
+            });
+        }
+
+        if (!periodEnd) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Attendance period end is required.",
+            });
+        }
+
+        if (
+            !Array.isArray(students) ||
+            students.length === 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Students data is required.",
+            });
+        }
+
+        // ========================================================
+        // VALIDATE DATES
+        // ========================================================
+
+        if (
+            new Date(periodStart) >
+            new Date(periodEnd)
+        ) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Period start cannot be after period end.",
+            });
+        }
+
+        // ========================================================
+        // COUNTERS
+        // ========================================================
 
         let studentsCreated = 0;
         let studentsUpdated = 0;
+
         let subjectsCreated = 0;
         let subjectsFound = 0;
+
         let attendanceCreated = 0;
         let attendanceUpdated = 0;
+
         let growthHourCreated = 0;
         let growthHourUpdated = 0;
 
-        const now = new Date().toISOString();
+        let skippedStudents = 0;
+        let skippedSubjects = 0;
 
-        // ==========================================
-        // CLEAN STUDENT DATA
-        // ==========================================
+        // ========================================================
+        // PROCESS STUDENTS
+        // ========================================================
 
-        const validStudents = students.filter(
-            (student) =>
-                student.email &&
-                student.name &&
-                student.squad
-        );
-
-        if (validStudents.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "No valid students found",
-            });
-        }
-
-        // ==========================================
-        // 1. FETCH ALL EXISTING STUDENTS AT ONCE
-        // ==========================================
-
-        const emails = validStudents.map(
-            (student) => student.email
-        );
-
-        const {
-            data: existingStudents,
-            error: studentsFetchError,
-        } = await supabase
-            .from("students")
-            .select("*")
-            .in("email", emails);
-
-        if (studentsFetchError) {
-            throw studentsFetchError;
-        }
-
-        const existingStudentMap = new Map(
-            (existingStudents || []).map(
-                (student) => [
-                    student.email,
-                    student,
-                ]
-            )
-        );
-
-        // ==========================================
-        // 2. CREATE NEW STUDENTS IN ONE REQUEST
-        // ==========================================
-
-        const newStudentRows = validStudents
-            .filter(
-                (student) =>
-                    !existingStudentMap.has(
-                        student.email
-                    )
-            )
-            .map((student) => ({
-                email: student.email,
-                name: student.name,
-                squad: student.squad,
-            }));
-
-        if (newStudentRows.length > 0) {
-            const {
-                data: createdStudents,
-                error: createStudentsError,
-            } = await supabase
-                .from("students")
-                .insert(newStudentRows)
-                .select();
-
-            if (createStudentsError) {
-                throw createStudentsError;
-            }
-
-            studentsCreated =
-                createdStudents.length;
-
-            createdStudents.forEach(
-                (student) => {
-                    existingStudentMap.set(
-                        student.email,
-                        student
-                    );
-                }
-            );
-        }
-
-        // ==========================================
-        // 3. UPDATE EXISTING STUDENTS IN PARALLEL
-        // ==========================================
-
-        const existingStudentUpdates =
-            validStudents
-                .filter((student) =>
-                    (existingStudents || []).some(
-                        (existing) =>
-                            existing.email === student.email
-                    )
-                )
-                .map((student) => {
-                    const existing =
-                        existingStudentMap.get(
-                            student.email
-                        );
-
-                    return supabase
-                        .from("students")
-                        .update({
-                            name: student.name,
-                            squad: student.squad,
-                            updated_at: now,
-                        })
-                        .eq("id", existing.id)
-                        .select()
-                        .single();
-                });
-
-        if (existingStudentUpdates.length > 0) {
-            const results = await Promise.all(
-                existingStudentUpdates
-            );
-
-            results.forEach((result) => {
-                if (result.error) {
-                    throw result.error;
-                }
-
-                if (result.data) {
-                    existingStudentMap.set(
-                        result.data.email,
-                        result.data
-                    );
-                }
-            });
-
-            studentsUpdated =
-                existingStudentUpdates.length;
-        }
-
-        // ==========================================
-        // 4. COLLECT ALL NORMAL SUBJECTS
-        // ==========================================
-
-        const subjectMap = new Map();
-
-        validStudents.forEach((student) => {
-            const subjects =
-                Array.isArray(student.subjects)
-                    ? student.subjects
-                    : [];
-
-            subjects.forEach((subject) => {
-                const subjectId =
-                    subject.id
-                        ? String(subject.id).trim()
-                        : "";
-
-                const subjectName =
-                    subject.name
-                        ? String(subject.name).trim()
-                        : "";
-
-                if (
-                    !subjectId ||
-                    !subjectName
-                ) {
-                    return;
-                }
-
-                subjectMap.set(
-                    subjectId,
-                    {
-                        id: subjectId,
-                        name: subjectName,
-                    }
-                );
-            });
-        });
-
-        const subjectIds = [
-            ...subjectMap.keys(),
-        ];
-
-        // ==========================================
-        // 5. FETCH ALL SUBJECTS AT ONCE
-        // ==========================================
-
-        let existingSubjects = [];
-
-        if (subjectIds.length > 0) {
-            const {
-                data,
-                error: subjectsFetchError,
-            } = await supabase
-                .from("subjects")
-                .select("*")
-                .in("id", subjectIds);
-
-            if (subjectsFetchError) {
-                throw subjectsFetchError;
-            }
-
-            existingSubjects = data || [];
-        }
-
-        const existingSubjectMap =
-            new Map(
-                existingSubjects.map(
-                    (subject) => [
-                        String(subject.id),
-                        subject,
-                    ]
-                )
-            );
-
-        subjectsFound =
-            existingSubjects.length;
-
-        // ==========================================
-        // 6. CREATE MISSING SUBJECTS IN ONE REQUEST
-        // ==========================================
-
-        const newSubjectRows =
-            subjectIds
-                .filter(
-                    (id) =>
-                        !existingSubjectMap.has(
-                            id
-                        )
-                )
-                .map((id) =>
-                    subjectMap.get(id)
-                );
-
-        if (newSubjectRows.length > 0) {
-            const {
-                data: createdSubjects,
-                error: createSubjectsError,
-            } = await supabase
-                .from("subjects")
-                .insert(newSubjectRows)
-                .select();
-
-            if (createSubjectsError) {
-                throw createSubjectsError;
-            }
-
-            subjectsCreated =
-                createdSubjects.length;
-
-            createdSubjects.forEach(
-                (subject) => {
-                    existingSubjectMap.set(
-                        String(subject.id),
-                        subject
-                    );
-                }
-            );
-        }
-
-        // ==========================================
-        // 7. FETCH EXISTING ATTENDANCE AT ONCE
-        // ==========================================
-
-        const studentIds = validStudents.map(
-            (student) =>
-                existingStudentMap.get(
-                    student.email
-                ).id
-        );
-
-        let existingAttendance = [];
-
-        if (
-            studentIds.length > 0 &&
-            subjectIds.length > 0
+        for (
+            const studentData of students
         ) {
-            const {
-                data,
-                error: attendanceFetchError,
-            } = await supabase
-                .from("attendance")
-                .select("*")
-                .in(
-                    "student_id",
-                    studentIds
-                )
-                .in(
-                    "subject_id",
-                    subjectIds
-                )
-                .eq(
-                    "academic_year",
-                    academicYear
-                );
-
-            if (attendanceFetchError) {
-                throw attendanceFetchError;
-            }
-
-            existingAttendance =
-                data || [];
-        }
-
-        const attendanceMap = new Map();
-
-        existingAttendance.forEach(
-            (attendance) => {
-                const key =
-                    `${attendance.student_id}_${attendance.subject_id}_${attendance.academic_year}`;
-
-                attendanceMap.set(
-                    key,
-                    attendance
-                );
-            }
-        );
-
-        // ==========================================
-        // 8. BUILD ALL ATTENDANCE ROWS
-        // ==========================================
-
-        const attendanceRows = [];
-
-        validStudents.forEach(
-            (studentData) => {
-                const student =
-                    existingStudentMap.get(
+            try {
+                const email =
+                    cleanString(
                         studentData.email
                     );
 
-                if (!student) return;
+                if (!email) {
+                    console.warn(
+                        "Skipping student without email."
+                    );
+
+                    skippedStudents++;
+
+                    continue;
+                }
+
+                // ====================================================
+                // STUDENT
+                // ====================================================
+
+                const studentResult =
+                    await createOrUpdateStudent(
+                        studentData
+                    );
+
+                const student =
+                    studentResult.student;
+
+                if (
+                    studentResult.created
+                ) {
+                    studentsCreated++;
+                }
+
+                if (
+                    studentResult.updated
+                ) {
+                    studentsUpdated++;
+                }
+
+                console.log(
+                    `Student processed: ${email}`
+                );
+
+                // ====================================================
+                // NORMAL SUBJECTS
+                // ====================================================
 
                 const subjects =
                     Array.isArray(
@@ -550,296 +836,176 @@ const importAttendance = async (req, res) => {
                         ? studentData.subjects
                         : [];
 
-                subjects.forEach(
-                    (subjectData) => {
-                        const subjectId =
+                for (
+                    const subjectData of subjects
+                ) {
+                    const subjectId =
+                        cleanString(
                             subjectData.id
-                                ? String(
-                                    subjectData.id
-                                ).trim()
-                                : "";
-
-                        if (
-                            !subjectId ||
-                            !subjectData.name
-                        ) {
-                            return;
-                        }
-
-                        const subject =
-                            existingSubjectMap.get(
-                                subjectId
-                            );
-
-                        if (!subject) return;
-
-                        const attendanceData = {
-                            student_id:
-                                student.id,
-
-                            subject_id:
-                                subject.id,
-
-                            attendance_type:
-                                "subject",
-
-                            academic_year:
-                                academicYear,
-
-                            sessions_conducted:
-                                Number(
-                                    subjectData.sessionsConducted
-                                ) || 0,
-
-                            sessions_attended:
-                                Number(
-                                    subjectData.sessionsAttended
-                                ) || 0,
-
-                            sessions_absent:
-                                Number(
-                                    subjectData.sessionsAbsent
-                                ) || 0,
-
-                            attendance_percentage:
-                                parseFloat(
-                                    String(
-                                        subjectData.attendancePercentage ??
-                                        0
-                                    ).replace(
-                                        "%",
-                                        ""
-                                    )
-                                ) || 0,
-
-                            sessions_marked_od:
-                                Number(
-                                    subjectData.sessionsMarkedOD
-                                ) || 0,
-
-                            sessions_medical_leave:
-                                Number(
-                                    subjectData.sessionsMedicalLeave
-                                ) || 0,
-
-                            sessions_applied_leave:
-                                Number(
-                                    subjectData.sessionsAppliedLeave
-                                ) || 0,
-
-                            updated_at: now,
-                        };
-
-                        attendanceRows.push(
-                            attendanceData
                         );
 
-                        const key =
-                            `${student.id}_${subject.id}_${academicYear}`;
+                    const subjectName =
+                        cleanString(
+                            subjectData.name
+                        );
 
-                        if (
-                            attendanceMap.has(
-                                key
-                            )
-                        ) {
-                            attendanceUpdated++;
-                        } else {
-                            attendanceCreated++;
-                        }
+                    if (
+                        !subjectId ||
+                        !subjectName
+                    ) {
+                        console.warn(
+                            `Skipping invalid subject for ${email}`
+                        );
+
+                        skippedSubjects++;
+
+                        continue;
                     }
-                );
-            }
-        );
 
-        // ==========================================
-        // 9. UPSERT ALL NORMAL ATTENDANCE
-        // ==========================================
+                    // ----------------------------------------------
+                    // SUBJECT
+                    // ----------------------------------------------
 
-        if (attendanceRows.length > 0) {
-            const {
-                error: attendanceUpsertError,
-            } = await supabase
-                .from("attendance")
-                .upsert(attendanceRows, {
-                    onConflict:
-                        "student_id,subject_id,academic_year",
-                });
+                    const subjectResult =
+                        await createOrUpdateSubject(
+                            {
+                                id: subjectId,
+                                name: subjectName,
+                                semester,
+                            }
+                        );
 
-            if (attendanceUpsertError) {
-                throw attendanceUpsertError;
-            }
-        }
-
-        // ==========================================
-        // 10. BUILD GROWTH HOUR ROWS
-        // ==========================================
-
-        const growthHourRows = [];
-
-        validStudents.forEach(
-            (studentData) => {
-                const growthHour =
-                    studentData.growthHour;
-
-                if (!growthHour) return;
-
-                const student =
-                    existingStudentMap.get(
-                        studentData.email
-                    );
-
-                if (!student) return;
-
-                growthHourRows.push({
-                    student_id:
-                        student.id,
-
-                    academic_year:
-                        academicYear,
-
-                    sessions_conducted:
-                        Number(
-                            growthHour.sessionsConducted
-                        ) || 0,
-
-                    sessions_attended:
-                        Number(
-                            growthHour.sessionsAttended
-                        ) || 0,
-
-                    sessions_absent:
-                        Number(
-                            growthHour.sessionsAbsent
-                        ) || 0,
-
-                    attendance_percentage:
-                        parseFloat(
-                            String(
-                                growthHour.attendancePercentage ??
-                                0
-                            ).replace(
-                                "%",
-                                ""
-                            )
-                        ) || 0,
-
-                    sessions_marked_od:
-                        Number(
-                            growthHour.sessionsMarkedOD
-                        ) || 0,
-
-                    sessions_medical_leave:
-                        Number(
-                            growthHour.sessionsMedicalLeave
-                        ) || 0,
-
-                    sessions_applied_leave:
-                        Number(
-                            growthHour.sessionsAppliedLeave
-                        ) || 0,
-
-                    updated_at: now,
-                });
-            }
-        );
-
-        // ==========================================
-        // 11. FETCH EXISTING GROWTH HOURS
-        // ==========================================
-
-        let existingGrowthHours = [];
-
-        if (studentIds.length > 0) {
-            const {
-                data,
-                error: growthFetchError,
-            } = await supabase
-                .from(
-                    "growth_hour_attendance"
-                )
-                .select("*")
-                .in(
-                    "student_id",
-                    studentIds
-                )
-                .eq(
-                    "academic_year",
-                    academicYear
-                );
-
-            if (growthFetchError) {
-                throw growthFetchError;
-            }
-
-            existingGrowthHours =
-                data || [];
-        }
-
-        const growthHourMap =
-            new Map();
-
-        existingGrowthHours.forEach(
-            (row) => {
-                const key =
-                    `${row.student_id}_${row.academic_year}`;
-
-                growthHourMap.set(
-                    key,
-                    row
-                );
-            }
-        );
-
-        growthHourRows.forEach((row) => {
-            const key =
-                `${row.student_id}_${row.academic_year}`;
-
-            if (
-                growthHourMap.has(key)
-            ) {
-                growthHourUpdated++;
-            } else {
-                growthHourCreated++;
-            }
-        });
-
-        // ==========================================
-        // 12. UPSERT GROWTH HOUR
-        // ==========================================
-
-        if (growthHourRows.length > 0) {
-            const {
-                error: growthHourUpsertError,
-            } = await supabase
-                .from(
-                    "growth_hour_attendance"
-                )
-                .upsert(
-                    growthHourRows,
-                    {
-                        onConflict:
-                            "student_id,academic_year",
+                    if (
+                        subjectResult.created
+                    ) {
+                        subjectsCreated++;
+                    } else {
+                        subjectsFound++;
                     }
+
+                    // ----------------------------------------------
+                    // ATTENDANCE
+                    // ----------------------------------------------
+
+                    const attendanceResult =
+                        await createOrUpdateAttendance(
+                            {
+                                studentId:
+                                    student.id,
+
+                                subjectId,
+
+                                attendanceType:
+                                    "subject",
+
+                                academicYear,
+
+                                semester,
+
+                                periodStart,
+
+                                periodEnd,
+
+                                attendance:
+                                    subjectData,
+                            }
+                        );
+
+                    if (
+                        attendanceResult.created
+                    ) {
+                        attendanceCreated++;
+                    }
+
+                    if (
+                        attendanceResult.updated
+                    ) {
+                        attendanceUpdated++;
+                    }
+                }
+
+                // ====================================================
+                // GROWTH HOUR
+                // ====================================================
+
+                if (
+                    studentData.growthHour
+                ) {
+                    const growthResult =
+                        await createOrUpdateAttendance(
+                            {
+                                studentId:
+                                    student.id,
+
+                                subjectId: null,
+
+                                attendanceType:
+                                    "growth_hour",
+
+                                academicYear,
+
+                                semester,
+
+                                periodStart,
+
+                                periodEnd,
+
+                                attendance:
+                                    studentData.growthHour,
+                            }
+                        );
+
+                    if (
+                        growthResult.created
+                    ) {
+                        growthHourCreated++;
+                    }
+
+                    if (
+                        growthResult.updated
+                    ) {
+                        growthHourUpdated++;
+                    }
+                }
+            } catch (studentError) {
+                console.error(
+                    `Failed to process student ${studentData.email}:`,
+                    studentError
                 );
 
-            if (growthHourUpsertError) {
-                throw growthHourUpsertError;
+                skippedStudents++;
             }
         }
 
-        // ==========================================
-        // RESPONSE
-        // ==========================================
+        // ========================================================
+        // SUCCESS RESPONSE
+        // ========================================================
 
-        res.json({
+        console.log(
+            "================================================"
+        );
+
+        console.log(
+            "ATTENDANCE IMPORT COMPLETED"
+        );
+
+        console.log(
+            "================================================"
+        );
+
+        return res.status(200).json({
             success: true,
+
             message:
-                "Attendance imported successfully",
+                "Attendance imported successfully.",
 
             academicYear,
 
-            studentsReceived:
-                students.length,
+            semester,
+
+            periodStart,
+
+            periodEnd,
 
             studentsCreated,
 
@@ -856,18 +1022,37 @@ const importAttendance = async (req, res) => {
             growthHourCreated,
 
             growthHourUpdated,
-        });
 
+            skippedStudents,
+
+            skippedSubjects,
+        });
     } catch (error) {
         console.error(
-            "Import attendance error:",
+            "================================================"
+        );
+
+        console.error(
+            "ATTENDANCE IMPORT FAILED"
+        );
+
+        console.error(
+            "================================================"
+        );
+
+        console.error(
             error
         );
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            message: "Import failed",
-            error: error.message,
+
+            error:
+                error.message ||
+                "Import failed.",
+
+            message:
+                "Import failed",
         });
     }
 };
