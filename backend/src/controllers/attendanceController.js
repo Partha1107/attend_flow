@@ -500,6 +500,25 @@ const createOrUpdateAttendance = async ({
     periodEnd,
     attendance,
 }) => {
+    const sessionsConducted = toNumber(
+        attendance.sessionsConducted
+    );
+
+    const sessionsAttended = toNumber(
+        attendance.sessionsAttended
+    );
+
+    const sessionsAbsent = toNumber(
+        attendance.sessionsAbsent
+    );
+
+    const attendancePercentage =
+        sessionsConducted > 0
+            ? Number(
+                ((sessionsAttended / sessionsConducted) * 100).toFixed(2)
+            )
+            : 0;
+
     const attendanceData = {
         student_id: studentId,
 
@@ -523,25 +542,13 @@ const createOrUpdateAttendance = async ({
         period_end:
             periodEnd,
 
-        sessions_conducted:
-            toNumber(
-                attendance.sessionsConducted
-            ),
+        sessions_conducted: sessionsConducted,
 
-        sessions_attended:
-            toNumber(
-                attendance.sessionsAttended
-            ),
+        sessions_attended: sessionsAttended,
 
-        sessions_absent:
-            toNumber(
-                attendance.sessionsAbsent
-            ),
+        sessions_absent: sessionsAbsent,
 
-        attendance_percentage:
-            toNumber(
-                attendance.attendancePercentage
-            ),
+        attendance_percentage: attendancePercentage,
 
         sessions_marked_od:
             toNumber(
