@@ -140,57 +140,27 @@ const transformAttendanceData = (data) => {
 
     let growthHour = null;
 
-    subjectNumbers.forEach(
-      (subjectNumber) => {
-        const id =
-          row[
-            `Subject ${subjectNumber} ID`
-          ];
+    subjectNumbers.forEach((subjectNumber) => {
+      const id = row[`Subject ${subjectNumber} ID`];
+      const name = row[`Subject ${subjectNumber} Name`];
+      const subjectData = {
+        id,
+        name,
+        sessionsConducted: row[`Subject ${subjectNumber} Sessions Conducted`],
+        sessionsAttended: row[`Subject ${subjectNumber} Sessions Attended`],
+        sessionsAbsent: row[`Subject ${subjectNumber} Sessions Absent`],
+        attendancePercentage: row[`Subject ${subjectNumber} Attendance %`],
+        sessionsMarkedOD: row[`Subject ${subjectNumber} Sessions Marked OD`],
+        sessionsMedicalLeave:
+          row[`Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`],
+        sessionsAppliedLeave: row[`Subject ${subjectNumber} Sessions Applied Leave`],
+      };
+      console.log(
+        `Subject ${subjectNumber} percentage:`,
+        row[`Subject ${subjectNumber} Attendance %`],
+        typeof row[`Subject ${subjectNumber} Attendance %`]
+      );
 
-        const name =
-          row[
-            `Subject ${subjectNumber} Name`
-          ];
-
-        const subjectData = {
-          id,
-          name,
-
-          sessionsConducted:
-            row[
-              `Subject ${subjectNumber} Sessions Conducted`
-            ],
-
-          sessionsAttended:
-            row[
-              `Subject ${subjectNumber} Sessions Attended`
-            ],
-
-          sessionsAbsent:
-            row[
-              `Subject ${subjectNumber} Sessions Absent`
-            ],
-
-          attendancePercentage:
-            row[
-              `Subject ${subjectNumber} Attendance %`
-            ],
-
-          sessionsMarkedOD:
-            row[
-              `Subject ${subjectNumber} Sessions Marked OD`
-            ],
-
-          sessionsMedicalLeave:
-            row[
-              `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
-            ],
-
-          sessionsAppliedLeave:
-            row[
-              `Subject ${subjectNumber} Sessions Applied Leave`
-            ],
-        };
 
         // ======================================================
         // GROWTH HOUR
