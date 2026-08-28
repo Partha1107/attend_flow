@@ -8,48 +8,40 @@ import "./EmailAutomation.css";
   Later this data will come from:
   Excel → Backend → Database/API → Email Automation
 */
-const attendanceData = [
-  {
-    id: "STU001",
-    name: "Rahul Kumar",
-    email: "karthikeyan9826@gmail.com",
-    parentEmail: "karthikeyan9826@gmail.com",
-    attendance: 62,
-  },
 
-  {
-    id: "STU002",
-    name: "Priya Sharma",
-    email: "karthikeyan9826@gmail.com",
-    parentEmail: "karthikeyan9826@gmail.com",
-    attendance: 68,
-  },
 
-  {
-    id: "STU003",
-    name: "Arun Kumar",
-    email: "karthikeyan9826@gmail.com",
-    parentEmail: "karthikeyan9826@gmail.com",
-    attendance: 72,
-  },
 
-  {
-    id: "STU004",
-    name: "Karthik Raj",
-    email: "karthikeyan9826@gmail.com",
-    parentEmail: "karthikeyan9826@gmail.com",
-    attendance: 58,
-  },
 
-  {
-    id: "STU005",
-    name: "Divya Sri",
-    email: "karthikeyan9826@gmail.com",
-    parentEmail: "karthikeyan9826@gmail.com",
-    attendance: 84,
-  },
-];
+function EmailAutomation() {
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
 
+  const fetchAttendanceData = async () => {
+  try {
+    setLoadingStudents(true);
+
+    const response = await fetch(
+      "http://localhost:5000/api/attendance/email-alerts"
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Failed to fetch attendance data"
+      );
+    }
+
+    setAttendanceData(result.students || []);
+  } catch (error) {
+    console.error("Failed to fetch email alert data:", error);
+  } finally {
+    setLoadingStudents(false);
+  }
+};
+useEffect(() => {
+  fetchAttendanceData();
+}, []);
 
 /*
   Attendance rules
@@ -93,7 +85,7 @@ const generateEmail = (student) => {
   };
 };
 
-function EmailAutomation() {
+
   const [mentorName, setMentorName] = useState("Mentor");
   const [mentorEmail, setMentorEmail] = useState("");
   /*
@@ -823,20 +815,29 @@ function EmailAutomation() {
           EMAIL LIST
       ====================================== */}
 
+      {/* =====================================
+    EMAIL LIST
+====================================== */}
+
       <div className="email-list">
 
-        {emailDrafts.length === 0 ? (
+        {loadingStudents ? (
 
           <div className="empty-email">
+            <h3>Loading students...</h3>
+            <p>Fetching student and parent details.</p>
+          </div>
 
+        ) : emailDrafts.length === 0 ? (
+
+          <div className="empty-email">
             <h3>
               No email drafts generated
             </h3>
 
             <p>
               Select the attendance date
-              and click "Generate Email
-              Drafts".
+              and click "Generate Email Drafts".
             </p>
 
           </div>
@@ -863,24 +864,15 @@ function EmailAutomation() {
                   <div className="student-avatar">
                     {email.name
                       .split(" ")
-                      .map(
-                        (word) =>
-                          word[0]
-                      )
+                      .map((word) => word[0])
                       .join("")
                       .toUpperCase()}
                   </div>
 
                   <div>
+                    <h3>{email.name}</h3>
 
-                    <h3>
-                      {email.name}
-                    </h3>
-
-                    <p>
-                      {email.email}
-                    </p>
-
+                    <p>{email.email}</p>
                   </div>
 
                 </div>
