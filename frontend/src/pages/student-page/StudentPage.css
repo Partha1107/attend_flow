@@ -36,6 +36,30 @@
   margin-bottom: 32px;
 }
 
+.student-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.import-student-btn {
+  border: 1px solid #f0b0b3;
+  background: #fff;
+  color: #c51a21;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-student-btn:hover {
+  background: #fff4f4;
+}
+
 .student-page-header h1 {
   margin: 0;
   font-size: 42px;
@@ -730,6 +754,16 @@
   }
 
   .add-student-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .student-header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .import-student-btn {
     width: 100%;
     justify-content: center;
   }
