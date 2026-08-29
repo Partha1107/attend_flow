@@ -36,7 +36,7 @@ function StudentPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/attendance/students/${detailsStudent.id}`,
+        `${import.meta.env.VITE_API_URL}/api/attendance/students/${detailsStudent.id}`,
         {
           method: "PATCH",
           headers: {
@@ -81,7 +81,7 @@ function StudentPage() {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/attendance/students"
+        `${import.meta.env.VITE_API_URL}/api/attendance/students`
       );
 
       const result = await response.json();

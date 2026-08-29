@@ -21,7 +21,7 @@ function EmailAutomation() {
     setLoadingStudents(true);
 
     const response = await fetch(
-      "http://localhost:5000/api/attendance/email-alerts"
+      `${import.meta.env.VITE_API_URL}/api/attendance/email-alerts`
     );
 
     const result = await response.json();
@@ -269,7 +269,7 @@ const generateEmail = (student) => {
     for (const email of automaticEmails) {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/email-automation/send",
+          `${import.meta.env.VITE_API_URL}/api/email-automation/send`,
           {
             method: "POST",
             headers: {
@@ -489,7 +489,7 @@ const generateEmail = (student) => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/email-automation/send",
+        `${import.meta.env.VITE_API_URL}/api/email-automation/send`,
         {
           method: "POST",
           headers: {
