@@ -21,7 +21,7 @@ function EmailAutomation() {
     setLoadingStudents(true);
 
     const response = await fetch(
-      "http://localhost:5000/api/attendance/email-alerts"
+      `${import.meta.env.VITE_API_URL}/api/attendance/email-alerts`
     );
 
     const responseText = await response.text();
