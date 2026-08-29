@@ -20,43 +20,102 @@ import {
 } from "recharts";
 
 import "./Dashboard.css";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-const API_URL = "http://localhost:5000";
-
-const statCardConfig = [
+const statCards = [
   {
     label: "Students",
-    value: 0,
-    change: "Live from student records",
+    value: "156",
+    change: "5 from last week",
     direction: "up",
     icon: UsersRound,
     tone: "blue",
   },
   {
     label: "Avg Attendance",
-    value: "0%",
-    change: "Live from attendance records",
+    value: "82.4%",
+    change: "2.6% from last week",
     direction: "up",
     icon: CheckCircle2,
     tone: "green",
   },
   {
     label: "At Risk Students",
-    value: 0,
-    change: "Below 75% attendance",
+    value: "24",
+    change: "4 from last week",
     direction: "down",
     icon: AlertCircle,
     tone: "orange",
   },
   {
     label: "Alerts Sent",
-    value: 0,
-    change: "Imported student records",
+    value: "118",
+    change: "18 from last week",
     direction: "up",
     icon: Mail,
     tone: "purple",
+  },
+];
+
+const distribution = [
+  {
+    name: "Good",
+    description: "75% and above",
+    value: 102,
+    percentage: 65.4,
+    fill: "#25B86A",
+  },
+  {
+    name: "Warning",
+    description: "65% – 74%",
+    value: 32,
+    percentage: 20.5,
+    fill: "#F3B62F",
+  },
+  {
+    name: "Critical",
+    description: "Below 65%",
+    value: 22,
+    percentage: 14.1,
+    fill: "#E64B4B",
+  },
+];
+
+const students = [
+  {
+    name: "Student A",
+    squad: "Squad 138",
+    attendance: 61,
+    updated: "May 18, 2024",
+    status: "Critical",
+  },
+  {
+    name: "Student B",
+    squad: "Squad 140",
+    attendance: 68,
+    updated: "May 18, 2024",
+    status: "Warning",
+  },
+  {
+    name: "Student C",
+    squad: "Squad 136",
+    attendance: 72,
+    updated: "May 18, 2024",
+    status: "Warning",
+  },
+  {
+    name: "Student D",
+    squad: "Squad 139",
+    attendance: 59,
+    updated: "May 18, 2024",
+    status: "Critical",
+  },
+  {
+    name: "Student E",
+    squad: "Squad 142",
+    attendance: 64,
+    updated: "May 18, 2024",
+    status: "Critical",
   },
 ];
 
@@ -144,62 +203,22 @@ function DistributionItem({ item }) {
 }
 
 function Dashboard() {
-  const navigate = useNavigate();
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [filterOpen, setFilterOpen] =
     useState(false);
 
   const [selectedSquad, setSelectedSquad] =
     useState("All");
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/attendance/students`);
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "Failed to fetch students");
-        }
-        setStudents(result.students || []);
-      } catch (fetchError) {
-        setError(fetchError.message || "Failed to fetch students");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void fetchStudents();
-  }, []);
-
-  const totalStudents = students.length;
-  const averageAttendance = totalStudents
-    ? students.reduce((total, student) => total + Number(student.attendance || 0), 0) / totalStudents
-    : 0;
-  const distribution = [
-    { name: "Good", description: "75% and above", value: students.filter((student) => Number(student.attendance) >= 75).length, fill: "#25B86A" },
-    { name: "Warning", description: "65% – 74%", value: students.filter((student) => Number(student.attendance) >= 65 && Number(student.attendance) < 75).length, fill: "#F3B62F" },
-    { name: "Critical", description: "Below 65%", value: students.filter((student) => Number(student.attendance) < 65).length, fill: "#E64B4B" },
-  ].map((item) => ({
-    ...item,
-    percentage: totalStudents ? Number(((item.value / totalStudents) * 100).toFixed(1)) : 0,
-  }));
+  const totalStudents =
+    distribution.reduce(
+      (total, item) =>
+        total + item.value,
+      0
+    );
 
   const studentsNeedingAttention =
     distribution[1].value +
     distribution[2].value;
-
-  const statCards = statCardConfig.map((card) => ({
-    ...card,
-    value: card.label === "Students"
-      ? totalStudents
-      : card.label === "Avg Attendance"
-        ? `${averageAttendance.toFixed(1)}%`
-        : card.label === "At Risk Students"
-          ? studentsNeedingAttention
-          : totalStudents,
-  }));
 
   /*
    * FILTER STUDENTS
@@ -215,12 +234,9 @@ function Dashboard() {
       ? students
       : students.filter(
           (student) =>
-            String(student.squad) === selectedSquad.replace("Squad ", "")
+            student.squad ===
+            selectedSquad
         );
-
-  const attentionStudents = filteredStudents.filter(
-    (student) => Number(student.attendance) < 75
-  );
 
   /*
    * VIEW ALL
@@ -297,8 +313,6 @@ function Dashboard() {
           />
         ))}
       </div>
-
-      {error && <div className="dashboard-error">{error}</div>}
 
       {/* =====================================
           ATTENDANCE DISTRIBUTION
@@ -392,7 +406,9 @@ function Dashboard() {
                   Overall healthy
                 </span>
 
-                <strong>{distribution[0].percentage}%</strong>
+                <strong>
+                  65.4%
+                </strong>
               </div>
 
               <div className="summary-status">
@@ -433,7 +449,9 @@ function Dashboard() {
                 Healthy Students
               </span>
 
-                <strong>{distribution[0].value}</strong>
+              <strong>
+                102
+              </strong>
             </div>
           </div>
 
@@ -447,7 +465,9 @@ function Dashboard() {
                 Warning Students
               </span>
 
-                <strong>{distribution[1].value}</strong>
+              <strong>
+                32
+              </strong>
             </div>
           </div>
 
@@ -461,7 +481,9 @@ function Dashboard() {
                 Critical Students
               </span>
 
-                <strong>{distribution[2].value}</strong>
+              <strong>
+                22
+              </strong>
             </div>
           </div>
 
@@ -639,13 +661,13 @@ function Dashboard() {
 
             <tbody>
 
-              {loading ? (
-                <div className="empty-state">Loading students...</div>
-              ) : attentionStudents.map(
+              {filteredStudents.map(
                 (student) => (
 
                   <tr
-                    key={student.id}
+                    key={
+                      student.name
+                    }
                   >
 
                     {/* STUDENT */}
@@ -658,7 +680,7 @@ function Dashboard() {
                             IN FRONT OF NAME */}
 
                         <div className="student-avatar">
-                          {student.name?.trim()
+                          {student.name
                             .split(" ")
                             .map(
                               (word) =>
@@ -669,7 +691,7 @@ function Dashboard() {
                         </div>
 
                         <strong>
-                          {student.name || "Unnamed student"}
+                          {student.name}
                         </strong>
 
                       </div>
@@ -681,7 +703,7 @@ function Dashboard() {
                     <td>
 
                       <span className="squad-pill">
-                        {student.squad || "Unassigned"}
+                        {student.squad}
                       </span>
 
                     </td>
@@ -692,7 +714,11 @@ function Dashboard() {
 
                       <div className="attendance-cell">
 
-                        <strong>{Number(student.attendance || 0).toFixed(2)}%</strong>
+                        <strong>
+                          {
+                            student.attendance
+                          }%
+                        </strong>
 
                         <div className="progress-track">
 
@@ -719,9 +745,11 @@ function Dashboard() {
                     <td>
 
                       <span
-                        className={`status-pill ${Number(student.attendance) < 65 ? "critical" : "warning"}`}
+                        className={`status-pill ${student.status.toLowerCase()}`}
                       >
-                        {Number(student.attendance) < 65 ? "Critical" : "Warning"}
+                        {
+                          student.status
+                        }
                       </span>
 
                     </td>
@@ -734,7 +762,9 @@ function Dashboard() {
                         size={13}
                       />
 
-                      {student.updated_at ? new Date(student.updated_at).toLocaleDateString() : "Not yet imported"}
+                      {
+                        student.updated
+                      }
 
                     </td>
 
@@ -745,9 +775,8 @@ function Dashboard() {
                       <button
                         className="student-action"
                         type="button"
-                        onClick={() => navigate(`/students?student=${encodeURIComponent(student.id)}`)}
                       >
-                        View Details
+                        View
                       </button>
 
                     </td>
@@ -763,10 +792,11 @@ function Dashboard() {
 
           {/* EMPTY STATE */}
 
-          {attentionStudents.length ===
+          {filteredStudents.length ===
             0 && (
               <div className="empty-state">
-                {loading ? "Loading students..." : "No students need attention for this squad."}
+                No students found for
+                this squad.
               </div>
             )}
 
@@ -783,10 +813,10 @@ function Dashboard() {
             />
 
             Showing{" "}
-              {
-                attentionStudents.length
-              }{" "}
-            of {studentsNeedingAttention} at-risk
+            {
+              filteredStudents.length
+            }{" "}
+            of 24 at-risk
             students
 
           </span>

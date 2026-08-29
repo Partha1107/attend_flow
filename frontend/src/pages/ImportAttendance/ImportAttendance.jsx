@@ -216,9 +216,6 @@ const transformAttendanceData = (data) => {
       email: row.email,
       name: row.Name,
       squad: row.Squad,
-      parent_name: row["Parent Name"] || row.parent_name || row.ParentName,
-      parent_email: row["Parent Email"] || row.parent_email || row.ParentEmail,
-      parent_phone: row["Parent Phone"] || row["Parent Phone Number"] || row["Parent's Number"] || row.parent_phone || row.ParentPhone,
 
       subjects,
 
@@ -815,17 +812,8 @@ function ImportAttendance() {
       // RESPONSE
       // ======================================================
 
-      const responseText = await response.text();
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch {
-        throw new Error(
-          response.status === 413
-            ? "The Excel import is too large. Please reduce the file size or number of columns."
-            : "The backend returned an invalid response. Please try again."
-        );
-      }
+      const result =
+        await response.json();
 
       console.log(
         "Backend response:",

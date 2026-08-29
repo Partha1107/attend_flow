@@ -1,19 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
-import { FileSpreadsheet, RefreshCw } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "./StudentPage.css";
 
 
 
 function StudentPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [squad, setSquad] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState("");
-  const [error, setError] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -81,10 +76,9 @@ function StudentPage() {
     }
   };
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = async () => {
     try {
       setLoading(true);
-      setError("");
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/attendance/students`
@@ -96,38 +90,22 @@ function StudentPage() {
         throw new Error(result.message || "Failed to fetch students");
       }
 
-        const fetchedStudents = result.students || [];
-        setStudents(fetchedStudents);
-
-        const studentId = searchParams.get("student");
-        const matchingStudent = fetchedStudents.find(
-          (student) => String(student.id) === studentId
-        );
-
-        if (matchingStudent) {
-          setSelectedStudent(matchingStudent);
-        }
+      setStudents(result.students || []);
     } catch (error) {
       console.error("Failed to fetch students:", error);
-      setError(error.message || "Failed to fetch students.");
     } finally {
       setLoading(false);
     }
-  }, [searchParams]);
+  };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void fetchStudents();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [fetchStudents]);
+    fetchStudents();
+  }, []);
 
   const filteredStudents = students.filter((student) => {
-    const searchValue = search.toLowerCase();
     const matchesSearch =
-      student.name?.toLowerCase().includes(searchValue) ||
-      String(student.id).toLowerCase().includes(searchValue);
+      student.name.toLowerCase().includes(search.toLowerCase()) ||
+      student.id.toLowerCase().includes(search.toLowerCase());
 
     const matchesSquad =
       !squad || student.squad === squad;
@@ -149,12 +127,6 @@ function StudentPage() {
     setAttendanceStatus("");
   };
 
-  const presentCount = students.filter((student) => student.status === "Present").length;
-  const absentCount = students.filter((student) => student.status === "Absent").length;
-  const averageAttendance = students.length
-    ? (students.reduce((sum, student) => sum + Number(student.attendance || 0), 0) / students.length).toFixed(2)
-    : "0.00";
-
   return (
     <div className="student-page">
       {/* Page Header */}
@@ -164,28 +136,14 @@ function StudentPage() {
           <p>Manage student profiles and view attendance information.</p>
         </div>
 
-        <div className="student-header-actions">
-          <button
-            className="import-student-btn"
-            type="button"
-            onClick={() => navigate("/import-attendance")}
-          >
-            <FileSpreadsheet size={18} />
-            Import Excel
-          </button>
-
-          <button
-            className="add-student-btn"
-            type="button"
-            onClick={fetchStudents}
-          >
-            <RefreshCw size={18} />
-            Refresh Students
-          </button>
-        </div>
+        <button
+          className="add-student-btn"
+          onClick={fetchStudents}
+        >
+          <span>↻</span>
+          Refresh Students
+        </button>
       </div>
-
-      {error && <div className="records-error">{error}</div>}
 
       {showDetailsModal && detailsStudent && (
         <div
@@ -242,6 +200,7 @@ function StudentPage() {
                   value={parentEmail}
                   onChange={(e) => setParentEmail(e.target.value)}
                   placeholder="Parent Email"
+                  required
                 />
 
                 <input
@@ -323,7 +282,7 @@ function StudentPage() {
           <div className="stat-icon">♙</div>
           <div>
             <p>Total Students</p>
-            <h2>{students.length}</h2>
+            <h2>150</h2>
           </div>
         </div>
 
@@ -331,7 +290,7 @@ function StudentPage() {
           <div className="stat-icon">✓</div>
           <div>
             <p>Present Today</p>
-            <h2>{presentCount}</h2>
+            <h2>132</h2>
           </div>
         </div>
 
@@ -339,7 +298,7 @@ function StudentPage() {
           <div className="stat-icon">⌁</div>
           <div>
             <p>Absent Today</p>
-            <h2>{absentCount}</h2>
+            <h2>18</h2>
           </div>
         </div>
 
@@ -347,7 +306,7 @@ function StudentPage() {
           <div className="stat-icon">◔</div>
           <div>
             <p>Average Attendance</p>
-            <h2>{averageAttendance}%</h2>
+            <h2>87%</h2>
           </div>
         </div>
       </div>
@@ -426,7 +385,7 @@ function StudentPage() {
         {/* Pagination */}
         <div className="pagination">
           <strong>
-            Showing {filteredStudents.length} of {students.length} students
+            Showing 1–{filteredStudents.length} of 150 students
           </strong>
 
           <div className="pagination-buttons">
@@ -534,7 +493,9 @@ function StudentPage() {
               </div>
 
               <div className="attendance-details">
-                <span>Attendance is calculated from imported records.</span>
+                <span>Present: 92 days</span>
+                <span>Absent: 8 days</span>
+                <span>Total: 100 days</span>
               </div>
             </div>
 
