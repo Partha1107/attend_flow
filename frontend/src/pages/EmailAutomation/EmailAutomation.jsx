@@ -24,7 +24,13 @@ function EmailAutomation() {
       "http://localhost:5000/api/attendance/email-alerts"
     );
 
-    const result = await response.json();
+    const responseText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error("The backend returned an invalid response.");
+    }
 
     if (!response.ok || !result.success) {
       throw new Error(
@@ -40,7 +46,11 @@ function EmailAutomation() {
   }
 };
 useEffect(() => {
-  fetchAttendanceData();
+  const timer = window.setTimeout(() => {
+    void fetchAttendanceData();
+  }, 0);
+
+  return () => window.clearTimeout(timer);
 }, []);
 
 /*
@@ -63,19 +73,12 @@ const getAttendanceStatus = (attendance) => {
 */
 const generateEmail = (student) => {
   const status = getAttendanceStatus(student.attendance);
-
-  let subject = "";
-  let message = "";
-
-  if (status === "Critical") {
-    subject = "Attendance Alert - Immediate Attention Required";
-
-    message = `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`;
-  } else {
-    subject = "Attendance Warning";
-
-    message = `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`;
-  }
+  const subject = status === "Critical"
+    ? "Attendance Alert - Immediate Attention Required"
+    : "Attendance Warning";
+  const message = status === "Critical"
+    ? `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`
+    : `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`;
 
   return {
     ...student,
@@ -113,7 +116,6 @@ const generateEmail = (student) => {
   */
   const [communicationMode, setCommunicationMode] = useState({});
 
-  const [sentEmails, setSentEmails] = useState([]);
   const [showDraftOnly, setShowDraftOnly] = useState(false);
 
   const [reviewedDrafts, setReviewedDrafts] = useState({});
@@ -137,16 +139,6 @@ const generateEmail = (student) => {
     Editable message
   */
   const [editMessage, setEditMessage] = useState("");
-
-  useEffect(() => {
-    const storedHistory = localStorage.getItem(
-      "communicationHistory"
-    );
-
-    if (storedHistory) {
-      setSentEmails(JSON.parse(storedHistory));
-    }
-  }, []);
 
   useEffect(() => {
     const getMentor = async () => {
@@ -177,13 +169,6 @@ const generateEmail = (student) => {
     getMentor();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "communicationHistory",
-      JSON.stringify(sentEmails)
-    );
-  }, [sentEmails]);
-
   /*
     Generate drafts
   */
@@ -210,47 +195,50 @@ const generateEmail = (student) => {
     generatedEmails.forEach((email) => {
       defaultCommunication[email.id] = "automatic";
     });
-
     setCommunicationMode(defaultCommunication);
-
     setSelectedEmail(null);
     setModalMode(null);
   };
 
-  /*
-    Change communication method
-    for one student
-  */
+  const sendEmail = async (email) => {
+    if (!email.parentEmail) throw new Error("Parent email missing");
+
+    const response = await fetch("http://localhost:5000/api/email-automation/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mentorName,
+        mentorEmail,
+        studentId: email.id,
+        studentName: email.name,
+        studentEmail: email.email,
+        parentEmail: email.parentEmail,
+        attendancePercentage: email.attendance,
+        subject: email.subject,
+        message: email.message,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || result.error || "Email sending failed");
+    }
+  };
+
   const handleCommunicationChange = (studentId, mode) => {
-    setCommunicationMode((currentModes) => ({
-      ...currentModes,
-      [studentId]: mode,
-    }));
+    setCommunicationMode((current) => ({ ...current, [studentId]: mode }));
   };
 
-  /*
-    Select all as Automatic
-  */
   const handleSelectAllAutomatic = () => {
-    const automaticModes = {};
-
-    emailDrafts.forEach((email) => {
-      automaticModes[email.id] = "automatic";
-    });
-
-    setCommunicationMode(automaticModes);
+    const modes = {};
+    emailDrafts.forEach((email) => { modes[email.id] = "automatic"; });
+    setCommunicationMode(modes);
   };
-  /*
-    Select all as Draft
-  */
+
   const handleSelectAllDraft = () => {
-    const draftModes = {};
-
-    emailDrafts.forEach((email) => {
-      draftModes[email.id] = "draft";
-    });
-
-    setCommunicationMode(draftModes);
+    const modes = {};
+    emailDrafts.forEach((email) => { modes[email.id] = "draft"; });
+    setCommunicationMode(modes);
   };
 
   const handleSendAutomaticEmails = async () => {
@@ -265,94 +253,27 @@ const generateEmail = (student) => {
 
     let successCount = 0;
     let failedCount = 0;
+    const successfulIds = [];
 
     for (const email of automaticEmails) {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/email-automation/send",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              mentorName,
-              mentorEmail,
-              studentName: email.name,
-              studentEmail: email.email,
-              parentEmail: email.parentEmail,
-              attendancePercentage: email.attendance,
-              subject: email.subject,
-              message: email.message,
-            }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(
-            data.message || "Email sending failed"
-          );
-        }
-
+        await sendEmail(email);
         successCount++;
-
-        setSentEmails((current) => [
-          ...current,
-          {
-            ...email,
-            id: `MSG-${Date.now()}-${email.id}`,
-            date: new Date().toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }),
-            time: new Date().toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            type: "Email",
-            recipient: email.email,
-            name: email.name,
-            message: email.message,
-            status: "Sent",
-            communicationType: "automatic",
-          },
-        ]);
+        successfulIds.push(email.id);
       } catch (error) {
-        console.error(
-          `Failed to send email to ${email.email}:`,
-          error
-        );
-
+        console.error(`Failed to send email to ${email.email}:`, error);
         failedCount++;
       }
     }
 
-    setEmailDrafts((currentEmails) =>
-      currentEmails.filter(
-        (email) =>
-          communicationMode[email.id] !== "automatic"
-      )
-    );
-
-    setCommunicationMode((currentModes) => {
-      const updatedModes = { ...currentModes };
-
-      automaticEmails.forEach((email) => {
-        delete updatedModes[email.id];
-      });
-
-      return updatedModes;
+    setEmailDrafts((current) => current.filter((email) => !successfulIds.includes(email.id)));
+    setCommunicationMode((current) => {
+      const updated = { ...current };
+      successfulIds.forEach((id) => delete updated[id]);
+      return updated;
     });
 
-    alert(
-      `${successCount} email(s) sent successfully. ${failedCount > 0
-        ? `${failedCount} email(s) failed.`
-        : ""
-      }`
-    );
+    alert(`${successCount} email(s) sent successfully. ${failedCount} email(s) failed.`);
   };
 
 
@@ -360,7 +281,7 @@ const generateEmail = (student) => {
     setShowDraftOnly(true);
   };
 
-  const handleSendReviewedDrafts = () => {
+  const handleSendReviewedDrafts = async () => {
     const reviewedEmails = emailDrafts.filter(
       (email) =>
         communicationMode[email.id] === "draft" &&
@@ -372,39 +293,29 @@ const generateEmail = (student) => {
       return;
     }
 
-    setSentEmails((current) => [
-      ...current,
-      ...reviewedEmails.map((email) => ({
-        ...email,
-        id: `MSG-${Date.now()}-${email.id}`,
-        date: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-        time: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        type: "Email",
-        recipient: email.email,
-        name: email.name,
-        message: email.message,
-        status: "Sent",
-        communicationType: "draft",
-      }))
+    let successCount = 0;
+    let failedCount = 0;
+    const successfulIds = [];
 
-    ]);
+    for (const email of reviewedEmails) {
+      try {
+        await sendEmail(email);
+        successCount++;
+        successfulIds.push(email.id);
+      } catch (error) {
+        console.error(`Failed to send reviewed draft ${email.id}:`, error);
+        failedCount++;
+      }
+    }
+
     setEmailDrafts((currentEmails) =>
-      currentEmails.filter(
-        (email) => !reviewedEmails.some((reviewed) => reviewed.id === email.id)
-      )
+      currentEmails.filter((email) => !successfulIds.includes(email.id))
     );
     setCommunicationMode((currentModes) => {
       const updatedModes = { ...currentModes };
 
-      reviewedEmails.forEach((email) => {
-        delete updatedModes[email.id];
+      successfulIds.forEach((id) => {
+        delete updatedModes[id];
       });
 
       return updatedModes;
@@ -412,12 +323,14 @@ const generateEmail = (student) => {
     setReviewedDrafts((current) => {
       const updatedReviews = { ...current };
 
-      reviewedEmails.forEach((email) => {
-        delete updatedReviews[email.id];
+      successfulIds.forEach((id) => {
+        delete updatedReviews[id];
       });
 
       return updatedReviews;
     });
+
+    alert(`${successCount} draft(s) sent successfully. ${failedCount} failed.`);
   };
 
 
@@ -488,56 +401,7 @@ const generateEmail = (student) => {
     if (!student) return;
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/email-automation/send",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mentorName,
-            mentorEmail,
-            studentName: student.name,
-            studentEmail: student.email,
-            attendancePercentage: student.attendance,
-            subject: student.subject,
-            message: student.message,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to send email"
-        );
-      }
-
-      setSentEmails((current) => [
-        ...current,
-        {
-          ...student,
-          id: `MSG-${Date.now()}-${student.id}`,
-          date: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-          time: new Date().toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          type: "Email",
-          recipient: student.email,
-          name: student.name,
-          message: student.message,
-          status: "Sent",
-          communicationType:
-            communicationMode[student.id] || "automatic",
-        },
-      ]);
+      await sendEmail(student);
 
       setEmailDrafts((currentEmails) =>
         currentEmails.filter(
@@ -559,7 +423,7 @@ const generateEmail = (student) => {
       setModalMode(null);
 
       alert(
-        `Email sent successfully to ${student.email}`
+        `Email sent successfully to ${student.parentEmail}`
       );
     } catch (error) {
       console.error("Email sending error:", error);
@@ -799,6 +663,14 @@ const generateEmail = (student) => {
 
             <button
               type="button"
+              className="review-drafts-button"
+              onClick={handleSendReviewedDrafts}
+            >
+              Send Reviewed Drafts
+            </button>
+
+            <button
+              type="button"
               className="show-all-button"
               onClick={() => setShowDraftOnly(false)}
             >
@@ -873,6 +745,8 @@ const generateEmail = (student) => {
                     <h3>{email.name}</h3>
 
                     <p>{email.email}</p>
+
+                    <p>{email.parentEmail || "Parent email missing"}</p>
                   </div>
 
                 </div>
@@ -1056,7 +930,7 @@ const generateEmail = (student) => {
                 </span>
 
                 <p>
-                  {selectedEmail.email}
+                  {selectedEmail.parentEmail || "Parent email missing"}
                 </p>
 
               </div>
