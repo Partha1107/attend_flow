@@ -28,15 +28,20 @@ const mainItems = [
     icon: UsersRound,
     to: "/students",
   },
-   {
-    label: "Email Automation",
-    icon: Mail,
-    to: "/email-automation",
+  {
+    label: "Alerts",
+    icon: AlertTriangle,
+    to: "/alerts",
   },
   {
     label: "Communication History",
     icon: Mail,
     to: "/communication-history",
+  },
+  {
+    label: "Email Automation",
+    icon: Mail,
+    to: "/email-automation",
   },
   {
     label: "Settings",

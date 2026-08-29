@@ -234,10 +234,6 @@ const createOrUpdateStudent = async (
         student.squad
     );
 
-    const parentName = cleanString(student.parent_name || student.parentName);
-    const parentEmail = cleanString(student.parent_email || student.parentEmail);
-    const parentPhone = cleanString(student.parent_phone || student.parentPhone);
-
     if (!email) {
         throw new Error(
             "Student email is missing."
@@ -259,9 +255,6 @@ const createOrUpdateStudent = async (
         const updateData = {
             name,
             squad,
-            parent_name: parentName || existingStudent.parent_name || null,
-            parent_email: parentEmail || existingStudent.parent_email || null,
-            parent_phone: parentPhone || existingStudent.parent_phone || null,
         };
 
         const {
@@ -303,9 +296,6 @@ const createOrUpdateStudent = async (
             email,
             name,
             squad,
-            parent_name: parentName || null,
-            parent_email: parentEmail || null,
-            parent_phone: parentPhone || null,
         })
         .select()
         .single();

@@ -12,33 +12,60 @@ import {
 
 import "./CommunicationHistory.css";
 
+const communicationData = [
+  {
+    id: "MSG-20260817-001",
+    date: "Aug 17, 2026",
+    time: "09:42 AM",
+    type: "Email",
+    recipient: "sarah.j@student.edu",
+    name: "Sarah Jenkins",
+    message: "Attendance Alert - You missed your Intro to CS class.",
+    status: "Delivered",
+  },
+  {
+    id: "SMS-20260817-002",
+    date: "Aug 17, 2026",
+    time: "09:30 AM",
+    type: "SMS",
+    recipient: "+91 XXXXXXXX",
+    name: "John Mathew",
+    message: "Attendance Reminder - Please check your attendance.",
+    status: "Delivered",
+  },
+  {
+    id: "MSG-20260817-003",
+    date: "Aug 17, 2026",
+    time: "09:20 AM",
+    type: "Email",
+    recipient: "student2@student.edu",
+    name: "David Kumar",
+    message: "Attendance Warning - Your attendance is below 75%.",
+    status: "Failed",
+  },
+  {
+    id: "SMS-20260817-004",
+    date: "Aug 17, 2026",
+    time: "09:10 AM",
+    type: "SMS",
+    recipient: "+91 XXXXXXXX",
+    name: "Priya",
+    message: "Attendance Reminder - Please check your attendance.",
+    status: "Pending",
+  },
+];
+
 function CommunicationHistory() {
   const [history, setHistory] = useState([]);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/email-automation/records");
-        const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.message || "Failed to fetch history");
-        setHistory((result.data || []).map((record) => ({
-          ...record,
-          date: new Date(record.sent_at).toLocaleDateString(),
-          time: new Date(record.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          type: record.communication_type || "Email",
-          recipient: record.parent_email,
-          name: record.student_name,
-          subject: record.subject || "Attendance Alert",
-          message: record.message || "Attendance email sent successfully.",
-          status: record.status,
-        })));
-      } catch (fetchError) {
-        setError(fetchError.message || "Failed to fetch communication history");
-      }
-    };
+    const storedHistory = localStorage.getItem(
+      "communicationHistory"
+    );
 
-    fetchHistory();
+    if (storedHistory) {
+      setHistory(JSON.parse(storedHistory));
+    }
   }, []);
 
   const [activeTab, setActiveTab] = useState("All");
@@ -46,7 +73,30 @@ function CommunicationHistory() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedMessage, setSelectedMessage] = useState(null);
 
-  const filteredData = history.filter((item) => {
+  const filteredData = history.length > 0
+    ? history.filter((item) => {
+      const matchesTab =
+        activeTab === "All" || item.type === activeTab;
+
+      const matchesStatus =
+        statusFilter === "All" ||
+        item.status === statusFilter;
+
+      const searchText = search.toLowerCase();
+
+      const matchesSearch =
+        item.recipient.toLowerCase().includes(searchText) ||
+        item.name.toLowerCase().includes(searchText) ||
+        item.message.toLowerCase().includes(searchText) ||
+        item.id.toLowerCase().includes(searchText);
+
+      return (
+        matchesTab &&
+        matchesStatus &&
+        matchesSearch
+      );
+    })
+     :communicationData.filter((item) => {
       const matchesTab =
         activeTab === "All" || item.type === activeTab;
 
@@ -68,22 +118,12 @@ function CommunicationHistory() {
         matchesSearch
       );
     });
-
-  const sentCount = history.filter((item) => item.status === "Sent").length;
-  const failedCount = history.filter((item) => item.status === "Failed").length;
-  const pendingCount = history.filter((item) => item.status === "Pending").length;
-
-  if (error) {
-    console.error(error);
-  }
 return (
   <div className="communication-history">
 
     {/* Page Header */}
     <div className="communication-header">
       <h1>Communication History</h1>
-
-      {error && <p className="records-error">{error}</p>}
 
       <p>
         Track and monitor all email and SMS notifications
@@ -96,31 +136,31 @@ return (
 
       <StatCard
         title="Total Sent"
-        value={sentCount}
-        subtitle="Successful emails"
+        value="1,248"
+        subtitle="All communications"
         icon={<Send size={20} />}
       />
 
       <StatCard
         title="Delivered"
-        value={sentCount}
-        subtitle="Confirmed by Brevo"
+        value="1,172"
+        subtitle="93.9% delivery rate"
         icon={<CheckCircle size={20} />}
         type="success"
       />
 
       <StatCard
         title="Failed"
-        value={failedCount}
-        subtitle="Not sent"
+        value="42"
+        subtitle="3.4% failed"
         icon={<AlertCircle size={20} />}
         type="error"
       />
 
       <StatCard
         title="Pending"
-        value={pendingCount}
-        subtitle="Awaiting action"
+        value="34"
+        subtitle="2.7% pending"
         icon={<Clock size={20} />}
         type="warning"
       />
@@ -226,8 +266,7 @@ return (
                 </td>
 
                 <td className="message-cell">
-                  <strong>{item.subject}</strong>
-                  <span>{item.message}</span>
+                  {item.message}
                 </td>
 
                 <td>
