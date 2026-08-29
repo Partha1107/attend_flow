@@ -9,10 +9,6 @@ const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
 
 const app = express();
 
-// --------------------------------------------------
-// CORS
-// --------------------------------------------------
-
 const allowedOrigins = [
     "http://localhost:5173",
     "https://attendance-recored.vercel.app",
@@ -21,8 +17,6 @@ const allowedOrigins = [
 app.use(
     cors({
         origin: function (origin, callback) {
-            // Allow requests without an origin
-            // (Postman, server-to-server requests, etc.)
             if (!origin) {
                 return callback(null, true);
             }
@@ -31,21 +25,25 @@ app.use(
                 return callback(null, true);
             }
 
-            return callback(new Error("Not allowed by CORS"));
+            return callback(
+                new Error("Not allowed by CORS")
+            );
         },
         credentials: true,
     })
 );
 
-// --------------------------------------------------
-// Middleware
-// --------------------------------------------------
+app.use(
+    express.json({
+        limit: "20mb",
+    })
+);
 
-// app.use(express.json({ limit: "20mb" }));
-
-// --------------------------------------------------
-// Health Check
-// --------------------------------------------------
+app.use(
+    express.urlencoded({
+        extended: true,
+    })
+);
 
 app.get("/api/health", (req, res) => {
     res.json({
@@ -54,17 +52,15 @@ app.get("/api/health", (req, res) => {
     });
 });
 
-// --------------------------------------------------
-// Routes
-// --------------------------------------------------
+app.use(
+    "/api/attendance",
+    attendanceRoutes
+);
 
-app.use("/api/attendance", attendanceRoutes);
-
-app.use("/api/email-automation", emailAutomationRoutes);
-
-// --------------------------------------------------
-// JSON / Payload Error Handler
-// --------------------------------------------------
+app.use(
+    "/api/email-automation",
+    emailAutomationRoutes
+);
 
 app.use((error, req, res, next) => {
     if (
@@ -74,15 +70,19 @@ app.use((error, req, res, next) => {
     ) {
         return res.status(400).json({
             success: false,
-            message: "Request body contains invalid JSON.",
+            message:
+                "Request body contains invalid JSON.",
             error: error.message,
         });
     }
 
-    if (error.type === "entity.too.large") {
+    if (
+        error.type === "entity.too.large"
+    ) {
         return res.status(413).json({
             success: false,
-            message: "Import payload is too large. Please use a smaller Excel file.",
+            message:
+                "Import payload is too large. Please use a smaller Excel file.",
             error: "Payload Too Large",
         });
     }
@@ -90,24 +90,20 @@ app.use((error, req, res, next) => {
     return next(error);
 });
 
-// --------------------------------------------------
-// 404 Handler
-// --------------------------------------------------
-
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        message: "API endpoint not found.",
+        message:
+            "API endpoint not found.",
         error: `${req.method} ${req.originalUrl}`,
     });
 });
 
-// --------------------------------------------------
-// Server
-// --------------------------------------------------
-
-const PORT = process.env.PORT || 5000;
+const PORT =
+    process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`AESA Backend running on port ${PORT}`);
+    console.log(
+        `AESA Backend running on port ${PORT}`
+    );
 });
