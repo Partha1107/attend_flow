@@ -119,6 +119,8 @@ const generateEmail = (student) => {
   const [showDraftOnly, setShowDraftOnly] = useState(false);
 
   const [reviewedDrafts, setReviewedDrafts] = useState({});
+  const [sendingIds, setSendingIds] = useState([]);
+  const [sendError, setSendError] = useState("");
 
   /*
     Currently selected email
@@ -201,7 +203,11 @@ const generateEmail = (student) => {
   };
 
   const sendEmail = async (email) => {
-    if (!email.parentEmail) throw new Error("Parent email missing");
+    if (!email.parentEmail) {
+      throw new Error(`Parent email is missing for ${email.name}.`);
+    }
+
+    setSendError("");
 
     const response = await fetch("http://localhost:5000/api/email-automation/send", {
       method: "POST",
@@ -219,7 +225,13 @@ const generateEmail = (student) => {
       }),
     });
 
-    const result = await response.json();
+    const responseText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error("The backend returned an invalid response.");
+    }
     if (!response.ok || !result.success) {
       throw new Error(result.message || result.error || "Email sending failed");
     }
@@ -254,6 +266,10 @@ const generateEmail = (student) => {
     let successCount = 0;
     let failedCount = 0;
     const successfulIds = [];
+    const failedNames = [];
+
+    setSendError("");
+    setSendingIds(automaticEmails.map((email) => email.id));
 
     for (const email of automaticEmails) {
       try {
@@ -263,6 +279,7 @@ const generateEmail = (student) => {
       } catch (error) {
         console.error(`Failed to send email to ${email.email}:`, error);
         failedCount++;
+        failedNames.push(`${email.name}: ${error.message}`);
       }
     }
 
@@ -274,6 +291,10 @@ const generateEmail = (student) => {
     });
 
     alert(`${successCount} email(s) sent successfully. ${failedCount} email(s) failed.`);
+    if (failedNames.length > 0) {
+      setSendError(failedNames.join(" | "));
+    }
+    setSendingIds([]);
   };
 
 
@@ -296,6 +317,10 @@ const generateEmail = (student) => {
     let successCount = 0;
     let failedCount = 0;
     const successfulIds = [];
+    const failedNames = [];
+
+    setSendError("");
+    setSendingIds(reviewedEmails.map((email) => email.id));
 
     for (const email of reviewedEmails) {
       try {
@@ -305,6 +330,7 @@ const generateEmail = (student) => {
       } catch (error) {
         console.error(`Failed to send reviewed draft ${email.id}:`, error);
         failedCount++;
+        failedNames.push(`${email.name}: ${error.message}`);
       }
     }
 
@@ -331,6 +357,10 @@ const generateEmail = (student) => {
     });
 
     alert(`${successCount} draft(s) sent successfully. ${failedCount} failed.`);
+    if (failedNames.length > 0) {
+      setSendError(failedNames.join(" | "));
+    }
+    setSendingIds([]);
   };
 
 
@@ -400,6 +430,9 @@ const generateEmail = (student) => {
 
     if (!student) return;
 
+    setSendingIds((current) => [...current, id]);
+    setSendError("");
+
     try {
       await sendEmail(student);
 
@@ -431,6 +464,9 @@ const generateEmail = (student) => {
       alert(
         `Failed to send email: ${error.message}`
       );
+      setSendError(error.message);
+    } finally {
+      setSendingIds((current) => current.filter((studentId) => studentId !== id));
     }
   };
 
@@ -683,6 +719,8 @@ const generateEmail = (student) => {
 
       )}
 
+      {sendError && <div className="email-send-error">{sendError}</div>}
+
       {/* =====================================
           EMAIL LIST
       ====================================== */}
@@ -834,26 +872,19 @@ const generateEmail = (student) => {
                     Preview
                   </button>
 
-                  {/* Edit is most useful for Draft */}
+                  <button
+                    type="button"
+                    className="edit-button"
+                    onClick={() => handleEdit(email)}
+                    disabled={sendingIds.includes(email.id)}
+                  >
+                    Edit Email
+                  </button>
 
-                  {communicationMode[email.id] === "draft" && (
-                    <>
-                      <button
-                        type="button"
-                        className="edit-button"
-                        onClick={() =>
-                          handleEdit(email)
-                        }
-                      >
-                        Edit Draft
-                      </button>
-
-                      {reviewedDrafts[email.id] && (
-                        <span className="reviewed-badge">
-                          ✓ Reviewed
-                        </span>
-                      )}
-                    </>
+                  {reviewedDrafts[email.id] && (
+                    <span className="reviewed-badge">
+                      ✓ Reviewed
+                    </span>
                   )}
 
                   {/* Send button */}
@@ -864,8 +895,9 @@ const generateEmail = (student) => {
                     onClick={() =>
                       handleSend(email.id)
                     }
+                    disabled={sendingIds.includes(email.id)}
                   >
-                    Send
+                    {sendingIds.includes(email.id) ? "Sending..." : "Send"}
                   </button>
 
                 </div>
@@ -1064,8 +1096,9 @@ const generateEmail = (student) => {
                       selectedEmail.id
                     )
                   }
+                  disabled={sendingIds.includes(selectedEmail.id)}
                 >
-                  Send Email
+                  {sendingIds.includes(selectedEmail.id) ? "Sending..." : "Send Email"}
                 </button>
 
               )}

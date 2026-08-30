@@ -207,13 +207,21 @@ const sendAttendanceEmail = async (req, res) => {
       historyError = fallbackResult.error;
     }
 
-    if (historyError) throw historyError;
+    const historySaved = !historyError;
+
+    if (historyError) {
+      console.warn(
+        "Email was sent, but communication history could not be saved:",
+        historyError.message
+      );
+    }
 
     return res.status(200).json({
       success: true,
       message: "Attendance email sent successfully",
       messageId: result.messageId,
       history: historyRecord,
+      historySaved,
       sentBy: mentorName,
       mentorEmail,
     });
