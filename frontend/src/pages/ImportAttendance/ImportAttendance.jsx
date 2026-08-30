@@ -862,7 +862,8 @@ function ImportAttendance() {
         result
       );
 
-      navigate(`/students?imported=${Date.now()}`);
+      sessionStorage.setItem("refresh-students", String(Date.now()));
+      navigate("/students");
     } catch (err) {
       console.error(
         "Import error:",
