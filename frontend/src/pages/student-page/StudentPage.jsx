@@ -288,7 +288,7 @@ function StudentPage() {
 
           <input
             type="text"
-            placeholder="Search students by name or student ID"
+            placeholder="Search students by name"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -371,7 +371,6 @@ function StudentPage() {
             <div className="student-row" key={student.id}>
               <div className="student-name">
                 <strong>{student.name}</strong>
-                <small>{student.id}</small>
               </div>
 
               <div>{student.squad}</div>

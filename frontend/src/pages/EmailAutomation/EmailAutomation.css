@@ -355,6 +355,22 @@
   background: #15803d;
 }
 
+.email-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.email-send-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 /* =========================================
    EMPTY STATE
 ========================================= */
@@ -584,6 +600,11 @@
 
 .modal-send-button:hover {
   background: #4338ca;
+}
+
+.modal-send-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* =========================================

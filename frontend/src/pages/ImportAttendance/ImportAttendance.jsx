@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FileSpreadsheet,
   Upload,
@@ -232,6 +233,7 @@ const transformAttendanceData = (data) => {
 // ============================================================
 
 function ImportAttendance() {
+  const navigate = useNavigate();
   // ==========================================================
   // FILE
   // ==========================================================
@@ -859,6 +861,8 @@ function ImportAttendance() {
       setImportSummary(
         result
       );
+
+      navigate(`/students?imported=${Date.now()}`);
     } catch (err) {
       console.error(
         "Import error:",
