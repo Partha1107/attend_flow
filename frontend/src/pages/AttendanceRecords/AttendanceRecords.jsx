@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Search } from "lucide-react";
-import { supabase, supabaseConfigError } from "../../lib/supabase";
 import "./AttendanceRecords.css";
+
+const API_URL = "http://localhost:5000";
 
 const AttendanceRecords = () => {
   const [records, setRecords] = useState([]);
@@ -11,43 +12,18 @@ const AttendanceRecords = () => {
   const [attendanceFilter, setAttendanceFilter] = useState("all");
 
   const fetchRecords = useCallback(async () => {
-    if (!supabase) {
-      setError(supabaseConfigError || "Supabase is not configured.");
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
-      const [attendanceResult, growthHourResult] = await Promise.all([
-        supabase
-          .from("attendance")
-          .select("*, students(name, email), subjects(name)")
-          .order("updated_at", { ascending: false })
-          .limit(300),
-        supabase
-          .from("growth_hour_attendance")
-          .select("*, students(name, email)")
-          .order("updated_at", { ascending: false })
-          .limit(300),
-      ]);
+      const response = await fetch(`${API_URL}/api/attendance/records`);
+      const result = await response.json();
 
-      if (attendanceResult.error) {
-        throw new Error(attendanceResult.error.message);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || result.error || "Failed to fetch records");
       }
 
-      if (growthHourResult.error) {
-        throw new Error(growthHourResult.error.message);
-      }
-
-      const growthHourRecords = (growthHourResult.data || []).map((record) => ({
-        ...record,
-        subjects: { name: "Growth Hour" },
-      }));
-
-      setRecords([...(attendanceResult.data || []), ...growthHourRecords]);
+      setRecords(result.records || []);
     } catch (err) {
       console.error("Failed to fetch attendance records:", err);
       setError(err.message);
