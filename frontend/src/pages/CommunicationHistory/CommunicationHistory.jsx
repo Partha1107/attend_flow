@@ -12,6 +12,8 @@ import {
 
 import "./CommunicationHistory.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function CommunicationHistory() {
   const [history, setHistory] = useState([]);
   const [error, setError] = useState("");
@@ -19,7 +21,7 @@ function CommunicationHistory() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/email-automation/records");
+        const response = await fetch(`${API_URL}/api/email-automation/records`);
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.message || "Failed to fetch history");
         setHistory((result.data || []).map((record) => ({

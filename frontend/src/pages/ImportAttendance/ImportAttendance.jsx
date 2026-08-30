@@ -11,7 +11,7 @@ import "./ImportAttendance.css";
 import StudentAttendanceCard from "../../components/StudentAttendanceCard";
 import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ============================================================
 // CONSTANT COLUMNS
