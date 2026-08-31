@@ -770,6 +770,8 @@ function ImportAttendance() {
       // ======================================================
 
       const payload = {
+        fileName,
+
         academicYear:
           calculatedAcademicYear,
 
@@ -860,6 +862,22 @@ function ImportAttendance() {
 
       setImportSummary(
         result
+      );
+
+      const importDetails = {
+        fileName,
+        importedAt: new Date().toISOString(),
+        ...result,
+      };
+
+      localStorage.setItem(
+        "lastAttendanceImport",
+        JSON.stringify(importDetails)
+      );
+      window.dispatchEvent(
+        new CustomEvent("attendanceImportCompleted", {
+          detail: importDetails,
+        })
       );
 
       sessionStorage.setItem("refresh-students", String(Date.now()));

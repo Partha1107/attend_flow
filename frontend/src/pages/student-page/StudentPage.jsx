@@ -140,7 +140,19 @@ function StudentPage() {
       void fetchStudents();
     }, 0);
 
-    return () => window.clearTimeout(timer);
+    const handleImportCompleted = () => {
+      void fetchStudents();
+    };
+
+    window.addEventListener("attendanceImportCompleted", handleImportCompleted);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(
+        "attendanceImportCompleted",
+        handleImportCompleted
+      );
+    };
   }, [fetchStudents]);
 
   useEffect(() => {
