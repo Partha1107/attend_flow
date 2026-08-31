@@ -156,6 +156,15 @@ function Dashboard() {
       () => localStorage.getItem("selectedSquad") || ""
     );
   const [squads, setSquads] = useState([]);
+  const [lastImport, setLastImport] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("lastAttendanceImport") || "null"
+      );
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     const fetchDashboardData = async (squad) => {
@@ -200,6 +209,19 @@ function Dashboard() {
       if (event.key === "selectedSquad") {
         setSelectedSquad(event.newValue || "");
       }
+
+      if (event.key === "lastAttendanceImport") {
+        try {
+          setLastImport(event.newValue ? JSON.parse(event.newValue) : null);
+        } catch {
+          setLastImport(null);
+        }
+      }
+    };
+
+    const handleImportCompleted = (event) => {
+      setLastImport(event.detail || null);
+      void fetchDashboardData(selectedSquad);
     };
 
     const loadSquads = async () => {
@@ -227,10 +249,12 @@ function Dashboard() {
     void loadSquads();
     window.addEventListener("selectedSquadChange", handleSquadChange);
     window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("attendanceImportCompleted", handleImportCompleted);
 
     return () => {
       window.removeEventListener("selectedSquadChange", handleSquadChange);
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("attendanceImportCompleted", handleImportCompleted);
     };
   }, [selectedSquad]);
 
@@ -360,6 +384,33 @@ function Dashboard() {
           />
         ))}
       </div>
+
+      {lastImport && (
+        <article className="last-import-panel">
+          <div className="last-import-heading">
+            <div className="section-kicker">LATEST IMPORT</div>
+            <h2>Attendance data updated</h2>
+            <p>
+              {lastImport.fileName || "Imported attendance file"}
+              {lastImport.importedAt
+                ? ` · ${new Date(lastImport.importedAt).toLocaleString()}`
+                : ""}
+            </p>
+          </div>
+
+          <div className="last-import-stats">
+            <span>
+              Students updated <strong>{lastImport.studentsUpdated ?? 0}</strong>
+            </span>
+            <span>
+              Attendance updated <strong>{lastImport.attendanceUpdated ?? 0}</strong>
+            </span>
+            <span>
+              Attendance created <strong>{lastImport.attendanceCreated ?? 0}</strong>
+            </span>
+          </div>
+        </article>
+      )}
 
       {error && <div className="dashboard-error">{error}</div>}
 

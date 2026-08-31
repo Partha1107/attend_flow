@@ -460,18 +460,12 @@ const findExistingAttendance = async ({
     subjectId,
     attendanceType,
     academicYear,
-    semester,
-    periodStart,
-    periodEnd,
 }) => {
     let query = supabase
         .from("attendance")
         .select("id")
         .eq("student_id", studentId)
         .eq("academic_year", academicYear)
-        .eq("semester", semester)
-        .eq("period_start", periodStart)
-        .eq("period_end", periodEnd)
         .eq("attendance_type", attendanceType);
 
     // ----------------------------------------------------------
@@ -609,9 +603,6 @@ const createOrUpdateAttendance = async ({
             subjectId,
             attendanceType,
             academicYear,
-            semester,
-            periodStart,
-            periodEnd,
         });
 
     // ----------------------------------------------------------
