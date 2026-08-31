@@ -116,6 +116,12 @@ function StudentPage() {
   }, [searchParams]);
 
   useEffect(() => {
+    const shouldRefreshStudents = sessionStorage.getItem("refresh-students");
+
+    if (shouldRefreshStudents) {
+      sessionStorage.removeItem("refresh-students");
+    }
+
     const timer = window.setTimeout(() => {
       void fetchStudents();
     }, 0);
