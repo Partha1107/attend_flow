@@ -11,10 +11,10 @@
 
   padding: 0 34px;
 
-  background: rgba(255, 255, 255, 0.96);
+  background: #ffffff;
 
   border-bottom:
-    1px solid var(--border);
+    1px solid #d0d0d0;
 
   backdrop-filter: blur(12px);
 }
@@ -29,13 +29,14 @@
   border: 0;
   border-radius: 9px;
 
-  color: #4e586b;
+  color: #000000;
   background: transparent;
+  transition: all 0.2s ease;
 }
 
 .menu-button:hover {
-  color: var(--kalvium-red);
-  background: var(--kalvium-red-soft);
+  color: #1a1a1a;
+  background: #f5f5f5;
 }
 
 .navbar-right {
@@ -58,7 +59,7 @@
 
   border-radius: 9px;
 
-  color: #566174;
+  color: #333333;
   background: #fff;
 
   font-size: 11.5px;
@@ -66,8 +67,8 @@
 }
 
 .top-date:hover {
-  border-color: #e3a4a7;
-  color: var(--kalvium-red-dark);
+  border-color: #999999;
+  color: #000000;
 }
 
 .notification {
@@ -138,12 +139,12 @@
   background:
     linear-gradient(
       145deg,
-      #e54b51,
-      #a80d14
+      #000000,
+      #1a1a1a
     );
 
   box-shadow:
-    0 3px 8px rgba(80, 10, 10, 0.15);
+    0 3px 8px rgba(0, 0, 0, 0.15);
 
   font-size: 13px;
   font-weight: 800;
@@ -176,6 +177,10 @@
     padding: 0 14px;
   }
 
+  .menu-button {
+    display: grid;
+  }
+
   .top-date {
     display: none;
   }
@@ -187,6 +192,12 @@
 
   .navbar-right {
     gap: 9px;
+  }
+}
+
+@media (min-width: 1101px) {
+  .menu-button {
+    display: none;
   }
 }
 
@@ -229,7 +240,7 @@
   background: #ffffff;
   border-radius: 6px;
   cursor: pointer;
-  color: #0f172a;
+  color: #000000;
   transition: all 0.2s ease;
 }
 
@@ -242,7 +253,7 @@
 .year-display {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: #000000;
   min-width: 50px;
   text-align: center;
 }
@@ -261,7 +272,7 @@
 }
 
 .calendar-dropdown .react-calendar__navigation button {
-  color: #0f172a;
+  color: #000000;
   font-weight: 600;
   background: transparent;
   border: none;
@@ -283,7 +294,7 @@
   height: 32px;
   padding: 0;
   font-size: 12px;
-  color: #0f172a;
+  color: #000000;
   border-radius: 6px;
   background: transparent;
   border: 1px solid transparent;
@@ -304,5 +315,7 @@
 .calendar-dropdown .react-calendar__tile--now {
   background-color: #f0f2f5;
   border-color: #8ecbff;
-  color: #0f172a;
+  color: #000000;
 }
+
+

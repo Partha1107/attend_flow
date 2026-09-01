@@ -13,7 +13,7 @@
   padding: 24px;
   box-sizing: border-box;
 
-  background-color: #f8fafc;
+  background-color: #ffffff;
 }
 
 
@@ -29,14 +29,14 @@
 
   background-color: #ffffff;
 
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d0d0d0;
   border-radius: 16px;
 
   text-align: center;
 
   box-sizing: border-box;
 
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
 
 
@@ -74,7 +74,7 @@
 .access-denied-card h1 {
   margin: 0 0 12px;
 
-  color: #0f172a;
+  color: #000000;
 
   font-size: 26px;
   font-weight: 700;
@@ -90,7 +90,7 @@
 .access-denied-card p {
   margin: 8px 0;
 
-  color: #64748b;
+  color: #666666;
 
   font-size: 14px;
 
@@ -98,7 +98,7 @@
 }
 
 .access-denied-card strong {
-  color: #334155;
+  color: #333333;
 
   font-weight: 600;
 }
@@ -118,7 +118,7 @@
   border: none;
   border-radius: 9px;
 
-  background-color: #0f172a;
+  background-color: #000000;
 
   color: #ffffff;
 
@@ -136,7 +136,7 @@
 .access-denied-card button:hover {
   background-color: #1e293b;
 
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
 .access-denied-card button:active {
@@ -168,3 +168,5 @@
     font-size: 26px;
   }
 }
+
+

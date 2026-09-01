@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: #ffffff;
   padding: 24px;
 }
 
@@ -29,7 +29,7 @@
 .not-found-card p {
   font-size: 16px;
   line-height: 1.6;
-  color: #64748b;
+  color: #666666;
   margin-bottom: 28px;
 }
 
@@ -47,3 +47,5 @@
 .back-dashboard:hover {
   background: #102a56;
 }
+
+

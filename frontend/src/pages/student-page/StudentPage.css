@@ -3,7 +3,7 @@
   --student-panel: #ffffff;
   --student-panel-alt: #f2f9ff;
   --student-card: #f8fbff;
-  --student-text: #0f172a;
+  --student-text: #000000;
   --student-muted: #4a617d;
   --student-border: rgba(105, 170, 238, 0.2);
   --student-primary: #8ecbff;
@@ -77,8 +77,8 @@
 
 .add-student-btn {
   border: 1px solid rgba(90, 168, 248, 0.25);
-  background: linear-gradient(135deg, #a7d8ff 0%, #5aa8f8 100%);
-  color: #0f172a;
+  background: linear-gradient(135deg, #d0d0d0 0%, #5aa8f8 100%);
+  color: #000000;
   padding: 14px 22px;
   border-radius: 12px;
   font-size: 16px;
@@ -266,12 +266,12 @@
 .student-table-header {
   min-height: 46px;
   padding: 0 18px;
-  background: linear-gradient(180deg, #dfeeff 0%, #d8eeff 100%);
+  background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
   border-bottom: 1px solid rgba(90, 168, 248, 0.2);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.3px;
-  color: #0f172a;
+  color: #000000;
 }
 
 .student-row {
@@ -359,7 +359,7 @@
   font-weight: 700;
   cursor: pointer;
   font-size: 13px;
-  color: #2563eb;
+  color: #000000;
   transition: 0.2s ease;
 }
 
@@ -515,7 +515,7 @@
   width: 65px;
   height: 65px;
   border-radius: 50%;
-  background: #fee2e2;
+  background: #f5f5f5;
   color: #dc2626;
   display: flex;
   align-items: center;
@@ -841,3 +841,5 @@
   background: #dff7ed;
   border-color: #0e8a5c;
 }
+
+

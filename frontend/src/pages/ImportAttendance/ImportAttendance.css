@@ -1,7 +1,7 @@
 .import-attendance-page {
   padding: 32px;
   min-height: 100%;
-  background: #f8fafc;
+  background: #ffffff;
 }
 
 /* Header */
@@ -14,13 +14,13 @@
   margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: #111827;
+  color: #000000;
 }
 
 .page-header p {
   margin: 8px 0 0;
   font-size: 15px;
-  color: #6b7280;
+  color: #666666;
 }
 
 /* Import Card */
@@ -30,10 +30,10 @@
   margin: 0 auto;
   padding: 48px 32px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 16px;
   text-align: center;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
 /* Icon */
@@ -45,8 +45,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eff6ff;
-  color: #2563eb;
+  background: #f5f5f5;
+  color: #000000;
   border-radius: 14px;
 }
 
@@ -54,13 +54,13 @@
   margin: 0;
   font-size: 21px;
   font-weight: 650;
-  color: #111827;
+  color: #000000;
 }
 
 .import-card p {
   margin: 10px 0 24px;
   font-size: 14px;
-  color: #6b7280;
+  color: #666666;
 }
 
 /* Success message */
@@ -69,8 +69,8 @@
   margin-top: 16px;
   padding: 10px 14px;
   border-radius: 8px;
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #e0e0e0;
+  color: #000000;
   font-size: 14px;
   font-weight: 500;
   display: flex;
@@ -89,8 +89,8 @@
   margin-top: 16px;
   padding: 10px 14px;
   border-radius: 8px;
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: #f5f5f5;
+  color: #000000;
   font-size: 14px;
   font-weight: 500;
 }
@@ -110,7 +110,7 @@
 .academic-year-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: #333333;
 }
 
 .academic-year-field select {
@@ -118,13 +118,13 @@
   padding: 10px 14px;
   font-size: 14px;
   font-weight: 500;
-  color: #111827;
+  color: #000000;
   background-color: #ffffff;
-  border: 1px solid #d1d5db;
+  border: 1px solid #d0d0d0;
   border-radius: 9px;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
@@ -133,19 +133,19 @@
 }
 
 .academic-year-field select:hover {
-  border-color: #9ca3af;
+  border-color: #666666;
 }
 
 .academic-year-field select:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
 }
 
 .academic-year-field select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: #f9fafb;
+  background-color: #f5f5f5;
 }
 
 /* Upload Button */
@@ -156,7 +156,7 @@
   justify-content: center;
   gap: 8px;
   padding: 11px 20px;
-  background: #111827;
+  background: #000000;
   color: #ffffff;
   border-radius: 9px;
   font-size: 14px;
@@ -168,7 +168,7 @@
 }
 
 .upload-button:hover {
-  background: #1f2937;
+  background: #1a1a1a;
   transform: translateY(-1px);
 }
 
@@ -190,11 +190,11 @@
 .selected-file {
   margin-top: 14px;
   font-size: 13px;
-  color: #6b7280;
+  color: #666666;
 }
 
 .selected-file strong {
-  color: #111827;
+  color: #000000;
 }
 
 /* ------------------------------------------- */
@@ -232,12 +232,12 @@
 }
 
 .import-confirm-button {
-  background: #111827;
+  background: #000000;
   color: #ffffff;
 }
 
 .import-confirm-button:hover:not(:disabled) {
-  background: #1f2937;
+  background: #1a1a1a;
   transform: translateY(-1px);
 }
 
@@ -253,13 +253,13 @@
 
 .import-cancel-button {
   background: #ffffff;
-  color: #6b7280;
-  border-color: #e5e7eb;
+  color: #666666;
+  border-color: #d0d0d0;
 }
 
 .import-cancel-button:hover:not(:disabled) {
-  background: #f9fafb;
-  color: #374151;
+  background: #f5f5f5;
+  color: #333333;
 }
 
 .import-cancel-button:disabled {
@@ -276,9 +276,9 @@
   margin: 24px auto 0;
   padding: 24px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
   text-align: left;
 }
 
@@ -286,25 +286,25 @@
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 650;
-  color: #111827;
+  color: #000000;
 }
 
 .import-preview p {
   margin: 0 0 14px;
   font-size: 14px;
-  color: #6b7280;
+  color: #666666;
 }
 
 .import-preview pre {
   max-height: 320px;
   overflow: auto;
   padding: 16px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
   border-radius: 10px;
   font-size: 12px;
   line-height: 1.5;
-  color: #111827;
+  color: #000000;
 }
 
 /* Responsive */
@@ -339,7 +339,7 @@
 .import-attendance-page {
   padding: 32px 40px;
   min-height: 100%;
-  background: #f8fafc;
+  background: #ffffff;
 }
 
 /* Keep content centered */
@@ -361,10 +361,10 @@
 .import-card {
   padding: 38px 50px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 18px;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 
   display: flex;
   flex-direction: column;
@@ -393,7 +393,7 @@
   justify-content: center;
   gap: 9px;
 
-  background: #111827;
+  background: #000000;
   color: #ffffff;
 
   border-radius: 10px;
@@ -410,7 +410,7 @@
 }
 
 .upload-button:hover {
-  background: #1f2937;
+  background: #1a1a1a;
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(17, 24, 39, 0.18);
 }
@@ -431,7 +431,7 @@
   justify-content: center;
   gap: 9px;
 
-  background: #2563eb;
+  background: #000000;
   color: #ffffff;
 
   border: none;
@@ -481,17 +481,17 @@
   padding: 26px;
 
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 18px;
 
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
 }
 
 .import-summary h2 {
   margin: 0 0 18px;
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: #000000;
 }
 
 
@@ -512,9 +512,9 @@
 
   padding: 18px;
 
-  background: #f8fafc;
+  background: #ffffff;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 12px;
 
   display: flex;
@@ -539,13 +539,13 @@
 
 .summary-item span {
   font-size: 13px;
-  color: #6b7280;
+  color: #666666;
   font-weight: 500;
 }
 
 .summary-item strong {
   font-size: 27px;
-  color: #111827;
+  color: #000000;
   font-weight: 700;
 }
 
@@ -561,12 +561,12 @@
 
   background: #ffffff;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
 
   border-radius: 18px;
 
   box-shadow:
-    0 6px 20px rgba(15, 23, 42, 0.05);
+    0 6px 20px rgba(0, 0, 0, 0.05);
 }
 
 .import-preview h2 {
@@ -598,7 +598,7 @@
 
   padding: 12px 15px;
 
-  border: 1px solid #d1d5db;
+  border: 1px solid #d0d0d0;
   border-radius: 10px;
 
   background: #ffffff;
@@ -613,7 +613,7 @@
 .student-search input:focus {
   outline: none;
 
-  border-color: #2563eb;
+  border-color: #000000;
 
   box-shadow:
     0 0 0 3px rgba(37, 99, 235, 0.12);
@@ -674,12 +674,12 @@
 }
 
 .student-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f5f5f5;
   border-radius: 10px;
 }
 
 .student-list::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #999999;
   border-radius: 10px;
 }
 
@@ -739,10 +739,10 @@
   min-height: 180px;
   padding: 30px;
 
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed #999999;
   border-radius: 14px;
 
-  background: #f8fafc;
+  background: #ffffff;
 
   text-align: center;
 }
@@ -753,30 +753,30 @@
   font-size: 18px;
   font-weight: 700;
 
-  color: #111827;
+  color: #000000;
 }
 
 .empty-search p {
   margin: 0;
 
   font-size: 14px;
-  color: #6b7280;
+  color: #666666;
 }
 
 .student-search select {
   flex: 0 0 180px;
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #d0d0d0;
   border-radius: 10px;
   background: #ffffff;
-  color: #111827;
+  color: #000000;
   font-size: 14px;
 }
 
 .student-search select:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: #000000;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
@@ -791,3 +791,5 @@
     width: 100%;
   }
 }
+
+
