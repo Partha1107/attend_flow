@@ -1,20 +1,18 @@
 import {
-  AlertTriangle,
-  Bell,
-  ChevronDown,
   FileSpreadsheet,
   GraduationCap,
-  Headphones,
+  History,
   LayoutDashboard,
+  LogOut,
   Mail,
   Settings,
   ShieldCheck,
-  UserRound,
-  UsersRound,
+  UserCheck,
+  Users,
   X,
 } from "lucide-react";
 
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
 const mainItems = [
@@ -25,17 +23,27 @@ const mainItems = [
   },
   {
     label: "Students",
-    icon: UsersRound,
+    icon: Users,
     to: "/students",
   },
-   {
+  {
+    label: "Attendance Records",
+    icon: UserCheck,
+    to: "/attendance-records",
+  },
+  {
+    label: "Import Attendance",
+    icon: FileSpreadsheet,
+    to: "/import-attendance",
+  },
+  {
     label: "Email Automation",
     icon: Mail,
     to: "/email-automation",
   },
   {
     label: "Communication History",
-    icon: Mail,
+    icon: History,
     to: "/communication-history",
   },
   {
@@ -43,30 +51,23 @@ const mainItems = [
     icon: Settings,
     to: "/settings",
   },
-  
 ];
 
 function Sidebar({ open = false, onClose = () => { } }) {
-  const { pathname } = useLocation();
-
-  const isImportActive = pathname === "/import-attendance";
-  const isRecordsActive = pathname === "/attendance-records";
-
   return (
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="brand-mark">
-          <GraduationCap size={27} strokeWidth={2.2} />
+          <GraduationCap size={24} strokeWidth={2.4} />
         </div>
 
-        <div>
+        <div className="brand-text">
           <div className="brand-name">AESA</div>
-
           <div className="brand-subtitle">
             Attendance &amp; Alert
             <br />
-            Automation
+            Automation System
           </div>
         </div>
 
@@ -76,95 +77,33 @@ function Sidebar({ open = false, onClose = () => { } }) {
           aria-label="Close menu"
           onClick={onClose}
         >
-          <X size={21} />
+          <X size={20} />
         </button>
       </div>
 
       {/* Navigation */}
       <nav className="sidebar-nav" aria-label="Main navigation">
         {mainItems.map(({ label, icon: Icon, to }) => (
-          <div key={label} className="nav-group">
-            <NavLink
-              to={to}
-              className={({ isActive }) =>
-                `nav-item ${isActive ? "active" : ""}`
-              }
-              onClick={onClose}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </NavLink>
-
-            {/* Attendance Section */}
-            {label === "Dashboard" && (
-              <div className="attendance-group">
-                <div className="attendance-title">
-                  <ShieldCheck size={18} />
-                  <span>Attendance</span>
-                  <ChevronDown
-                    size={15}
-                    className="attendance-chevron"
-                  />
-                </div>
-
-                <NavLink
-                  to="/import-attendance"
-                  className={`subnav-item ${isImportActive ? "active" : ""
-                    }`}
-                  onClick={onClose}
-                >
-                  <FileSpreadsheet size={16} />
-                  <span>Import Excel</span>
-                </NavLink>
-
-                <NavLink
-                  to="/attendance-records"
-                  className={`subnav-item ${isRecordsActive ? "active" : ""
-                    }`}
-                  onClick={onClose}
-                >
-                  <Bell size={16} />
-                  <span>Attendance Records</span>
-                </NavLink>
-              </div>
-            )}
-
-          </div>
+          <NavLink
+            key={label}
+            to={to}
+            className={({ isActive }) =>
+              `nav-item ${isActive ? "active" : ""}`
+            }
+            onClick={onClose}
+          >
+            <Icon size={18} />
+            <span>{label}</span>
+          </NavLink>
         ))}
       </nav>
 
-      {/* Help */}
-      <div className="sidebar-help">
-        <div className="help-icon">
-          <Headphones size={20} />
-        </div>
-
-        <div className="help-copy">
-          <h3>Need Help?</h3>
-
-          <p>
-            Contact support if you need any assistance.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="support-button"
-        >
-          Contact Support
-        </button>
-      </div>
-
-      {/* User */}
-      <div className="sidebar-user">
-        <div className="mini-avatar">
-          <UserRound size={17} />
-        </div>
-
-        <div>
-          <strong>Mentor</strong>
-          <span>Mentor Portal</span>
-        </div>
+      {/* Logout at bottom */}
+      <div className="sidebar-footer">
+        <NavLink to="/login" className="logout-btn" onClick={onClose}>
+          <LogOut size={18} />
+          <span>Logout</span>
+        </NavLink>
       </div>
     </aside>
   );

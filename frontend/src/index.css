@@ -26,56 +26,61 @@
     sans-serif;
 
   /* -----------------------------------------
-     AESA THEME 1: BLACK & WHITE (CLASSIC)
+     AESA THEME: CLEAN LIGHT + VIBRANT RED ACCENT
      ----------------------------------------- */
 
   /* Core Colors */
-  --aesa-black: #000000;
-  --aesa-dark: #111111;
-  --aesa-sidebar: #151515;
+  --aesa-black: #111827;
+  --aesa-dark: #1E293B;
+  --aesa-sidebar: #FFFFFF;
   --aesa-white: #FFFFFF;
 
   /* Backgrounds */
-  --aesa-bg: #F7F7F7;
-  --aesa-light-gray: #F3F3F3;
+  --aesa-bg: #F8F9FA;
+  --aesa-light-gray: #F3F4F6;
   --aesa-gray: #6B7280;
 
   /* Borders */
   --aesa-border: #E5E7EB;
   --aesa-border-dark: #D1D5DB;
 
-  /* Primary Action */
-  --aesa-primary: #000000;
-  --aesa-primary-hover: #1F1F1F;
+  /* Primary Action - Vibrant Red */
+  --aesa-primary: #ED1C24;
+  --aesa-primary-hover: #D01219;
+  --aesa-primary-light: #FFECEC;
 
   /* Semantic Status Colors */
   --aesa-success: #16A34A;
+  --aesa-success-bg: #DEF7EC;
   --aesa-warning: #D97706;
+  --aesa-warning-bg: #FEF3C7;
   --aesa-danger: #DC2626;
+  --aesa-danger-bg: #FEE2E2;
 
   /* Shadows */
-  --aesa-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --aesa-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  --aesa-shadow-lg: 0 10px 25px -5px rgba(237, 28, 36, 0.15);
 
   /* Radius */
-  --aesa-radius: 10px;
+  --aesa-radius: 12px;
 
   /* ----------------------------------------- */
-  /* TEXT COLORS */
+  /* TEXT & SURFACE SYSTEM */
   /* ----------------------------------------- */
 
   color: var(--aesa-dark);
   background: var(--aesa-bg);
 
-  /* Brand Colors (for backward compatibility) */
+  /* Brand Colors */
   --kalvium-red: var(--aesa-primary);
   --kalvium-red-dark: var(--aesa-primary-hover);
-  --kalvium-red-soft: var(--aesa-light-gray);
+  --kalvium-red-soft: var(--aesa-primary-light);
 
   /* Text System */
   --ink: var(--aesa-dark);
-  --text-primary: var(--aesa-dark);
-  --text-secondary: var(--aesa-gray);
-  --text-muted: var(--aesa-gray);
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
   --text-light: #9CA3AF;
 
   /* UI Colors */
