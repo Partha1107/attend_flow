@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { Menu } from "lucide-react";
 
-import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import "./DashboardLayout.css";
 
@@ -16,7 +16,14 @@ const DashboardLayout = () => {
       />
 
       <div className="app-main">
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          aria-label="Open navigation"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu size={22} />
+        </button>
 
         <main className="page-content">
           <Outlet />
