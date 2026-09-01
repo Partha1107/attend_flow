@@ -152,14 +152,45 @@ function Dashboard() {
     useState(false);
 
   const [selectedSquad, setSelectedSquad] =
-    useState("All");
+    useState(
+      () => localStorage.getItem("selectedSquad") || ""
+    );
+  const [squads, setSquads] = useState([]);
+  const [lastImport, setLastImport] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("lastAttendanceImport") || "null"
+      );
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchDashboardData = async (squad) => {
       try {
-        const response = await fetch(`${API_URL}/api/attendance/students`);
+        setLoading(true);
+        setError("");
+
+        const params = new URLSearchParams();
+        if (squad) {
+          params.set("squad", squad);
+        }
+
+        const query = params.toString();
+        const response = await fetch(
+          `${API_URL}/api/mentor/dashboard/students${query ? `?${query}` : ""}`
+        );
         const result = await response.json();
-        if (!response.ok || !result.success) {
+        if (response.status === 404) {
+          throw new Error(
+            "Dashboard API endpoint not found. Check the backend route."
+          );
+        }
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        if (!result.success) {
           throw new Error(result.message || "Failed to fetch students");
         }
         setStudents(result.students || []);
@@ -170,8 +201,62 @@ function Dashboard() {
       }
     };
 
-    void fetchStudents();
-  }, []);
+    const handleSquadChange = (event) => {
+      setSelectedSquad(event.detail || "");
+    };
+
+    const handleStorageChange = (event) => {
+      if (event.key === "selectedSquad") {
+        setSelectedSquad(event.newValue || "");
+      }
+
+      if (event.key === "lastAttendanceImport") {
+        try {
+          setLastImport(event.newValue ? JSON.parse(event.newValue) : null);
+        } catch {
+          setLastImport(null);
+        }
+      }
+    };
+
+    const handleImportCompleted = (event) => {
+      setLastImport(event.detail || null);
+      void fetchDashboardData(selectedSquad);
+    };
+
+    const loadSquads = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/mentor/dashboard/squads`);
+        const result = await response.json();
+        if (response.status === 404) {
+          throw new Error(
+            "Squad API endpoint not found. Check the backend route."
+          );
+        }
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        if (!result.success) {
+          throw new Error(result.message || "Failed to load squads");
+        }
+        setSquads(result.squads || []);
+      } catch (fetchError) {
+        setError(fetchError.message || "Failed to load squads");
+      }
+    };
+
+    void fetchDashboardData(selectedSquad);
+    void loadSquads();
+    window.addEventListener("selectedSquadChange", handleSquadChange);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("attendanceImportCompleted", handleImportCompleted);
+
+    return () => {
+      window.removeEventListener("selectedSquadChange", handleSquadChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("attendanceImportCompleted", handleImportCompleted);
+    };
+  }, [selectedSquad]);
 
   const totalStudents = students.length;
   const averageAttendance = totalStudents
@@ -210,13 +295,7 @@ function Dashboard() {
    * Otherwise show only the
    * selected squad.
    */
-  const filteredStudents =
-    selectedSquad === "All"
-      ? students
-      : students.filter(
-          (student) =>
-            String(student.squad) === selectedSquad.replace("Squad ", "")
-        );
+  const filteredStudents = students;
 
   const attentionStudents = filteredStudents.filter(
     (student) => Number(student.attendance) < 75
@@ -229,7 +308,11 @@ function Dashboard() {
    * close the dropdown.
    */
   const handleViewAll = () => {
-    setSelectedSquad("All");
+    localStorage.removeItem("selectedSquad");
+    window.dispatchEvent(
+      new CustomEvent("selectedSquadChange", { detail: "" })
+    );
+    setSelectedSquad("");
     setFilterOpen(false);
   };
 
@@ -239,6 +322,10 @@ function Dashboard() {
   const handleSquadFilter = (
     squad
   ) => {
+    localStorage.setItem("selectedSquad", squad);
+    window.dispatchEvent(
+      new CustomEvent("selectedSquadChange", { detail: squad })
+    );
     setSelectedSquad(squad);
     setFilterOpen(false);
   };
@@ -297,6 +384,33 @@ function Dashboard() {
           />
         ))}
       </div>
+
+      {lastImport && (
+        <article className="last-import-panel">
+          <div className="last-import-heading">
+            <div className="section-kicker">LATEST IMPORT</div>
+            <h2>Attendance data updated</h2>
+            <p>
+              {lastImport.fileName || "Imported attendance file"}
+              {lastImport.importedAt
+                ? ` · ${new Date(lastImport.importedAt).toLocaleString()}`
+                : ""}
+            </p>
+          </div>
+
+          <div className="last-import-stats">
+            <span>
+              Students updated <strong>{lastImport.studentsUpdated ?? 0}</strong>
+            </span>
+            <span>
+              Attendance updated <strong>{lastImport.attendanceUpdated ?? 0}</strong>
+            </span>
+            <span>
+              Attendance created <strong>{lastImport.attendanceCreated ?? 0}</strong>
+            </span>
+          </div>
+        </article>
+      )}
 
       {error && <div className="dashboard-error">{error}</div>}
 
@@ -549,39 +663,22 @@ function Dashboard() {
               {filterOpen && (
                 <div className="filter-menu">
 
-                  <button
-                    type="button"
-                    className={
-                      selectedSquad ===
-                      "Squad 138"
-                        ? "selected"
-                        : ""
-                    }
-                    onClick={() =>
-                      handleSquadFilter(
-                        "Squad 138"
-                      )
-                    }
-                  >
-                    Squad 138
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      selectedSquad ===
-                      "Squad 139"
-                        ? "selected"
-                        : ""
-                    }
-                    onClick={() =>
-                      handleSquadFilter(
-                        "Squad 139"
-                      )
-                    }
-                  >
-                    Squad 139
-                  </button>
+                  {squads.map((squad) => (
+                    <button
+                      key={squad}
+                      type="button"
+                      className={
+                        selectedSquad === squad
+                          ? "selected"
+                          : ""
+                      }
+                      onClick={() =>
+                        handleSquadFilter(squad)
+                      }
+                    >
+                      Squad {squad}
+                    </button>
+                  ))}
 
                 </div>
               )}

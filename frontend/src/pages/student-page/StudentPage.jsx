@@ -3,6 +3,7 @@ import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./StudentPage.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 function StudentPage() {
@@ -11,7 +12,10 @@ function StudentPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [squad, setSquad] = useState("");
+  const [squad, setSquad] = useState(
+    () => localStorage.getItem("selectedSquad") || ""
+  );
+  const [squads, setSquads] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState("");
   const [error, setError] = useState("");
 
@@ -41,7 +45,7 @@ function StudentPage() {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/attendance/students/${detailsStudent.id}`,
+        `${API_URL}/api/attendance/students/${detailsStudent.id}`,
         {
           method: "PATCH",
           headers: {
@@ -87,12 +91,22 @@ function StudentPage() {
       setError("");
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/attendance/students`
+        `${API_URL}/api/mentor/dashboard/students${squad ? `?squad=${encodeURIComponent(squad)}` : ""}`
       );
 
       const result = await response.json();
 
-      if (!response.ok || !result.success) {
+      if (response.status === 404) {
+        throw new Error(
+          "Student API endpoint not found. Check the backend route."
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      if (!result.success) {
         throw new Error(result.message || "Failed to fetch students");
       }
 
@@ -113,7 +127,7 @@ function StudentPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, squad]);
 
   useEffect(() => {
     const shouldRefreshStudents = sessionStorage.getItem("refresh-students");
@@ -126,8 +140,59 @@ function StudentPage() {
       void fetchStudents();
     }, 0);
 
-    return () => window.clearTimeout(timer);
+    const handleImportCompleted = () => {
+      void fetchStudents();
+    };
+
+    window.addEventListener("attendanceImportCompleted", handleImportCompleted);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(
+        "attendanceImportCompleted",
+        handleImportCompleted
+      );
+    };
   }, [fetchStudents]);
+
+  useEffect(() => {
+    const loadSquads = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/mentor/dashboard/squads`
+        );
+        const result = await response.json();
+
+        if (response.status === 404) {
+          throw new Error(
+            "Squad API endpoint not found. Check the backend route."
+          );
+        }
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message || `Server error: ${response.status}`
+          );
+        }
+
+        setSquads(result.squads || []);
+      } catch (loadError) {
+        console.error("Load squads error:", loadError);
+      }
+    };
+
+    const handleSquadChange = (event) => {
+      const nextSquad = event.detail || "";
+      setSquad(nextSquad);
+    };
+
+    void loadSquads();
+    window.addEventListener("selectedSquadChange", handleSquadChange);
+
+    return () => {
+      window.removeEventListener("selectedSquadChange", handleSquadChange);
+    };
+  }, []);
 
   const filteredStudents = students.filter((student) => {
     const searchValue = search.toLowerCase();
@@ -304,9 +369,12 @@ function StudentPage() {
           value={squad}
           onChange={(e) => setSquad(e.target.value)}
         >
-          <option value="">Squad</option>
-          <option value="138">138</option>
-          <option value="139">139</option>
+          <option value="">All Squads</option>
+          {squads.map((availableSquad) => (
+            <option key={availableSquad} value={availableSquad}>
+              {availableSquad}
+            </option>
+          ))}
         </select>
 
         <select

@@ -13,6 +13,9 @@ const allowedOrigins = [
     "http://localhost:5173",
     "https://attendance-recored.vercel.app",
 ];
+const mentorDashboardRoutes = require(
+    "./src/routes/mentorDashboardRoutes"
+);
 
 app.use(
     cors({
@@ -60,6 +63,11 @@ app.use(
 app.use(
     "/api/email-automation",
     emailAutomationRoutes
+);
+
+app.use(
+    "/api/mentor/dashboard",
+    mentorDashboardRoutes
 );
 
 app.use((error, req, res, next) => {
