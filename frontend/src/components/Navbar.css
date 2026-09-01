@@ -11,10 +11,10 @@
 
   padding: 0 34px;
 
-  background: #ffffff;
+  background: #FFFFFF;
 
   border-bottom:
-    1px solid #d0d0d0;
+    1px solid #E5E7EB;
 
   backdrop-filter: blur(12px);
 }
@@ -29,14 +29,14 @@
   border: 0;
   border-radius: 9px;
 
-  color: #000000;
+  color: #111111;
   background: transparent;
   transition: all 0.2s ease;
 }
 
 .menu-button:hover {
-  color: #1a1a1a;
-  background: #f5f5f5;
+  color: #000000;
+  background: #F3F3F3;
 }
 
 .navbar-right {
@@ -55,20 +55,21 @@
   gap: 8px;
 
   border:
-    1px solid var(--border);
+    1px solid #D1D5DB;
 
   border-radius: 9px;
 
-  color: #333333;
-  background: #fff;
+  color: #6B7280;
+  background: #FFFFFF;
 
   font-size: 11.5px;
   font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .top-date:hover {
-  border-color: #999999;
-  color: #000000;
+  border-color: #111111;
+  color: #111111;
 }
 
 .notification {
@@ -81,12 +82,18 @@
   place-items: center;
 
   border:
-    1px solid var(--border);
+    1px solid #D1D5DB;
 
   border-radius: 50%;
 
-  color: #556074;
-  background: #fff;
+  color: #6B7280;
+  background: #FFFFFF;
+  transition: all 0.2s ease;
+}
+
+.notification:hover {
+  color: #111111;
+  border-color: #111111;
 }
 
 .notification-count {
@@ -103,12 +110,12 @@
   place-items: center;
 
   border:
-    2px solid #fff;
+    2px solid #FFFFFF;
 
   border-radius: 20px;
 
-  color: #fff;
-  background: var(--kalvium-red);
+  color: #FFFFFF;
+  background: #DC2626;
 
   font-size: 8px;
   font-weight: 800;
@@ -130,11 +137,11 @@
   place-items: center;
 
   border:
-    2px solid #fff;
+    2px solid #FFFFFF;
 
   border-radius: 50%;
 
-  color: #fff;
+  color: #FFFFFF;
 
   background:
     linear-gradient(
@@ -156,19 +163,19 @@
 }
 
 .profile-copy strong {
-  color: #1b2436;
+  color: #111111;
   font-size: 12.5px;
 }
 
 .profile-copy span {
   margin-top: 2px;
-  color: #8790a0;
+  color: #6B7280;
   font-size: 9.5px;
 }
 
 .profile-chevron {
   margin-left: 4px;
-  color: #7b8494;
+  color: #6B7280;
 }
 
 @media (max-width: 760px) {
@@ -211,10 +218,10 @@
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: #ffffff;
-  border: 1px solid #e1e4e8;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   padding: 16px;
   z-index: 1000;
   min-width: 320px;
@@ -226,7 +233,7 @@
   justify-content: space-between;
   margin-bottom: 12px;
   padding: 8px;
-  background: #f6f8fa;
+  background: #F7F7F7;
   border-radius: 8px;
 }
 
@@ -236,24 +243,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e1e4e8;
-  background: #ffffff;
+  border: 1px solid #D1D5DB;
+  background: #FFFFFF;
   border-radius: 6px;
   cursor: pointer;
-  color: #000000;
+  color: #111111;
   transition: all 0.2s ease;
 }
 
 .year-nav:hover {
-  background: #8ecbff;
-  border-color: #5aa8f8;
-  color: #ffffff;
+  background: #F3F3F3;
+  border-color: #111111;
+  color: #000000;
 }
 
 .year-display {
   font-size: 14px;
   font-weight: 600;
-  color: #000000;
+  color: #111111;
   min-width: 50px;
   text-align: center;
 }
@@ -261,7 +268,7 @@
 /* React Calendar Customization */
 .calendar-dropdown .react-calendar {
   width: 100%;
-  background: #ffffff;
+  background: #FFFFFF;
   border: none;
   border-radius: 8px;
   font-family: inherit;
@@ -272,21 +279,21 @@
 }
 
 .calendar-dropdown .react-calendar__navigation button {
-  color: #000000;
+  color: #111111;
   font-weight: 600;
   background: transparent;
   border: none;
 }
 
 .calendar-dropdown .react-calendar__navigation button:hover {
-  background-color: #f0f2f5;
+  background-color: #F7F7F7;
 }
 
 .calendar-dropdown .react-calendar__month-view__weekdays {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: #4a617d;
+  color: #6B7280;
   padding: 8px 0;
 }
 
@@ -294,28 +301,40 @@
   height: 32px;
   padding: 0;
   font-size: 12px;
-  color: #000000;
+  color: #111111;
   border-radius: 6px;
   background: transparent;
   border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .calendar-dropdown .react-calendar__tile:hover {
-  background-color: #edf7ff;
-  border-color: #8ecbff;
+  background-color: #F7F7F7;
+  border-color: #111111;
 }
 
 .calendar-dropdown .react-calendar__tile--active {
-  background: linear-gradient(135deg, #8ecbff, #5aa8f8);
-  color: #ffffff;
+  background: #000000;
+  color: #FFFFFF;
   font-weight: 600;
-  border-color: #5aa8f8;
+  border-color: #000000;
 }
 
 .calendar-dropdown .react-calendar__tile--now {
-  background-color: #f0f2f5;
-  border-color: #8ecbff;
-  color: #000000;
+  background-color: #F7F7F7;
+  border-color: #111111;
+  color: #111111;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

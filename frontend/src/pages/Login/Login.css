@@ -67,7 +67,7 @@
 .login-brand p {
   margin: 8px 0 0;
 
-  color: #666666;
+  color: #6B7280;
 
   font-size: 15px;
 }
@@ -114,7 +114,7 @@
 .login-heading p {
   margin: 8px 0 0;
 
-  color: #666666;
+  color: #6B7280;
 
   font-size: 14px;
 
@@ -138,11 +138,11 @@
 
   background-color: #ffffff;
 
-  border: 1px solid #999999;
+  border: 1px solid #6B7280;
 
   border-radius: 10px;
 
-  color: #333333;
+  color: #6B7280;
 
   font-size: 15px;
   font-weight: 500;
@@ -159,7 +159,7 @@
 .google-login-button:hover {
   background-color: #ffffff;
 
-  border-color: #94a3b8;
+  border-color: #9CA3AF;
 
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -175,7 +175,7 @@
 
 .google-login-button:disabled:hover {
   background-color: #ffffff;
-  border-color: #999999;
+  border-color: #6B7280;
   box-shadow: none;
 }
 
@@ -224,7 +224,7 @@
 .login-divider p {
   margin: 0;
 
-  color: #94a3b8;
+  color: #9CA3AF;
 
   font-size: 11px;
 
@@ -241,7 +241,7 @@
 
   text-align: center;
 
-  color: #666666;
+  color: #6B7280;
 
   font-size: 12px;
 
@@ -258,7 +258,7 @@
 
   text-align: center;
 
-  color: #94a3b8;
+  color: #9CA3AF;
 
   font-size: 11px;
 }
@@ -285,5 +285,16 @@
     font-size: 27px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

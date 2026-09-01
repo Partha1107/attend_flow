@@ -26,37 +26,67 @@
     sans-serif;
 
   /* -----------------------------------------
-     TEXT COLORS
+     AESA THEME: CLEAN LIGHT + VIBRANT RED ACCENT
      ----------------------------------------- */
 
-  color: #000000;
-  background: #ffffff;
+  /* Core Colors */
+  --aesa-black: #111827;
+  --aesa-dark: #1E293B;
+  --aesa-sidebar: #FFFFFF;
+  --aesa-white: #FFFFFF;
 
-  /* -----------------------------------------
-     BRAND COLORS
-     ----------------------------------------- */
+  /* Backgrounds */
+  --aesa-bg: #F8F9FA;
+  --aesa-light-gray: #F3F4F6;
+  --aesa-gray: #6B7280;
 
-  --kalvium-red: #000000;
-  --kalvium-red-dark: #1a1a1a;
-  --kalvium-red-soft: #f5f5f5;
+  /* Borders */
+  --aesa-border: #E5E7EB;
+  --aesa-border-dark: #D1D5DB;
 
-  /* -----------------------------------------
-     TEXT SYSTEM
-     ----------------------------------------- */
+  /* Primary Action - Vibrant Red */
+  --aesa-primary: #ED1C24;
+  --aesa-primary-hover: #D01219;
+  --aesa-primary-light: #FFECEC;
 
-  --ink: #000000;
-  --text-primary: #000000;
-  --text-secondary: #333333;
-  --text-muted: #666666;
-  --text-light: #999999;
+  /* Semantic Status Colors */
+  --aesa-success: #16A34A;
+  --aesa-success-bg: #DEF7EC;
+  --aesa-warning: #D97706;
+  --aesa-warning-bg: #FEF3C7;
+  --aesa-danger: #DC2626;
+  --aesa-danger-bg: #FEE2E2;
 
-  /* -----------------------------------------
-     UI COLORS
-     ----------------------------------------- */
+  /* Shadows */
+  --aesa-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  --aesa-shadow-lg: 0 10px 25px -5px rgba(237, 28, 36, 0.15);
 
-  --border: #e0e0e0;
-  --surface: #ffffff;
-  --page: #ffffff;
+  /* Radius */
+  --aesa-radius: 12px;
+
+  /* ----------------------------------------- */
+  /* TEXT & SURFACE SYSTEM */
+  /* ----------------------------------------- */
+
+  color: var(--aesa-dark);
+  background: var(--aesa-bg);
+
+  /* Brand Colors */
+  --kalvium-red: var(--aesa-primary);
+  --kalvium-red-dark: var(--aesa-primary-hover);
+  --kalvium-red-soft: var(--aesa-primary-light);
+
+  /* Text System */
+  --ink: var(--aesa-dark);
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --text-light: #9CA3AF;
+
+  /* UI Colors */
+  --border: var(--aesa-border);
+  --surface: var(--aesa-white);
+  --page: var(--aesa-bg);
 
   /* -----------------------------------------
      FONT WEIGHTS
@@ -272,7 +302,7 @@ textarea::placeholder {
     "Segoe UI",
     sans-serif;
 
-  color: #8a95a6;
+  color: #6B7280;
 }
 
 
@@ -282,7 +312,7 @@ textarea::placeholder {
 
 ::selection {
   background: rgba(215, 25, 32, 0.14);
-  color: #172033;
+  color: #111111;
 }
 
 
@@ -296,16 +326,27 @@ textarea::placeholder {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f4f5f7;
+  background: #F7F7F7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cfd4dc;
+  background: #D1D5DB;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b8bec8;
+  background: #9CA3AF;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -25,7 +25,7 @@
 
 .page-label {
   margin-bottom: 7px;
-  color: #666666;
+  color: #6B7280;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.2px;
@@ -42,7 +42,7 @@
 
 .email-page-header p {
   margin: 8px 0 0;
-  color: #666666;
+  color: #6B7280;
   font-size: 14px;
 }
 
@@ -58,7 +58,7 @@
 }
 
 .date-section label {
-  color: #333333;
+  color: #6B7280;
   font-size: 12px;
   font-weight: 600;
 }
@@ -118,7 +118,7 @@
 
 .email-summary-card p {
   margin: 0 0 5px;
-  color: #666666;
+  color: #6B7280;
   font-size: 12px;
   font-weight: 500;
 }
@@ -148,14 +148,14 @@
 
 .generate-section h2 {
   margin: 0;
-  color: #172033;
+  color: #111111;
   font-size: 18px;
   font-weight: 700;
 }
 
 .generate-section p {
   margin: 6px 0 0;
-  color: #666666;
+  color: #6B7280;
   font-size: 13px;
 }
 
@@ -234,7 +234,7 @@
 
 .student-email-info p {
   margin: 0;
-  color: #666666;
+  color: #6B7280;
   font-size: 11px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -252,7 +252,7 @@
 }
 
 .attendance-info span {
-  color: #666666;
+  color: #6B7280;
   font-size: 11px;
 }
 
@@ -275,7 +275,7 @@
 
 .email-status.warning {
   background: #f5f5f5;
-  color: #666666;
+  color: #6B7280;
 }
 
 .email-status.critical {
@@ -294,13 +294,13 @@
 .email-subject span {
   display: block;
   margin-bottom: 3px;
-  color: #666666;
+  color: #6B7280;
   font-size: 10px;
 }
 
 .email-subject p {
   margin: 0;
-  color: #333333;
+  color: #6B7280;
   font-size: 11px;
   line-height: 1.4;
 }
@@ -329,7 +329,7 @@
 .preview-button {
   border: 1px solid #d0d0d0;
   background: #ffffff;
-  color: #333333;
+  color: #6B7280;
 }
 
 .preview-button:hover {
@@ -391,14 +391,14 @@
 
 .empty-email h3 {
   margin: 0 0 7px;
-  color: #333333;
+  color: #6B7280;
   font-size: 16px;
 }
 
 .empty-email p {
   margin: 0;
   max-width: 400px;
-  color: #666666;
+  color: #6B7280;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -455,7 +455,7 @@
   border: none;
   border-radius: 7px;
   background: #f5f5f5;
-  color: #333333;
+  color: #6B7280;
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
@@ -482,14 +482,14 @@
 .email-details span {
   display: block;
   margin-bottom: 4px;
-  color: #666666;
+  color: #6B7280;
   font-size: 11px;
   font-weight: 600;
 }
 
 .email-details p {
   margin: 0;
-  color: #333333;
+  color: #6B7280;
   font-size: 13px;
 }
 
@@ -507,7 +507,7 @@
 
 .email-message p {
   margin: 0 0 14px;
-  color: #333333;
+  color: #6B7280;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -528,7 +528,7 @@
   border: 1px solid #d0d0d0;
   border-radius: 7px;
   background: #ffffff;
-  color: #333333;
+  color: #6B7280;
   font-family: inherit;
   font-size: 13px;
   outline: none;
@@ -547,7 +547,7 @@
   border: 1px solid #d0d0d0;
   border-radius: 8px;
   background: #ffffff;
-  color: #333333;
+  color: #6B7280;
   font-family: inherit;
   font-size: 13px;
   line-height: 1.6;
@@ -586,7 +586,7 @@
 .cancel-button {
   border: 1px solid #d0d0d0;
   background: #ffffff;
-  color: #333333;
+  color: #6B7280;
 }
 
 .cancel-button:hover {
@@ -735,7 +735,7 @@
 
 .communication-header p {
   margin: 0;
-  color: #666666;
+  color: #6B7280;
 }
 
 .communication-counts {
@@ -801,7 +801,7 @@
 
 .communication-method span {
   font-size: 12px;
-  color: #666666;
+  color: #6B7280;
   font-weight: 600;
 }
 
@@ -853,8 +853,19 @@
 
 .show-all-button {
   background: #eef2f7;
-  color: #333333;
+  color: #6B7280;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,7 @@
 .app-main {
   min-height: 100vh;
-  margin-left: 252px;
+  margin-left: 240px;
+  background: #F7F7F7;
 }
 
 .page-content {
@@ -10,6 +11,26 @@
   padding: 28px 34px 22px;
 }
 
+.mobile-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 16px 0 0 20px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #374151;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-menu-toggle:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
 .sidebar-backdrop {
   display: none;
 }
@@ -17,6 +38,20 @@
 @media (max-width: 1100px) {
   .app-main {
     margin-left: 0;
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    cursor: pointer;
   }
 
   .page-content {
@@ -29,5 +64,16 @@
     padding: 18px 14px 24px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

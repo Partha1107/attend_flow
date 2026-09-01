@@ -14,7 +14,7 @@
 }
 
 .student-attendance-card:hover {
-  border-color: #999999;
+  border-color: #6B7280;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
 }
 
@@ -46,7 +46,7 @@
 }
 
 .student-info span {
-  color: #666666;
+  color: #6B7280;
   font-size: 14px;
   line-height: 1.4;
 }
@@ -64,7 +64,7 @@
 }
 
 .overall-attendance span {
-  color: #666666;
+  color: #6B7280;
   font-size: 13px;
   line-height: 1.4;
 }
@@ -110,7 +110,7 @@
 
 .attendance-details-button:hover {
   background: #e0e0e0;
-  border-color: #999999;
+  border-color: #6B7280;
 }
 
 /* =======================================
@@ -154,7 +154,7 @@
 
 .attendance-modal-header p {
   margin: 6px 0 0;
-  color: #666666;
+  color: #6B7280;
   font-size: 14px;
 }
 
@@ -168,7 +168,7 @@
   border: 1px solid #d0d0d0;
   border-radius: 8px;
   background: #ffffff;
-  color: #333333;
+  color: #6B7280;
   cursor: pointer;
 }
 
@@ -232,7 +232,7 @@
 
   background: #f5f5f5;
 
-  color: #333333;
+  color: #6B7280;
   font-size: 13px;
   font-weight: 600;
 
@@ -249,7 +249,7 @@
 .attendance-table td {
   padding: 15px 16px;
 
-  color: #333333;
+  color: #6B7280;
   font-size: 14px;
 
   border-bottom: 1px solid #f5f5f5;
@@ -332,5 +332,16 @@
     font-size: 13px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
