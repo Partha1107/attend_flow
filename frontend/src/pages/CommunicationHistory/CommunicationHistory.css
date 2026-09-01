@@ -1,8 +1,8 @@
 .communication-history {
   padding: 32px;
-  background: #f7f9fb;
+  background: #F7F7F7;
   min-height: 100%;
-  color: #191c1e;
+  color: #111111;
 }
 
 .communication-header {
@@ -17,7 +17,7 @@
 
 .communication-header p {
   margin: 0;
-  color: #44474d;
+  color: #6B7280;
   font-size: 14px;
 }
 
@@ -30,7 +30,7 @@
 
 .stat-card {
   background: #ffffff;
-  border: 1px solid #c4c6ce;
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   padding: 20px;
   display: flex;
@@ -40,7 +40,7 @@
 
 .stat-card p {
   margin: 0 0 5px;
-  color: #44474d;
+  color: #6B7280;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -52,7 +52,7 @@
 }
 
 .stat-card span {
-  color: #666666;
+  color: #6B7280;
   font-size: 12px;
 }
 
@@ -60,7 +60,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #0b1f3a;
+  background: #151515;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -83,7 +83,7 @@
 }
 .history-container {
   background: #ffffff;
-  border: 1px solid #c4c6ce;
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -100,13 +100,13 @@
   background: transparent;
   padding: 10px 16px;
   cursor: pointer;
-  color: #666666;
+  color: #6B7280;
   font-weight: 500;
 }
 
 .history-tabs button.active {
-  color: #0b1f3a;
-  border-bottom: 2px solid #0b1f3a;
+  color: #151515;
+  border-bottom: 2px solid #151515;
 }
 
 .history-filters {
@@ -123,7 +123,7 @@
   gap: 8px;
   flex: 1;
   max-width: 450px;
-  border: 1px solid #c4c6ce;
+  border: 1px solid #E5E7EB;
   border-radius: 4px;
   padding: 9px 12px;
 }
@@ -137,7 +137,7 @@
 .history-filters select,
 .clear-button {
   padding: 9px 12px;
-  border: 1px solid #c4c6ce;
+  border: 1px solid #E5E7EB;
   border-radius: 4px;
   background: #ffffff;
   cursor: pointer;
@@ -159,10 +159,10 @@
 .history-table th {
   padding: 13px 16px;
   text-align: left;
-  color: #44474d;
+  color: #6B7280;
   font-size: 12px;
   text-transform: uppercase;
-  border-bottom: 1px solid #c4c6ce;
+  border-bottom: 1px solid #E5E7EB;
 }
 
 .history-table td {
@@ -178,7 +178,7 @@
 .history-table td span {
   display: block;
   margin-top: 3px;
-  color: #666666;
+  color: #6B7280;
   font-size: 12px;
 }
 
@@ -195,7 +195,7 @@
 .view-button {
   border: none;
   background: none;
-  color: #0b1f3a;
+  color: #151515;
   font-weight: 600;
   cursor: pointer;
 }
@@ -258,7 +258,7 @@
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #0b1f3a;
+  color: #151515;
 }
 
 .drawer-header button {
@@ -286,7 +286,7 @@
 .detail-item > span {
   display: block;
   margin-bottom: 5px;
-  color: #666666;
+  color: #6B7280;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -294,7 +294,7 @@
 
 .detail-item p {
   margin: 0;
-  color: #191c1e;
+  color: #111111;
   line-height: 1.5;
 }
 @media (max-width: 1000px) {
@@ -353,7 +353,7 @@
 
   margin-bottom: 6px;
 
-  color: #666666;
+  color: #6B7280;
 
   font-size: 12px;
   font-weight: 600;
@@ -372,5 +372,16 @@
 .drawer-header button:hover {
   background: #f5f5f5;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

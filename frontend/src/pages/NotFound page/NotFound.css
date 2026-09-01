@@ -16,7 +16,7 @@
   font-size: 120px;
   font-weight: 800;
   line-height: 1;
-  color: #0b1f3a;
+  color: #151515;
   margin-bottom: 20px;
 }
 
@@ -29,14 +29,14 @@
 .not-found-card p {
   font-size: 16px;
   line-height: 1.6;
-  color: #666666;
+  color: #6B7280;
   margin-bottom: 28px;
 }
 
 .back-dashboard {
   display: inline-block;
   padding: 12px 22px;
-  background: #0b1f3a;
+  background: #151515;
   color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
@@ -45,7 +45,18 @@
 }
 
 .back-dashboard:hover {
-  background: #102a56;
+  background: #151515;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

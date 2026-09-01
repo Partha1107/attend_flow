@@ -25,7 +25,7 @@
 .settings-header p {
   margin: 4px 0 0 0;
   font-size: 14px;
-  color: #666666;
+  color: #6B7280;
 }
 
 .settings-card {
@@ -50,7 +50,7 @@
   margin: 6px 0 0;
   font-size: 13px;
   line-height: 1.5;
-  color: #666666;
+  color: #6B7280;
 }
 
 .settings-field {
@@ -63,13 +63,13 @@
 .settings-field label {
   font-size: 14px;
   font-weight: 500;
-  color: #333333;
+  color: #6B7280;
 }
 
 .settings-field select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #999999;
+  border: 1px solid #6B7280;
   border-radius: 8px;
   background: #ffffff;
   color: #000000;
@@ -79,7 +79,7 @@
 .settings-field select:focus {
   outline: none;
   border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 .settings-save-button {
@@ -147,13 +147,13 @@
 .settings-group label {
   font-size: 14px;
   font-weight: 500;
-  color: #333333;
+  color: #6B7280;
 }
 
 .settings-sublabel {
   margin: 0 0 8px 0;
   font-size: 13px;
-  color: #666666;
+  color: #6B7280;
 }
 
 /* Styled Input Box */
@@ -161,7 +161,7 @@
   width: 100%;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #999999;
+  border: 1px solid #6B7280;
   font-size: 14px;
   color: #000000;
   background-color: #ffffff;
@@ -172,7 +172,7 @@
 
 .settings-input:focus {
   border-color: #000000;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 .settings-input[type="number"]::-webkit-inner-spin-button,
@@ -194,7 +194,7 @@
   padding: 0 16px;
   background-color: #f5f5f5;
   color: #000000;
-  border: 1px solid #999999;
+  border: 1px solid #6B7280;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -205,7 +205,7 @@
 
 .squad-add-btn:hover:not(:disabled) {
   background-color: #d0d0d0;
-  border-color: #94a3b8;
+  border-color: #9CA3AF;
 }
 
 .squad-add-btn:disabled {
@@ -255,7 +255,7 @@
 /* Empty & Loading States */
 .settings-loading {
   padding: 20px 0;
-  color: #666666;
+  color: #6B7280;
   font-size: 14px;
 }
 
@@ -264,8 +264,8 @@
   padding: 12px 16px;
   border-radius: 8px;
   background-color: #ffffff;
-  border: 1px dashed #999999;
-  color: #666666;
+  border: 1px dashed #6B7280;
+  color: #6B7280;
   font-size: 14px;
 }
 
@@ -312,7 +312,7 @@
   padding: 12px 18px;
   background-color: #ffffff;
   border: 1px solid #fecaca;
-  border-left: 4px solid #ef4444;
+  border-left: 4px solid #DC2626;
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
   animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -320,7 +320,7 @@
 
 .error-toast.success-toast {
   border-color: #bbf7d0;
-  border-left-color: #22c55e;
+  border-left-color: #16A34A;
 }
 
 .error-toast.slide-out {
@@ -410,5 +410,16 @@
     left: 16px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

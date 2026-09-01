@@ -90,7 +90,7 @@
 .access-denied-card p {
   margin: 8px 0;
 
-  color: #666666;
+  color: #6B7280;
 
   font-size: 14px;
 
@@ -98,7 +98,7 @@
 }
 
 .access-denied-card strong {
-  color: #333333;
+  color: #6B7280;
 
   font-weight: 600;
 }
@@ -168,5 +168,16 @@
     font-size: 26px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
