@@ -11,10 +11,10 @@
 
   padding: 0 34px;
 
-  background: rgba(255, 255, 255, 0.96);
+  background: #FFFFFF;
 
   border-bottom:
-    1px solid var(--border);
+    1px solid #FFE0E0;
 
   backdrop-filter: blur(12px);
 }
@@ -29,13 +29,14 @@
   border: 0;
   border-radius: 9px;
 
-  color: #4e586b;
+  color: #FF5A5A;
   background: transparent;
+  transition: all 0.2s ease;
 }
 
 .menu-button:hover {
-  color: var(--kalvium-red);
-  background: var(--kalvium-red-soft);
+  color: #FF3B3B;
+  background: #FFF5F5;
 }
 
 .navbar-right {
@@ -66,7 +67,7 @@
 }
 
 .top-date:hover {
-  border-color: #e3a4a7;
+  border-color: #FFCACA;
   color: var(--kalvium-red-dark);
 }
 
@@ -138,12 +139,12 @@
   background:
     linear-gradient(
       145deg,
-      #e54b51,
-      #a80d14
+      #FF5A5A,
+      #FF3B3B
     );
 
   box-shadow:
-    0 3px 8px rgba(80, 10, 10, 0.15);
+    0 3px 8px rgba(255, 90, 90, 0.15);
 
   font-size: 13px;
   font-weight: 800;
@@ -176,6 +177,10 @@
     padding: 0 14px;
   }
 
+  .menu-button {
+    display: grid;
+  }
+
   .top-date {
     display: none;
   }
@@ -187,6 +192,12 @@
 
   .navbar-right {
     gap: 9px;
+  }
+}
+
+@media (min-width: 1101px) {
+  .menu-button {
+    display: none;
   }
 }
 
