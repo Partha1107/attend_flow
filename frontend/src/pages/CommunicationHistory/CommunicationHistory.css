@@ -112,35 +112,79 @@
 .history-filters {
   padding: 16px 20px;
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   border-bottom: 1px solid #d0d0d0;
 }
 
 .search-box {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  max-width: 450px;
+  flex: 1 1 260px;
+  min-width: 220px;
+  height: 40px;
   border: 1px solid #E5E7EB;
-  border-radius: 4px;
-  padding: 9px 12px;
+  border-radius: 8px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.search-box::before {
+  content: "";
+  position: absolute;
+  inset: 8px 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 17px,
+      rgba(17, 24, 39, 0.08) 17px,
+      rgba(17, 24, 39, 0.08) 18px,
+      transparent 18px,
+      transparent 100%
+    ),
+    radial-gradient(circle at 14px 50%, rgba(17, 24, 39, 0.12) 0 2.3px, transparent 2.4px);
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .search-box input {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
   width: 100%;
   border: none;
   outline: none;
+  background: transparent;
 }
 
 .history-filters select,
 .clear-button {
-  padding: 9px 12px;
+  height: 40px;
+  padding: 0 12px;
   border: 1px solid #E5E7EB;
-  border-radius: 4px;
+  border-radius: 8px;
   background: #ffffff;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  box-shadow: none;
+}
+
+.history-filters select:focus,
+.clear-button:focus {
+  border-color: #E5E7EB;
+  box-shadow: none;
+  outline: none;
 }
 
 .clear-button:hover {
