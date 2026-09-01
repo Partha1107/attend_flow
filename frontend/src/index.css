@@ -29,34 +29,34 @@
      TEXT COLORS
      ----------------------------------------- */
 
-  color: #172033;
-  background: #f7f8fa;
+  color: #000000;
+  background: #ffffff;
 
   /* -----------------------------------------
      BRAND COLORS
      ----------------------------------------- */
 
-  --kalvium-red: #FF5A5A;
-  --kalvium-red-dark: #FF3B3B;
-  --kalvium-red-soft: #FFF5F5;
+  --kalvium-red: #000000;
+  --kalvium-red-dark: #1a1a1a;
+  --kalvium-red-soft: #f5f5f5;
 
   /* -----------------------------------------
      TEXT SYSTEM
      ----------------------------------------- */
 
-  --ink: #172033;
-  --text-primary: #172033;
-  --text-secondary: #526078;
-  --text-muted: #697386;
-  --text-light: #8a95a6;
+  --ink: #000000;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --text-light: #999999;
 
   /* -----------------------------------------
      UI COLORS
      ----------------------------------------- */
 
-  --border: #e7e9ee;
+  --border: #e0e0e0;
   --surface: #ffffff;
-  --page: #f7f8fa;
+  --page: #ffffff;
 
   /* -----------------------------------------
      FONT WEIGHTS
@@ -307,3 +307,5 @@ textarea::placeholder {
 ::-webkit-scrollbar-thumb:hover {
   background: #b8bec8;
 }
+
+

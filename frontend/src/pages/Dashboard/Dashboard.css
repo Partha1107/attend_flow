@@ -102,9 +102,9 @@
   margin: 24px 0;
   padding: 20px 24px;
   border: 1px solid #bfdbfe;
-  border-left: 4px solid #2563eb;
+  border-left: 4px solid #000000;
   border-radius: 10px;
-  background: #eff6ff;
+  background: #f5f5f5;
 }
 
 .last-import-heading h2 {
@@ -115,7 +115,7 @@
 
 .last-import-heading p {
   margin: 0;
-  color: #475569;
+  color: #333333;
   font-size: 13px;
 }
 
@@ -124,7 +124,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 16px 24px;
-  color: #475569;
+  color: #333333;
   font-size: 13px;
 }
 
@@ -1222,9 +1222,9 @@
   gap: 8px;
 
   background: #ffffff;
-  color: #df1a22;
+  color: #000000;
 
-  border: 1px solid #ef7479;
+  border: 1px solid #d0d0d0;
   border-radius: 9px;
 
   font-size: 12px;
@@ -1247,8 +1247,8 @@
 
 /* Hover */
 .outline-button:hover {
-  background: #fff5f5;
-  border-color: #df1a22;
+  background: #f5f5f5;
+  border-color: #666666;
 }
 
 /* Click */
@@ -1276,7 +1276,7 @@
 
   background: #ffffff;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d0d0d0;
   border-radius: 9px;
 
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -1305,13 +1305,13 @@
 }
 
 .filter-menu button:hover {
-  background: #fff1f1;
-  color: #df1a22;
+  background: #f5f5f5;
+  color: #000000;
 }
 
 .filter-menu button.selected {
-  background: #fff1f1;
-  color: #df1a22;
+  background: #f5f5f5;
+  color: #000000;
 }/* =========================================
    STUDENT AVATAR + NAME ALIGNMENT
    ========================================= */
@@ -1344,10 +1344,10 @@
 
   border-radius: 50% !important;
 
-  background: #fff5f5 !important;
-  border: 1px solid #ffb3b3 !important;
+  background: #f5f5f5 !important;
+  border: 1px solid #d0d0d0 !important;
 
-  color: #e31b23 !important;
+  color: #000000 !important;
 
   font-size: 11px !important;
   font-weight: 700 !important;
@@ -1370,3 +1370,5 @@
 
   line-height: 1.2 !important;
 }
+
+
