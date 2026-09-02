@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import "./EmailAutomation.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 /*
   TEMPORARY ATTENDANCE DATA
 
@@ -17,76 +20,78 @@ function EmailAutomation() {
   const [loadingStudents, setLoadingStudents] = useState(true);
 
   const fetchAttendanceData = async () => {
-  try {
-    setLoadingStudents(true);
-
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/attendance/email-alerts`
-    );
-
-    const responseText = await response.text();
-    let result;
     try {
-      result = JSON.parse(responseText);
-    } catch {
-      throw new Error("The backend returned an invalid response.");
-    }
+      setLoadingStudents(true);
 
-    if (!response.ok || !result.success) {
-      throw new Error(
-        result.message || "Failed to fetch attendance data"
+      const response = await fetch(
+        `${API_URL}/api/attendance/email-alerts`
       );
+
+
+
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        throw new Error("The backend returned an invalid response.");
+      }
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Failed to fetch attendance data"
+        );
+      }
+
+      setAttendanceData(result.students || []);
+    } catch (error) {
+      console.error("Failed to fetch email alert data:", error);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchAttendanceData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  /*
+    Attendance rules
+  */
+  const getAttendanceStatus = (attendance) => {
+    if (attendance >= 75) {
+      return "Good";
     }
 
-    setAttendanceData(result.students || []);
-  } catch (error) {
-    console.error("Failed to fetch email alert data:", error);
-  } finally {
-    setLoadingStudents(false);
-  }
-};
-useEffect(() => {
-  const timer = window.setTimeout(() => {
-    void fetchAttendanceData();
-  }, 0);
+    if (attendance >= 65) {
+      return "Warning";
+    }
 
-  return () => window.clearTimeout(timer);
-}, []);
-
-/*
-  Attendance rules
-*/
-const getAttendanceStatus = (attendance) => {
-  if (attendance >= 75) {
-    return "Good";
-  }
-
-  if (attendance >= 65) {
-    return "Warning";
-  }
-
-  return "Critical";
-};
-
-/*
-  Generate email content
-*/
-const generateEmail = (student) => {
-  const status = getAttendanceStatus(student.attendance);
-  const subject = status === "Critical"
-    ? "Attendance Alert - Immediate Attention Required"
-    : "Attendance Warning";
-  const message = status === "Critical"
-    ? `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`
-    : `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`;
-
-  return {
-    ...student,
-    status,
-    subject,
-    message,
+    return "Critical";
   };
-};
+
+  /*
+    Generate email content
+  */
+  const generateEmail = (student) => {
+    const status = getAttendanceStatus(student.attendance);
+    const subject = status === "Critical"
+      ? "Attendance Alert - Immediate Attention Required"
+      : "Attendance Warning";
+    const message = status === "Critical"
+      ? `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`
+      : `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`;
+
+    return {
+      ...student,
+      status,
+      subject,
+      message,
+    };
+  };
 
 
   const [mentorName, setMentorName] = useState("Mentor");
@@ -209,21 +214,23 @@ const generateEmail = (student) => {
 
     setSendError("");
 
-    const response = await fetch("http://localhost:5000/api/email-automation/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mentorName,
-        mentorEmail,
-        studentId: email.id,
-        studentName: email.name,
-        studentEmail: email.email,
-        parentEmail: email.parentEmail,
-        attendancePercentage: email.attendance,
-        subject: email.subject,
-        message: email.message,
-      }),
-    });
+    const response = await fetch(
+      `${API_URL}/api/email-automation/send`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mentorName,
+          mentorEmail,
+          studentId: email.id,
+          studentName: email.name,
+          studentEmail: email.email,
+          parentEmail: email.parentEmail,
+          attendancePercentage: email.attendance,
+          subject: email.subject,
+          message: email.message,
+        }),
+      });
 
     const responseText = await response.text();
     let result;
