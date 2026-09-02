@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { getMentorStudents } from "../../api/mentor";
 import "./StudentPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -90,25 +91,7 @@ function StudentPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
-        `${API_URL}/api/mentor/dashboard/students${squad ? `?squad=${encodeURIComponent(squad)}` : ""}`
-      );
-
-      const result = await response.json();
-
-      if (response.status === 404) {
-        throw new Error(
-          "Student API endpoint not found. Check the backend route."
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      if (!result.success) {
-        throw new Error(result.message || "Failed to fetch students");
-      }
+      const result = await getMentorStudents();
 
         const fetchedStudents = result.students || [];
         setStudents(fetchedStudents);
@@ -127,7 +110,7 @@ function StudentPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchParams, squad]);
+  }, [searchParams]);
 
   useEffect(() => {
     const shouldRefreshStudents = sessionStorage.getItem("refresh-students");

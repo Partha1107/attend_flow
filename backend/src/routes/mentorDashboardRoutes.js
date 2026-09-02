@@ -5,6 +5,9 @@ const router = express.Router();
 const mentorDashboardController = require(
     "../controllers/mentorDashboardController"
 );
+const { requireAuth } = require(
+    "../middleware/authMiddleware"
+);
 
 // ============================================================
 // GET ALL SQUADS
@@ -24,6 +27,7 @@ router.get(
 
 router.get(
     "/students",
+    requireAuth,
     mentorDashboardController.getStudents
 );
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { getMentorEmailAlerts } from "../../api/mentor";
 import "./EmailAutomation.css";
 
 const API_URL =
@@ -18,31 +19,18 @@ const API_URL =
 function EmailAutomation() {
   const [attendanceData, setAttendanceData] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
+  const [mentorSquad, setMentorSquad] = useState("");
+  const [selectedSquad, setSelectedSquad] = useState(
+    () => localStorage.getItem("selectedSquad") || ""
+  );
 
   const fetchAttendanceData = async () => {
     try {
       setLoadingStudents(true);
 
-      const response = await fetch(
-        `${API_URL}/api/attendance/email-alerts`
-      );
+      const result = await getMentorEmailAlerts();
 
-
-
-      const responseText = await response.text();
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch {
-        throw new Error("The backend returned an invalid response.");
-      }
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.message || "Failed to fetch attendance data"
-        );
-      }
-
+      setMentorSquad(result.squad || "");
       setAttendanceData(result.students || []);
     } catch (error) {
       console.error("Failed to fetch email alert data:", error);
@@ -110,6 +98,28 @@ function EmailAutomation() {
     Email drafts
   */
   const [emailDrafts, setEmailDrafts] = useState([]);
+
+  useEffect(() => {
+    const updateSelectedSquad = (event) => {
+      setSelectedSquad(event.detail || "");
+      setEmailDrafts([]);
+    };
+
+    const handleStorageChange = (event) => {
+      if (event.key === "selectedSquad") {
+        setSelectedSquad(event.newValue || "");
+        setEmailDrafts([]);
+      }
+    };
+
+    window.addEventListener("selectedSquadChange", updateSelectedSquad);
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("selectedSquadChange", updateSelectedSquad);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   /*
     Communication method
@@ -181,7 +191,9 @@ function EmailAutomation() {
   */
   const handleGenerateDrafts = () => {
     const studentsNeedingEmail = attendanceData.filter(
-      (student) => student.attendance < 75
+      (student) =>
+        (!selectedSquad || String(student.squad) === String(selectedSquad)) &&
+        student.attendance < 75
     );
 
     const generatedEmails = studentsNeedingEmail.map((student) =>
@@ -517,7 +529,7 @@ function EmailAutomation() {
 
           <p>
             Generate, review and send
-            attendance alert emails.
+            attendance alert emails for Squad {selectedSquad || mentorSquad}.
           </p>
         </div>
 

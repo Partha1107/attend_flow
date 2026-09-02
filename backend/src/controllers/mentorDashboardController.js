@@ -154,9 +154,28 @@ const getSquads = async (req, res) => {
 
 const getStudents = async (req, res) => {
     try {
-        const squad = cleanString(
-            req.query.squad
-        );
+        const {
+            data: mentorProfile,
+            error: profileError,
+        } = await supabase
+            .from("mentor_profiles")
+            .select("college_name, squad")
+            .eq("user_id", req.user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (!mentorProfile) {
+            return res.status(403).json({
+                success: false,
+                profileExists: false,
+                message: "Please complete your mentor profile first.",
+            });
+        }
+
+        const squad = cleanString(mentorProfile.squad);
 
         // --------------------------------------------------------
         // GET STUDENTS
@@ -169,15 +188,7 @@ const getStudents = async (req, res) => {
                 ascending: true,
             });
 
-        // IMPORTANT:
-        // Filter directly in Supabase.
-        if (squad) {
-            studentQuery =
-                studentQuery.eq(
-                    "squad",
-                    squad
-                );
-        }
+        studentQuery = studentQuery.eq("squad", squad);
 
         const {
             data: studentsData,
@@ -261,6 +272,12 @@ const getStudents = async (req, res) => {
 
             squad:
                 squad || null,
+
+            mentor: {
+                email: req.user.email,
+                collegeName: mentorProfile.college_name,
+                squad,
+            },
 
             count: result.length,
 
