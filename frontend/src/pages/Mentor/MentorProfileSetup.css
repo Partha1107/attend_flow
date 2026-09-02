@@ -1,0 +1,132 @@
+.mentor-setup-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f7f7f8;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.mentor-setup-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 36px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.mentor-setup-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.mentor-avatar {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #e8342a;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mentor-setup-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.mentor-setup-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+}
+
+.mentor-email {
+  margin: 20px 0 28px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f7f7f8;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 15px;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #e8342a;
+  box-shadow: 0 0 0 3px rgba(232, 52, 42, 0.1);
+}
+
+.mentor-setup-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.mentor-setup-card button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 9px;
+  background: #e8342a;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mentor-setup-card button:hover {
+  background: #d92f26;
+}
+
+.mentor-setup-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .mentor-setup-card {
+    padding: 24px;
+  }
+
+  .mentor-setup-header h1 {
+    font-size: 21px;
+  }
+}

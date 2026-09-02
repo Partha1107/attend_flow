@@ -1194,6 +1194,27 @@ const getEmailAlerts = async (
     res
 ) => {
     try {
+        const {
+            data: mentorProfile,
+            error: profileError,
+        } = await supabase
+            .from("mentor_profiles")
+            .select("squad")
+            .eq("user_id", req.user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (!mentorProfile) {
+            return res.status(403).json({
+                success: false,
+                profileExists: false,
+                message: "Please complete your mentor profile first.",
+            });
+        }
+
         const [
             {
                 data: students,
@@ -1209,6 +1230,7 @@ const getEmailAlerts = async (
                 .select(
                     "id, name, email, squad, parent_email"
                 )
+                .eq("squad", mentorProfile.squad)
                 .order("name", {
                     ascending: true,
                 }),
@@ -1254,6 +1276,7 @@ const getEmailAlerts = async (
 
         res.json({
             success: true,
+            squad: mentorProfile.squad,
             students: alerts,
         });
     } catch (error) {

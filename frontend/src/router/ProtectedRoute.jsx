@@ -1,12 +1,17 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import { supabase } from "../lib/supabase";
 import { ALLOWED_USERS } from "../constants/allowedUsers";
+import { getMentorProfile } from "../api/mentor";
 
 const ProtectedRoute = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(Boolean(supabase));
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!supabase) {
@@ -44,6 +49,48 @@ const ProtectedRoute = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      loading ||
+      !session ||
+      location.pathname === "/mentor/setup"
+    ) {
+      return undefined;
+    }
+
+    let mounted = true;
+
+    const checkMentorProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const result = await getMentorProfile();
+
+        if (mounted && !result.exists) {
+          navigate("/mentor/setup", { replace: true });
+        }
+      } catch (profileCheckError) {
+        console.error("Mentor profile check error:", profileCheckError);
+
+        if (mounted) {
+          setProfileError(
+            profileCheckError.message ||
+              "Unable to verify your mentor profile."
+          );
+        }
+      } finally {
+        if (mounted) {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    void checkMentorProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, [loading, location.pathname, navigate, session]);
 
   if (loading) {
     return (
@@ -84,6 +131,14 @@ const ProtectedRoute = () => {
         replace
       />
     );
+  }
+
+  if (profileLoading) {
+    return <div>Loading mentor profile...</div>;
+  }
+
+  if (profileError) {
+    return <div>{profileError}</div>;
   }
 
   return <Outlet />;

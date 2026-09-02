@@ -18,6 +18,7 @@ import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHis
 import EmailAutomation from "../pages/EmailAutomation/EmailAutomation";
 import NotFound from "../pages/NotFound page/NotFound";
 import Settings from "../pages/Settingspage/Settingspage"
+import MentorProfileSetup from "../pages/Mentor/MentorProfileSetup";
 
 function AppRoutes() {
   return (
@@ -36,6 +37,11 @@ function AppRoutes() {
       {/* ================= PROTECTED ================= */}
 
       <Route element={<ProtectedRoute />}>
+
+        <Route
+          path="/mentor/setup"
+          element={<MentorProfileSetup />}
+        />
 
         <Route path="/" element={<DashboardLayout />}>
 

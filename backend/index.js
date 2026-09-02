@@ -6,6 +6,7 @@ const cors = require("cors");
 
 const attendanceRoutes = require("./src/routes/attendanceRoutes");
 const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
+const mentorRoutes = require("./src/routes/mentorRoutes");
 
 const app = express();
 
@@ -63,6 +64,11 @@ app.use(
 app.use(
     "/api/email-automation",
     emailAutomationRoutes
+);
+
+app.use(
+    "/api/mentor",
+    mentorRoutes
 );
 
 app.use(
