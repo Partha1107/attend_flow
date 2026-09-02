@@ -33,12 +33,14 @@
 .records-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
 .search-box {
+  position: relative;
   flex: 1 1 260px;
+  min-width: 220px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -48,9 +50,34 @@
   border-radius: 8px;
   background: #FFFFFF;
   color: #6B7280;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.search-box::before {
+  content: "";
+  position: absolute;
+  inset: 8px 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 16px,
+      rgba(17, 24, 39, 0.08) 16px,
+      rgba(17, 24, 39, 0.08) 17px,
+      transparent 17px,
+      transparent 100%
+    ),
+    radial-gradient(circle at 13px 50%, rgba(17, 24, 39, 0.12) 0 2.2px, transparent 2.3px);
+  opacity: 0.7;
+  pointer-events: none;
 }
 .search-box input {
+  position: relative;
+  z-index: 1;
   flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
   background: transparent;
@@ -71,7 +98,11 @@
   cursor: pointer;
 }
 .status-select:focus,
-.date-filter:focus { border-color: #dc2626; }
+.date-filter:focus {
+  border-color: #d0d0d0;
+  box-shadow: none;
+  outline: none;
+}
 
 /* Stats */
 .records-stats {
