@@ -22,7 +22,7 @@
 
 .login-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
 }
 
 
@@ -32,12 +32,12 @@
 
 .login-brand {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 34px;
 }
 
 .login-logo {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
 
   margin: 0 auto 16px;
 
@@ -45,13 +45,14 @@
   align-items: center;
   justify-content: center;
 
-  background-color: #000000;
-  color: #ffffff;
-
   border-radius: 14px;
+  overflow: hidden;
+}
 
-  font-size: 22px;
-  font-weight: 700;
+.login-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .login-brand h1 {
@@ -59,17 +60,8 @@
 
   color: #000000;
 
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: -0.5px;
-}
-
-.login-brand p {
-  margin: 8px 0 0;
-
-  color: #6B7280;
-
-  font-size: 15px;
 }
 
 
@@ -80,13 +72,13 @@
 .login-card {
   background-color: #ffffff;
 
-  border: 1px solid #d0d0d0;
+  border: 1px solid #d2d2d2;
 
-  border-radius: 16px;
+  border-radius: 14px;
 
-  padding: 32px;
+  padding: 28px 30px 30px;
 
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 5px 18px rgba(17, 24, 39, 0.07);
 
   box-sizing: border-box;
 }
@@ -99,7 +91,7 @@
 .login-heading {
   text-align: center;
 
-  margin-bottom: 28px;
+  margin-bottom: 26px;
 }
 
 .login-heading h2 {
@@ -107,7 +99,7 @@
 
   color: #000000;
 
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 600;
 }
 
@@ -119,6 +111,10 @@
   font-size: 14px;
 
   line-height: 1.5;
+}
+
+.login-heading p + p {
+  margin-top: 4px;
 }
 
 
@@ -138,11 +134,11 @@
 
   background-color: #ffffff;
 
-  border: 1px solid #6B7280;
+  border: 1px solid #64748b;
 
   border-radius: 10px;
 
-  color: #6B7280;
+  color: #64748b;
 
   font-size: 15px;
   font-weight: 500;
@@ -247,22 +243,6 @@
 
   line-height: 1.5;
 }
-
-
-/* ================================
-   Footer
-================================ */
-
-.login-footer {
-  margin: 24px 0 0;
-
-  text-align: center;
-
-  color: #9CA3AF;
-
-  font-size: 11px;
-}
-
 
 /* ================================
    Responsive
