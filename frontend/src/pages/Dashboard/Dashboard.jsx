@@ -144,6 +144,9 @@ function DistributionItem({ item }) {
 function Dashboard() {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
+  const [selectedSquad, setSelectedSquad] = useState(
+    () => localStorage.getItem("selectedSquad") || ""
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastImport, setLastImport] = useState(() => {
@@ -161,7 +164,7 @@ function Dashboard() {
       try {
         setLoading(true);
         setError("");
-        const result = await getMentorStudents();
+        const result = await getMentorStudents(selectedSquad);
         setStudents(result.students || []);
       } catch (fetchError) {
         setError(fetchError.message || "Failed to fetch students");
@@ -185,15 +188,21 @@ function Dashboard() {
       void fetchDashboardData();
     };
 
+    const handleSquadChange = (event) => {
+      setSelectedSquad(event.detail || "");
+    };
+
     void fetchDashboardData();
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("attendanceImportCompleted", handleImportCompleted);
+    window.addEventListener("selectedSquadChange", handleSquadChange);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("attendanceImportCompleted", handleImportCompleted);
+      window.removeEventListener("selectedSquadChange", handleSquadChange);
     };
-  }, []);
+  }, [selectedSquad]);
 
   const totalStudents = students.length;
   const averageAttendance = totalStudents
