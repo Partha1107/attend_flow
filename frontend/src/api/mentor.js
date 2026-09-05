@@ -67,9 +67,12 @@ export const saveMentorProfile = async ({ collegeName, squad }) => {
   return readResponse(response, "Failed to save mentor profile.");
 };
 
-export const getMentorStudents = async () => {
+export const getMentorStudents = async (squad = "") => {
+  const query = squad
+    ? `?squad=${encodeURIComponent(squad)}`
+    : "";
   const response = await fetch(
-    `${API_URL}/api/mentor/dashboard/students`,
+    `${API_URL}/api/mentor/dashboard/students${query}`,
     { headers: await getAuthHeaders() }
   );
 

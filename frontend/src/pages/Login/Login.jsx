@@ -5,6 +5,7 @@ import {
     supabase,
     supabaseConfigError,
 } from "../../lib/supabase";
+import logo from "../../assets/web-favicon.png";
 import "./Login.css";
 
 const Login = () => {
@@ -43,19 +44,20 @@ const Login = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                {/* Logo */}
-                <div className="login-brand">
-                    <div className="login-logo">A</div>
-
-                    <h1>AESA</h1>
-
-                    <p>Mentor Access Portal</p>
-                </div>
-
                 {/* Login Card */}
                 <div className="login-card">
+                    <div className="login-brand">
+                        <div className="login-logo">
+                            <img src={logo} alt="AESA logo" />
+                        </div>
+
+                        <h1>AESA</h1>
+                    </div>
+
                     <div className="login-heading">
                         <h2>Welcome Back</h2>
+
+                        <p>Mentor Access Portal</p>
 
                         <p>
                             Sign in to manage student attendance
@@ -101,10 +103,6 @@ const Login = () => {
                     </p>
                 </div>
 
-                {/* Footer */}
-                <p className="login-footer">
-                    AESA • Attendance Email & SMS Automation
-                </p>
             </motion.div>
         </div>
     );

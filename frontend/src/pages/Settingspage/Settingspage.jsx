@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
+import {
+    getMentorProfile,
+    saveMentorProfile,
+} from "../../api/mentor";
 import "./SettingsPage.css";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000";
 
 export default function SquadSettings({
     onSquadChange,
@@ -15,6 +21,9 @@ export default function SquadSettings({
                 "selectedSquad"
             ) || ""
         );
+
+    const [mentorProfile, setMentorProfile] =
+        useState(null);
 
     const [isLoading, setIsLoading] =
         useState(true);
@@ -33,28 +42,31 @@ export default function SquadSettings({
     // ==========================================================
 
     useEffect(() => {
-        const loadSquads = async () => {
+        const loadSettings = async () => {
             try {
                 setIsLoading(true);
                 setError("");
 
-                const response =
-                    await fetch(
-                        `${API_URL}/api/mentor/dashboard/squads`
-                    );
+                const [squadsResponse, profileResult] =
+                    await Promise.all([
+                        fetch(
+                            `${API_URL}/api/mentor/dashboard/squads`
+                        ),
+                        getMentorProfile(),
+                    ]);
 
                 const result =
-                    await response.json();
+                    await squadsResponse.json();
 
-                if (response.status === 404) {
+                if (squadsResponse.status === 404) {
                     throw new Error(
                         "Squad API endpoint not found. Check the backend route."
                     );
                 }
 
-                if (!response.ok) {
+                if (!squadsResponse.ok) {
                     throw new Error(
-                        `Server error: ${response.status}`
+                        `Server error: ${squadsResponse.status}`
                     );
                 }
 
@@ -68,6 +80,22 @@ export default function SquadSettings({
                 setSquads(
                     result.squads || []
                 );
+
+                setMentorProfile(
+                    profileResult.profile || null
+                );
+
+                if (profileResult.profile?.squad) {
+                    const profileSquad = String(
+                        profileResult.profile.squad
+                    );
+
+                    setSelectedSquad(profileSquad);
+                    localStorage.setItem(
+                        "selectedSquad",
+                        profileSquad
+                    );
+                }
             } catch (err) {
                 console.error(
                     "Load squads error:",
@@ -83,14 +111,14 @@ export default function SquadSettings({
             }
         };
 
-        loadSquads();
+        loadSettings();
     }, []);
 
     // ==========================================================
     // SAVE SQUAD
     // ==========================================================
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setError("");
         setMessage("");
 
@@ -98,6 +126,20 @@ export default function SquadSettings({
 
         try {
             if (!selectedSquad) {
+                if (!mentorProfile) {
+                    throw new Error(
+                        "Mentor profile could not be loaded."
+                    );
+                }
+
+                await saveMentorProfile({
+                    collegeName:
+                        mentorProfile.collegeName ||
+                        mentorProfile.college_name ||
+                        "",
+                    squad: "",
+                });
+
                 localStorage.removeItem(
                     "selectedSquad"
                 );
@@ -118,6 +160,20 @@ export default function SquadSettings({
 
                 return;
             }
+
+            if (!mentorProfile) {
+                throw new Error(
+                    "Mentor profile could not be loaded."
+                );
+            }
+
+            await saveMentorProfile({
+                collegeName:
+                    mentorProfile.collegeName ||
+                    mentorProfile.college_name ||
+                    "",
+                squad: selectedSquad,
+            });
 
             localStorage.setItem(
                 "selectedSquad",
