@@ -12,7 +12,8 @@ import {
 
 import "./CommunicationHistory.css";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function CommunicationHistory() {
   const [history, setHistory] = useState([]);
@@ -24,17 +25,25 @@ function CommunicationHistory() {
         const response = await fetch(`${API_URL}/api/email-automation/records`);
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.message || "Failed to fetch history");
-        setHistory((result.data || []).map((record) => ({
-          ...record,
-          date: new Date(record.sent_at).toLocaleDateString(),
-          time: new Date(record.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          type: record.communication_type || "Email",
-          recipient: record.parent_email,
-          name: record.student_name,
-          subject: record.subject || "Attendance Alert",
-          message: record.message || "Attendance email sent successfully.",
-          status: record.status,
-        })));
+        setHistory((result.data || []).map((record) => {
+          const sentAt = record.sent_at || record.created_at;
+          const sentDate = sentAt ? new Date(sentAt) : null;
+
+          return {
+            ...record,
+            date: sentDate?.toLocaleDateString() || "Unknown date",
+            time: sentDate?.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }) || "",
+            type: record.communication_type || "Email",
+            recipient: record.parent_email || "Unknown recipient",
+            name: record.student_name || "Unknown student",
+            subject: record.subject || "Attendance Alert",
+            message: record.message || "No message content stored.",
+            status: record.status || "Sent",
+          };
+        }));
       } catch (fetchError) {
         setError(fetchError.message || "Failed to fetch communication history");
       }
@@ -62,7 +71,7 @@ function CommunicationHistory() {
         item.recipient.toLowerCase().includes(searchText) ||
         item.name.toLowerCase().includes(searchText) ||
         item.message.toLowerCase().includes(searchText) ||
-        item.id.toLowerCase().includes(searchText);
+        String(item.id || "").toLowerCase().includes(searchText);
 
       return (
         matchesTab &&
