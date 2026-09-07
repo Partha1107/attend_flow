@@ -7,28 +7,9 @@ const cors = require("cors");
 const attendanceRoutes = require("./src/routes/attendanceRoutes");
 const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
 const mentorRoutes = require("./src/routes/mentorRoutes");
+const mentorProfileRoutes = require("./src/routes/mentorProfileRoutes");
+const mentorDashboardRoutes = require("./src/routes/mentorDashboardRoutes");
 
-const mentorProfileRoutes = require(
-    "./src/routes/mentorProfileRoutes"
-);
-
-const mentorDashboardRoutes = require(
-    "./src/routes/mentorDashboardRoutes"
-);
-
-app.use(
-    "/api/mentor/dashboard",
-    mentorDashboardRoutes
-);
-
-const mentorProfileRoutes = require(
-    "./src/routes/mentorProfileRoutes"
-);
-
-app.use(
-    "/api/mentor",
-    mentorProfileRoutes
-);
 const app = express();
 
 // ===============================
@@ -39,9 +20,6 @@ const allowedOrigins = [
     "http://localhost:5173",
     "https://attendance-recored.vercel.app",
 ];
-const mentorDashboardRoutes = require(
-    "./src/routes/mentorDashboardRoutes"
-);
 
 app.use(
     cors({
@@ -168,7 +146,7 @@ app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: "API endpoint not found.",
-        error: `${req.method} ${req.originalUrl}`,
+        error: `${ req.method } ${ req.originalUrl }`,
     });
 });
 
@@ -181,6 +159,6 @@ const PORT =
 
 app.listen(PORT, () => {
     console.log(
-        `AESA Backend running on port ${PORT}`
+        `AESA Backend running on port ${ PORT }`
     );
 });
