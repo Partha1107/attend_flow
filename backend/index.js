@@ -7,41 +7,25 @@ const cors = require("cors");
 const attendanceRoutes = require("./src/routes/attendanceRoutes");
 const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
 const mentorRoutes = require("./src/routes/mentorRoutes");
+const mentorProfileRoutes = require("./src/routes/mentorProfileRoutes");
+const mentorDashboardRoutes = require("./src/routes/mentorDashboardRoutes");
 
-const mentorProfileRoutes = require(
-    "./src/routes/mentorProfileRoutes"
-);
-
-const mentorDashboardRoutes = require(
-    "./src/routes/mentorDashboardRoutes"
-);
-
-app.use(
-    "/api/mentor/dashboard",
-    mentorDashboardRoutes
-);
-
-const mentorProfileRoutes = require(
-    "./src/routes/mentorProfileRoutes"
-);
-
-app.use(
-    "/api/mentor",
-    mentorProfileRoutes
-);
 const app = express();
+
+// ===============================
+// CORS
+// ===============================
 
 const allowedOrigins = [
     "http://localhost:5173",
     "https://attendance-recored.vercel.app",
 ];
-const mentorDashboardRoutes = require(
-    "./src/routes/mentorDashboardRoutes"
-);
 
 app.use(
     cors({
         origin: function (origin, callback) {
+            // Allow requests without an Origin
+            // such as Postman/server-to-server requests
             if (!origin) {
                 return callback(null, true);
             }
@@ -58,6 +42,10 @@ app.use(
     })
 );
 
+// ===============================
+// BODY PARSERS
+// ===============================
+
 app.use(
     express.json({
         limit: "20mb",
@@ -70,6 +58,10 @@ app.use(
     })
 );
 
+// ===============================
+// HEALTH CHECK
+// ===============================
+
 app.get("/api/health", (req, res) => {
     res.json({
         success: true,
@@ -77,27 +69,46 @@ app.get("/api/health", (req, res) => {
     });
 });
 
+// ===============================
+// ROUTES
+// ===============================
+
+// Attendance
 app.use(
     "/api/attendance",
     attendanceRoutes
 );
 
+// Email Automation
 app.use(
     "/api/email-automation",
     emailAutomationRoutes
 );
 
+// Mentor
 app.use(
     "/api/mentor",
     mentorRoutes
 );
 
+// Mentor Profile
+app.use(
+    "/api/mentor",
+    mentorProfileRoutes
+);
+
+// Mentor Dashboard
 app.use(
     "/api/mentor/dashboard",
     mentorDashboardRoutes
 );
 
+// ===============================
+// JSON ERROR HANDLER
+// ===============================
+
 app.use((error, req, res, next) => {
+    // Invalid JSON
     if (
         error instanceof SyntaxError &&
         error.status === 400 &&
@@ -111,6 +122,7 @@ app.use((error, req, res, next) => {
         });
     }
 
+    // Payload too large
     if (
         error.type === "entity.too.large"
     ) {
@@ -122,17 +134,25 @@ app.use((error, req, res, next) => {
         });
     }
 
+    // Pass other errors to the next handler
     return next(error);
 });
+
+// ===============================
+// 404 HANDLER
+// ===============================
 
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        message:
-            "API endpoint not found.",
+        message: "API endpoint not found.",
         error: `${req.method} ${req.originalUrl}`,
     });
 });
+
+// ===============================
+// SERVER
+// ===============================
 
 const PORT =
     process.env.PORT || 5000;
