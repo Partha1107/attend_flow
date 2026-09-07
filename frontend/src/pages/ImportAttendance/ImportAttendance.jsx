@@ -4,7 +4,6 @@ import {
   FileSpreadsheet,
   Upload,
   Database,
-  CalendarDays,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import "./ImportAttendance.css";
@@ -74,40 +73,54 @@ const SEMESTERS = [
 ];
 
 // ============================================================
-// GET ACADEMIC YEAR FROM DATE
+// EXTRACT ATTENDANCE PERIOD FROM FILE NAME
 // ============================================================
 
-const getAcademicYearFromDate = (date) => {
-  if (!date) return "";
-
-  const selectedDate = new Date(`${date}T00:00:00`);
-
-  if (Number.isNaN(selectedDate.getTime())) {
-    return "";
+const extractAttendancePeriodFromFileName = (
+  fileName
+) => {
+  if (!fileName) {
+    return null;
   }
 
-  const year = selectedDate.getFullYear();
+  const match = fileName.match(
+    /_(\d{4}-\d{2}-\d{2})_to_(\d{4}-\d{2}-\d{2})\.(xlsx|xls)$/i
+  );
 
-  // Academic year starts in August
-  if (selectedDate.getMonth() >= 7) {
-    return `${year}-${year + 1}`;
+  if (!match) {
+    return null;
   }
 
-  return `${year - 1}-${year}`;
+  const [
+    ,
+    periodStart,
+    periodEnd,
+  ] = match;
+
+  return {
+    periodStart,
+    periodEnd,
+  };
 };
 
 // ============================================================
 // DETECT SUBJECTS
 // ============================================================
 
-const detectSubjects = (columns) => {
+const detectSubjects = (
+  columns
+) => {
   const subjectNumbers = new Set();
 
   columns.forEach((column) => {
-    const match = column.match(/^Subject (\d+) /);
+    const match = column.match(
+      /^Subject (\d+) /
+    );
 
     if (match) {
-      subjectNumbers.add(Number(match[1]));
+      subjectNumbers.add(
+        Number(match[1])
+      );
     }
   });
 
@@ -120,9 +133,13 @@ const detectSubjects = (columns) => {
 // DETECT GROWTH HOUR
 // ============================================================
 
-const detectGrowthHour = (columns) => {
+const detectGrowthHour = (
+  columns
+) => {
   return columns.some((column) =>
-    column.toLowerCase().includes("growth hour")
+    column
+      .toLowerCase()
+      .includes("growth hour")
   );
 };
 
@@ -130,9 +147,12 @@ const detectGrowthHour = (columns) => {
 // TRANSFORM EXCEL DATA
 // ============================================================
 
-const transformAttendanceData = (data) => {
+const transformAttendanceData = (
+  data
+) => {
   return data.map((row) => {
-    const columns = Object.keys(row);
+    const columns =
+      Object.keys(row);
 
     const subjectNumbers =
       detectSubjects(columns);
@@ -141,31 +161,65 @@ const transformAttendanceData = (data) => {
 
     let growthHour = null;
 
-    subjectNumbers.forEach((subjectNumber) => {
-      const id = row[`Subject ${subjectNumber} ID`];
-      const name = row[`Subject ${subjectNumber} Name`];
-      const subjectData = {
-        id,
-        name,
-        sessionsConducted: row[`Subject ${subjectNumber} Sessions Conducted`],
-        sessionsAttended: row[`Subject ${subjectNumber} Sessions Attended`],
-        sessionsAbsent: row[`Subject ${subjectNumber} Sessions Absent`],
-        attendancePercentage: row[`Subject ${subjectNumber} Attendance %`],
-        sessionsMarkedOD: row[`Subject ${subjectNumber} Sessions Marked OD`],
-        sessionsMedicalLeave:
-          row[`Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`],
-        sessionsAppliedLeave: row[`Subject ${subjectNumber} Sessions Applied Leave`],
-      };
-      console.log(
-        `Subject ${subjectNumber} percentage:`,
-        row[`Subject ${subjectNumber} Attendance %`],
-        typeof row[`Subject ${subjectNumber} Attendance %`]
-      );
+    // ========================================================
+    // PROCESS SUBJECTS
+    // ========================================================
 
+    subjectNumbers.forEach(
+      (subjectNumber) => {
+        const id =
+          row[
+            `Subject ${subjectNumber} ID`
+          ];
 
-        // ======================================================
+        const name =
+          row[
+            `Subject ${subjectNumber} Name`
+          ];
+
+        const subjectData = {
+          id,
+          name,
+
+          sessionsConducted:
+            row[
+              `Subject ${subjectNumber} Sessions Conducted`
+            ],
+
+          sessionsAttended:
+            row[
+              `Subject ${subjectNumber} Sessions Attended`
+            ],
+
+          sessionsAbsent:
+            row[
+              `Subject ${subjectNumber} Sessions Absent`
+            ],
+
+          attendancePercentage:
+            row[
+              `Subject ${subjectNumber} Attendance %`
+            ],
+
+          sessionsMarkedOD:
+            row[
+              `Subject ${subjectNumber} Sessions Marked OD`
+            ],
+
+          sessionsMedicalLeave:
+            row[
+              `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
+            ],
+
+          sessionsAppliedLeave:
+            row[
+              `Subject ${subjectNumber} Sessions Applied Leave`
+            ],
+        };
+
+        // ====================================================
         // GROWTH HOUR
-        // ======================================================
+        // ====================================================
 
         const isGrowthHour =
           (!id ||
@@ -176,7 +230,9 @@ const transformAttendanceData = (data) => {
 
         if (isGrowthHour) {
           growthHour = {
-            name: name || "Growth Hour",
+            name:
+              name ||
+              "Growth Hour",
 
             sessionsConducted:
               subjectData.sessionsConducted,
@@ -203,23 +259,48 @@ const transformAttendanceData = (data) => {
           return;
         }
 
-        // ======================================================
+        // ====================================================
         // NORMAL SUBJECT
-        // ======================================================
+        // ====================================================
 
         if (id && name) {
-          subjects.push(subjectData);
+          subjects.push(
+            subjectData
+          );
         }
       }
     );
 
+    // ========================================================
+    // RETURN STUDENT
+    // ========================================================
+
     return {
-      email: row.email,
-      name: row.Name,
-      squad: row.Squad,
-      parent_name: row["Parent Name"] || row.parent_name || row.ParentName,
-      parent_email: row["Parent Email"] || row.parent_email || row.ParentEmail,
-      parent_phone: row["Parent Phone"] || row["Parent Phone Number"] || row["Parent's Number"] || row.parent_phone || row.ParentPhone,
+      email:
+        row.email,
+
+      name:
+        row.Name,
+
+      squad:
+        row.Squad,
+
+      parent_name:
+        row["Parent Name"] ||
+        row.parent_name ||
+        row.ParentName,
+
+      parent_email:
+        row["Parent Email"] ||
+        row.parent_email ||
+        row.ParentEmail,
+
+      parent_phone:
+        row["Parent Phone"] ||
+        row["Parent Phone Number"] ||
+        row["Parent's Number"] ||
+        row.parent_phone ||
+        row.ParentPhone,
 
       subjects,
 
@@ -233,7 +314,9 @@ const transformAttendanceData = (data) => {
 // ============================================================
 
 function ImportAttendance() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
+
   // ==========================================================
   // FILE
   // ==========================================================
@@ -245,34 +328,47 @@ function ImportAttendance() {
   // ATTENDANCE DATA
   // ==========================================================
 
-  const [attendanceData, setAttendanceData] =
-    useState([]);
+  const [
+    attendanceData,
+    setAttendanceData,
+  ] = useState([]);
 
   // ==========================================================
   // SEARCH / FILTER
   // ==========================================================
 
-  const [studentSearch, setStudentSearch] =
-    useState("");
+  const [
+    studentSearch,
+    setStudentSearch,
+  ] = useState("");
 
-  const [attendanceFilter, setAttendanceFilter] =
-    useState("");
+  const [
+    attendanceFilter,
+    setAttendanceFilter,
+  ] = useState("");
 
   // ==========================================================
   // FORM DATA
   // ==========================================================
 
-  const [academicYear, setAcademicYear] =
-    useState("");
+  const [
+    semester,
+    setSemester,
+  ] = useState("Sem 1");
 
-  const [semester, setSemester] =
-    useState("Sem 1");
+  // ==========================================================
+  // AUTOMATIC ATTENDANCE PERIOD
+  // ==========================================================
 
-  const [periodStart, setPeriodStart] =
-    useState("");
+  const [
+    periodStart,
+    setPeriodStart,
+  ] = useState("");
 
-  const [periodEnd, setPeriodEnd] =
-    useState("");
+  const [
+    periodEnd,
+    setPeriodEnd,
+  ] = useState("");
 
   // ==========================================================
   // STATUS
@@ -284,626 +380,693 @@ function ImportAttendance() {
   const [success, setSuccess] =
     useState("");
 
-  const [isImporting, setIsImporting] =
-    useState(false);
+  const [
+    isImporting,
+    setIsImporting,
+  ] = useState(false);
 
-  const [importSummary, setImportSummary] =
-    useState(null);
+  const [
+    importSummary,
+    setImportSummary,
+  ] = useState(null);
 
   // ==========================================================
   // FILTER STUDENTS
   // ==========================================================
 
   const filteredStudents =
-    attendanceData.filter((student) => {
-      const searchValue =
-        studentSearch
-          .toLowerCase()
-          .trim();
+    attendanceData.filter(
+      (student) => {
+        const searchValue =
+          studentSearch
+            .toLowerCase()
+            .trim();
 
-      const overallAttendance =
-        calculateOverallAttendance(
-          student
+        const overallAttendance =
+          calculateOverallAttendance(
+            student
+          );
+
+        const matchesSearch =
+          !searchValue ||
+          student.name
+            ?.toLowerCase()
+            .includes(
+              searchValue
+            ) ||
+          student.email
+            ?.toLowerCase()
+            .includes(
+              searchValue
+            ) ||
+          String(
+            student.squad || ""
+          )
+            .toLowerCase()
+            .includes(
+              searchValue
+            );
+
+        const matchesAttendance =
+          !attendanceFilter ||
+          (attendanceFilter ===
+          "below-75"
+            ? overallAttendance < 75
+            : overallAttendance >=
+              75);
+
+        return (
+          matchesSearch &&
+          matchesAttendance
         );
-
-      const matchesSearch =
-        !searchValue ||
-        student.name
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        student.email
-          ?.toLowerCase()
-          .includes(searchValue) ||
-        String(student.squad || "")
-          .toLowerCase()
-          .includes(searchValue);
-
-      const matchesAttendance =
-        !attendanceFilter ||
-        (attendanceFilter ===
-        "below-75"
-          ? overallAttendance < 75
-          : overallAttendance >= 75);
-
-      return (
-        matchesSearch &&
-        matchesAttendance
-      );
-    });
+      }
+    );
 
   // ==========================================================
   // FILE CHANGE
   // ==========================================================
 
-  const handleFileChange = async (
-    event
-  ) => {
-    const file =
-      event.target.files?.[0];
+  const handleFileChange =
+    async (event) => {
+      const file =
+        event.target.files?.[0];
 
-    if (!file) return;
+      if (!file) {
+        return;
+      }
 
-    setFileName(file.name);
-    setError("");
-    setSuccess("");
-    setImportSummary(null);
-    setAttendanceData([]);
-
-    try {
       // ======================================================
-      // READ FILE
+      // RESET OLD DATA
       // ======================================================
 
-      const arrayBuffer =
-        await file.arrayBuffer();
+      setFileName(
+        file.name
+      );
 
-      const workbook =
-        XLSX.read(
-          arrayBuffer,
-          {
-            type: "array",
-          }
+      setError("");
+
+      setSuccess("");
+
+      setImportSummary(null);
+
+      setAttendanceData([]);
+
+      // ======================================================
+      // EXTRACT PERIOD FROM FILE NAME
+      // ======================================================
+
+      const attendancePeriod =
+        extractAttendancePeriodFromFileName(
+          file.name
         );
 
-      if (
-        !workbook.SheetNames.length
-      ) {
+      if (!attendancePeriod) {
+        setPeriodStart("");
+        setPeriodEnd("");
+
         setError(
-          "The Excel file does not contain any sheets."
+          "Invalid Excel filename. Expected format: attendance_report_squad_138_2026-07-23_to_2026-08-19.xlsx"
         );
 
         return;
       }
 
-      // ======================================================
-      // FIRST SHEET
-      // ======================================================
+      const {
+        periodStart:
+          extractedPeriodStart,
+        periodEnd:
+          extractedPeriodEnd,
+      } = attendancePeriod;
 
-      const firstSheetName =
-        workbook.SheetNames[0];
+      setPeriodStart(
+        extractedPeriodStart
+      );
 
-      const worksheet =
-        workbook.Sheets[
-          firstSheetName
-        ];
-
-      const data =
-        XLSX.utils.sheet_to_json(
-          worksheet,
-          {
-            defval: "",
-          }
-        );
-
-      // ======================================================
-      // EMPTY FILE
-      // ======================================================
-
-      if (data.length === 0) {
-        setError(
-          "The Excel sheet is empty."
-        );
-
-        return;
-      }
-
-      // ======================================================
-      // COLUMNS
-      // ======================================================
-
-      const actualColumns =
-        Object.keys(data[0]);
-
-      console.log(
-        "Excel columns:",
-        actualColumns
+      setPeriodEnd(
+        extractedPeriodEnd
       );
 
       // ======================================================
-      // VALIDATE CONSTANT COLUMNS
+      // VALIDATE DATE ORDER
       // ======================================================
 
-      const missingConstantColumns =
-        CONSTANT_COLUMNS.filter(
-          (column) =>
-            !actualColumns.includes(
-              column
-            )
+      const startDate =
+        new Date(
+          `${extractedPeriodStart}T00:00:00`
+        );
+
+      const endDate =
+        new Date(
+          `${extractedPeriodEnd}T00:00:00`
         );
 
       if (
-        missingConstantColumns.length >
-        0
+        Number.isNaN(
+          startDate.getTime()
+        ) ||
+        Number.isNaN(
+          endDate.getTime()
+        )
       ) {
         setError(
-          `Invalid Excel file. Missing required column(s): ${missingConstantColumns.join(
-            ", "
-          )}`
+          "The attendance dates in the filename are invalid."
+        );
+
+        return;
+      }
+
+      if (
+        startDate > endDate
+      ) {
+        setError(
+          "Attendance period start date cannot be after the end date."
         );
 
         return;
       }
 
       // ======================================================
-      // DETECT SUBJECTS
+      // READ EXCEL FILE
       // ======================================================
 
-      const subjectNumbers =
-        detectSubjects(
+      try {
+        const arrayBuffer =
+          await file.arrayBuffer();
+
+        const workbook =
+          XLSX.read(
+            arrayBuffer,
+            {
+              type: "array",
+            }
+          );
+
+        // ====================================================
+        // CHECK SHEETS
+        // ====================================================
+
+        if (
+          !workbook.SheetNames.length
+        ) {
+          setError(
+            "The Excel file does not contain any sheets."
+          );
+
+          return;
+        }
+
+        // ====================================================
+        // FIRST SHEET
+        // ====================================================
+
+        const firstSheetName =
+          workbook.SheetNames[0];
+
+        const worksheet =
+          workbook.Sheets[
+            firstSheetName
+          ];
+
+        const data =
+          XLSX.utils.sheet_to_json(
+            worksheet,
+            {
+              defval: "",
+            }
+          );
+
+        // ====================================================
+        // EMPTY FILE
+        // ====================================================
+
+        if (
+          data.length === 0
+        ) {
+          setError(
+            "The Excel sheet is empty."
+          );
+
+          return;
+        }
+
+        // ====================================================
+        // COLUMNS
+        // ====================================================
+
+        const actualColumns =
+          Object.keys(
+            data[0]
+          );
+
+        console.log(
+          "Excel columns:",
           actualColumns
         );
 
-      // ======================================================
-      // DETECT GROWTH HOUR
-      // ======================================================
+        // ====================================================
+        // VALIDATE CONSTANT COLUMNS
+        // ====================================================
 
-      const hasGrowthHour =
-        detectGrowthHour(
-          actualColumns
+        const missingConstantColumns =
+          CONSTANT_COLUMNS.filter(
+            (column) =>
+              !actualColumns.includes(
+                column
+              )
+          );
+
+        if (
+          missingConstantColumns.length >
+          0
+        ) {
+          setError(
+            `Invalid Excel file. Missing required column(s): ${missingConstantColumns.join(
+              ", "
+            )}`
+          );
+
+          return;
+        }
+
+        // ====================================================
+        // DETECT SUBJECTS
+        // ====================================================
+
+        const subjectNumbers =
+          detectSubjects(
+            actualColumns
+          );
+
+        // ====================================================
+        // DETECT GROWTH HOUR
+        // ====================================================
+
+        const hasGrowthHour =
+          detectGrowthHour(
+            actualColumns
+          );
+
+        if (
+          subjectNumbers.length ===
+            0 &&
+          !hasGrowthHour
+        ) {
+          setError(
+            "Invalid Excel file. No subjects or Growth Hour were detected."
+          );
+
+          return;
+        }
+
+        console.log(
+          "Detected subjects:",
+          subjectNumbers
         );
 
-      if (
-        subjectNumbers.length === 0 &&
-        !hasGrowthHour
-      ) {
-        setError(
-          "Invalid Excel file. No subjects or Growth Hour were detected."
+        console.log(
+          "Growth Hour detected:",
+          hasGrowthHour
         );
 
-        return;
-      }
+        // ====================================================
+        // VALIDATE SUBJECT COLUMNS
+        // ====================================================
 
-      console.log(
-        "Detected subjects:",
-        subjectNumbers
-      );
+        const missingSubjectColumns =
+          [];
 
-      console.log(
-        "Growth Hour detected:",
-        hasGrowthHour
-      );
+        subjectNumbers.forEach(
+          (subjectNumber) => {
+            SUBJECT_FIELDS.forEach(
+              (field) => {
+                const columnName =
+                  `Subject ${subjectNumber} ${field}`;
 
-      // ======================================================
-      // VALIDATE SUBJECT COLUMNS
-      // ======================================================
+                if (
+                  !actualColumns.includes(
+                    columnName
+                  )
+                ) {
+                  missingSubjectColumns.push(
+                    columnName
+                  );
+                }
+              }
+            );
+          }
+        );
 
-      const missingSubjectColumns =
-        [];
+        // ====================================================
+        // VALIDATE GROWTH HOUR
+        // ====================================================
 
-      subjectNumbers.forEach(
-        (subjectNumber) => {
-          SUBJECT_FIELDS.forEach(
+        const missingGrowthHourColumns =
+          [];
+
+        if (hasGrowthHour) {
+          GROWTH_HOUR_FIELDS.forEach(
             (field) => {
               const columnName =
-                `Subject ${subjectNumber} ${field}`;
+                `Growth Hour ${field}`;
 
               if (
                 !actualColumns.includes(
                   columnName
                 )
               ) {
-                missingSubjectColumns.push(
+                missingGrowthHourColumns.push(
                   columnName
                 );
               }
             }
           );
         }
-      );
 
-      // ======================================================
-      // VALIDATE GROWTH HOUR
-      // ======================================================
+        // ====================================================
+        // ALL MISSING COLUMNS
+        // ====================================================
 
-      const missingGrowthHourColumns =
-        [];
+        const missingColumns = [
+          ...missingSubjectColumns,
+          ...missingGrowthHourColumns,
+        ];
 
-      if (hasGrowthHour) {
-        GROWTH_HOUR_FIELDS.forEach(
-          (field) => {
-            const columnName =
-              `Growth Hour ${field}`;
+        if (
+          missingColumns.length > 0
+        ) {
+          setError(
+            `Invalid Excel file. Missing ${missingColumns.length} required column(s).`
+          );
 
-            if (
-              !actualColumns.includes(
-                columnName
-              )
-            ) {
-              missingGrowthHourColumns.push(
-                columnName
-              );
-            }
-          }
+          console.error(
+            "Missing columns:",
+            missingColumns
+          );
+
+          return;
+        }
+
+        // ====================================================
+        // TRANSFORM DATA
+        // ====================================================
+
+        const transformedData =
+          transformAttendanceData(
+            data
+          );
+
+        console.log(
+          "Transformed attendance data:",
+          transformedData
         );
-      }
 
-      const missingColumns = [
-        ...missingSubjectColumns,
-        ...missingGrowthHourColumns,
-      ];
-
-      if (
-        missingColumns.length > 0
-      ) {
-        setError(
-          `Invalid Excel file. Missing ${missingColumns.length} required column(s).`
+        setAttendanceData(
+          transformedData
         );
 
+        // ====================================================
+        // SUCCESS
+        // ====================================================
+
+        const detectedCount =
+          subjectNumbers.length +
+          (hasGrowthHour
+            ? 1
+            : 0);
+
+        setSuccess(
+          `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`
+        );
+      } catch (err) {
         console.error(
-          "Missing columns:",
-          missingColumns
+          "Excel parsing error:",
+          err
         );
 
-        return;
+        setError(
+          "Unable to read the Excel file. Please check the file format."
+        );
       }
-
-      // ======================================================
-      // TRANSFORM DATA
-      // ======================================================
-
-      const transformedData =
-        transformAttendanceData(
-          data
-        );
-
-      console.log(
-        "Transformed attendance data:",
-        transformedData
-      );
-
-      setAttendanceData(
-        transformedData
-      );
-
-      // ======================================================
-      // SUCCESS
-      // ======================================================
-
-      const detectedCount =
-        subjectNumbers.length +
-        (hasGrowthHour ? 1 : 0);
-
-      setSuccess(
-        `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`
-      );
-    } catch (err) {
-      console.error(
-        "Excel parsing error:",
-        err
-      );
-
-      setError(
-        "Unable to read the Excel file. Please check the file format."
-      );
-    }
-  };
-
-  // ==========================================================
-  // START DATE CHANGE
-  // ==========================================================
-
-  const handlePeriodStartChange = (
-    event
-  ) => {
-    const date =
-      event.target.value;
-
-    setPeriodStart(date);
-
-    // Automatically determine academic year
-    if (date) {
-      const year =
-        getAcademicYearFromDate(
-          date
-        );
-
-      setAcademicYear(year);
-    }
-
-    // Clear invalid end date
-    if (
-      periodEnd &&
-      date &&
-      new Date(
-        `${periodEnd}T00:00:00`
-      ) <
-        new Date(
-          `${date}T00:00:00`
-        )
-    ) {
-      setPeriodEnd("");
-    }
-  };
-
-  // ==========================================================
-  // END DATE CHANGE
-  // ==========================================================
-
-  const handlePeriodEndChange = (
-    event
-  ) => {
-    const date =
-      event.target.value;
-
-    setPeriodEnd(date);
-
-    // If start date is empty,
-    // use end date to determine academic year.
-    if (!periodStart && date) {
-      const year =
-        getAcademicYearFromDate(
-          date
-        );
-
-      setAcademicYear(year);
-    }
-  };
+    };
 
   // ==========================================================
   // IMPORT
   // ==========================================================
 
-  const handleImport = async () => {
-    // ========================================================
-    // VALIDATE FILE
-    // ========================================================
+  const handleImport =
+    async () => {
+      // ========================================================
+      // VALIDATE FILE DATA
+      // ========================================================
 
-    if (
-      attendanceData.length === 0
-    ) {
-      setError(
-        "Please select and validate an Excel file first."
-      );
+      if (
+        attendanceData.length ===
+        0
+      ) {
+        setError(
+          "Please select and validate an Excel file first."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    // ========================================================
-    // VALIDATE SEMESTER
-    // ========================================================
+      // ========================================================
+      // VALIDATE FILE NAME
+      // ========================================================
 
-    if (!semester) {
-      setError(
-        "Please select a semester."
-      );
+      if (!fileName) {
+        setError(
+          "Please select an Excel file."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    // ========================================================
-    // VALIDATE START DATE
-    // ========================================================
+      // ========================================================
+      // VALIDATE SEMESTER
+      // ========================================================
 
-    if (!periodStart) {
-      setError(
-        "Please select the attendance period start date."
-      );
+      if (!semester) {
+        setError(
+          "Please select a semester."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    // ========================================================
-    // VALIDATE END DATE
-    // ========================================================
+      // ========================================================
+      // VALIDATE EXTRACTED PERIOD
+      // ========================================================
 
-    if (!periodEnd) {
-      setError(
-        "Please select the attendance period end date."
-      );
+      if (
+        !periodStart ||
+        !periodEnd
+      ) {
+        setError(
+          "Attendance period could not be extracted from the filename."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    // ========================================================
-    // CALCULATE ACADEMIC YEAR
-    // ========================================================
+      // ========================================================
+      // VALIDATE DATE ORDER
+      // ========================================================
 
-    const calculatedAcademicYear =
-      getAcademicYearFromDate(
-        periodStart
-      );
-
-    if (!calculatedAcademicYear) {
-      setError(
-        "Unable to determine the academic year from the selected date."
-      );
-
-      return;
-    }
-
-    // Keep state synchronized
-    setAcademicYear(
-      calculatedAcademicYear
-    );
-
-    // ========================================================
-    // VALIDATE DATE ORDER
-    // ========================================================
-
-    if (
-      new Date(
-        `${periodStart}T00:00:00`
-      ) >
+      if (
+        new Date(
+          `${periodStart}T00:00:00`
+        ) >
         new Date(
           `${periodEnd}T00:00:00`
         )
-    ) {
-      setError(
-        "Attendance period start date cannot be after the end date."
-      );
-
-      return;
-    }
-
-    // ========================================================
-    // START IMPORT
-    // ========================================================
-
-    setIsImporting(true);
-    setError("");
-    setSuccess("");
-    setImportSummary(null);
-
-    try {
-      // ======================================================
-      // PAYLOAD
-      // ======================================================
-
-      const payload = {
-        fileName,
-
-        academicYear:
-          calculatedAcademicYear,
-
-        semester,
-
-        periodStart,
-
-        periodEnd,
-
-        students:
-          attendanceData,
-      };
-
-      console.log(
-        "Sending attendance data to backend..."
-      );
-
-      console.log(
-        "Payload:",
-        payload
-      );
-
-      // ======================================================
-      // API REQUEST
-      // ======================================================
-
-      const response =
-        await fetch(
-          `${API_URL}/api/attendance/import`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify(
-              payload
-            ),
-          }
+      ) {
+        setError(
+          "Attendance period start date cannot be after the end date."
         );
 
-      // ======================================================
-      // RESPONSE
-      // ======================================================
+        return;
+      }
 
-      const responseText = await response.text();
-      let result;
+      // ========================================================
+      // START IMPORT
+      // ========================================================
+
+      setIsImporting(true);
+
+      setError("");
+
+      setSuccess("");
+
+      setImportSummary(null);
+
       try {
-        result = JSON.parse(responseText);
-      } catch {
-        throw new Error(
-          response.status === 413
-            ? "The Excel import is too large. Please reduce the file size or number of columns."
-            : "The backend returned an invalid response. Please try again."
+        // ======================================================
+        // PAYLOAD
+        // ======================================================
+
+        const payload = {
+          fileName,
+
+          semester,
+
+          students:
+            attendanceData,
+        };
+
+        console.log(
+          "Sending attendance data to backend..."
         );
+
+        console.log(
+          "Payload:",
+          payload
+        );
+
+        // ======================================================
+        // API REQUEST
+        // ======================================================
+
+        const response =
+          await fetch(
+            `${API_URL}/api/attendance/import`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify(
+                payload
+              ),
+            }
+          );
+
+        // ======================================================
+        // RESPONSE
+        // ======================================================
+
+        const responseText =
+          await response.text();
+
+        let result;
+
+        try {
+          result =
+            JSON.parse(
+              responseText
+            );
+        } catch {
+          throw new Error(
+            response.status ===
+              413
+              ? "The Excel import is too large. Please reduce the file size or number of columns."
+              : "The backend returned an invalid response. Please try again."
+          );
+        }
+
+        console.log(
+          "Backend response:",
+          result
+        );
+
+        // ======================================================
+        // ERROR
+        // ======================================================
+
+        if (
+          !response.ok ||
+          !result.success
+        ) {
+          throw new Error(
+            result.error ||
+              result.message ||
+              "Attendance import failed."
+          );
+        }
+
+        // ======================================================
+        // SUCCESS
+        // ======================================================
+
+        setSuccess(
+          result.message ||
+            "Attendance imported successfully."
+        );
+
+        setImportSummary(
+          result
+        );
+
+        // ======================================================
+        // SAVE LAST IMPORT
+        // ======================================================
+
+        const importDetails = {
+          fileName,
+
+          importedAt:
+            new Date().toISOString(),
+
+          ...result,
+        };
+
+        localStorage.setItem(
+          "lastAttendanceImport",
+          JSON.stringify(
+            importDetails
+          )
+        );
+
+        window.dispatchEvent(
+          new CustomEvent(
+            "attendanceImportCompleted",
+            {
+              detail:
+                importDetails,
+            }
+          )
+        );
+
+        sessionStorage.setItem(
+          "refresh-students",
+          String(
+            Date.now()
+          )
+        );
+
+        // ======================================================
+        // GO TO STUDENTS
+        // ======================================================
+
+        navigate(
+          "/students"
+        );
+      } catch (err) {
+        console.error(
+          "Import error:",
+          err
+        );
+
+        if (
+          err instanceof
+          TypeError
+        ) {
+          setError(
+            "Cannot connect to the AESA backend. Make sure the server is running."
+          );
+        } else {
+          setError(
+            err.message ||
+              "Failed to import attendance."
+          );
+        }
+      } finally {
+        setIsImporting(false);
       }
-
-      console.log(
-        "Backend response:",
-        result
-      );
-
-      // ======================================================
-      // ERROR
-      // ======================================================
-
-      if (
-        !response.ok ||
-        !result.success
-      ) {
-        throw new Error(
-          result.error ||
-            result.message ||
-            "Attendance import failed."
-        );
-      }
-
-      // ======================================================
-      // SUCCESS
-      // ======================================================
-
-      setSuccess(
-        result.message ||
-          "Attendance imported successfully."
-      );
-
-      setImportSummary(
-        result
-      );
-
-      const importDetails = {
-        fileName,
-        importedAt: new Date().toISOString(),
-        ...result,
-      };
-
-      localStorage.setItem(
-        "lastAttendanceImport",
-        JSON.stringify(importDetails)
-      );
-      window.dispatchEvent(
-        new CustomEvent("attendanceImportCompleted", {
-          detail: importDetails,
-        })
-      );
-
-      sessionStorage.setItem("refresh-students", String(Date.now()));
-      navigate("/students");
-    } catch (err) {
-      console.error(
-        "Import error:",
-        err
-      );
-
-      if (
-        err instanceof TypeError
-      ) {
-        setError(
-          "Cannot connect to the AESA backend. Make sure the server is running on port 5000."
-        );
-      } else {
-        setError(
-          err.message ||
-            "Failed to import attendance."
-        );
-      }
-    } finally {
-      setIsImporting(false);
-    }
-  };
+    };
 
   // ==========================================================
   // RENDER
@@ -987,117 +1150,14 @@ function ImportAttendance() {
         </div>
 
         {/* ================================================ */}
-        {/* ATTENDANCE PERIOD */}
-        {/* ================================================ */}
-
-        <div className="attendance-period-fields">
-
-          {/* ---------------------------------------------- */}
-          {/* START DATE */}
-          {/* ---------------------------------------------- */}
-
-          <div className="academic-year-field">
-
-            <label htmlFor="periodStart">
-              <CalendarDays
-                size={16}
-              />
-
-              Attendance Period Start
-            </label>
-
-            <input
-              id="periodStart"
-              type="date"
-              value={periodStart}
-              onChange={
-                handlePeriodStartChange
-              }
-              disabled={isImporting}
-            />
-
-          </div>
-
-          {/* ---------------------------------------------- */}
-          {/* END DATE */}
-          {/* ---------------------------------------------- */}
-
-          <div className="academic-year-field">
-
-            <label htmlFor="periodEnd">
-              <CalendarDays
-                size={16}
-              />
-
-              Attendance Period End
-            </label>
-
-            <input
-              id="periodEnd"
-              type="date"
-              value={periodEnd}
-              min={
-                periodStart ||
-                undefined
-              }
-              onChange={
-                handlePeriodEndChange
-              }
-              disabled={isImporting}
-            />
-
-          </div>
-
-        </div>
-
-        {/* ================================================ */}
-        {/* ACADEMIC YEAR AUTO INFO */}
-        {/* ================================================ */}
-
-        {academicYear && (
-          <div className="academic-year-auto">
-
-            <span>
-              Academic Year
-            </span>
-
-            <strong>
-              {academicYear}
-            </strong>
-
-          </div>
-        )}
-
-        {/* ================================================ */}
-        {/* PERIOD PREVIEW */}
-        {/* ================================================ */}
-
-        {(periodStart ||
-          periodEnd) && (
-          <div className="attendance-period-preview">
-
-            <strong>
-              Attendance Period
-            </strong>
-
-            <span>
-              {periodStart ||
-                "Start date"}{" "}
-              →{" "}
-              {periodEnd ||
-                "End date"}
-            </span>
-
-          </div>
-        )}
-
-        {/* ================================================ */}
         {/* FILE UPLOAD */}
         {/* ================================================ */}
 
         <label className="upload-button">
 
-          <Upload size={18} />
+          <Upload
+            size={18}
+          />
 
           <span>
             {fileName
@@ -1112,7 +1172,9 @@ function ImportAttendance() {
             onChange={
               handleFileChange
             }
-            disabled={isImporting}
+            disabled={
+              isImporting
+            }
           />
 
         </label>
@@ -1139,6 +1201,27 @@ function ImportAttendance() {
         )}
 
         {/* ================================================ */}
+        {/* ATTENDANCE PERIOD */}
+        {/* ================================================ */}
+
+        {periodStart &&
+          periodEnd && (
+            <div className="attendance-period-preview">
+
+              <strong>
+                Attendance Period
+              </strong>
+
+              <span>
+                {periodStart}
+                {" → "}
+                {periodEnd}
+              </span>
+
+            </div>
+          )}
+
+        {/* ================================================ */}
         {/* IMPORT META */}
         {/* ================================================ */}
 
@@ -1146,41 +1229,32 @@ function ImportAttendance() {
           semester &&
           periodStart &&
           periodEnd && (
-          <div className="import-meta-preview">
+            <div className="import-meta-preview">
 
-            <div>
-              <span>
-                Academic Year
-              </span>
+              <div>
+                <span>
+                  Semester
+                </span>
 
-              <strong>
-                {academicYear}
-              </strong>
+                <strong>
+                  {semester}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Attendance Period
+                </span>
+
+                <strong>
+                  {periodStart}
+                  {" → "}
+                  {periodEnd}
+                </strong>
+              </div>
+
             </div>
-
-            <div>
-              <span>
-                Semester
-              </span>
-
-              <strong>
-                {semester}
-              </strong>
-            </div>
-
-            <div>
-              <span>
-                Period
-              </span>
-
-              <strong>
-                {periodStart} →{" "}
-                {periodEnd}
-              </strong>
-            </div>
-
-          </div>
-        )}
+          )}
 
         {/* ================================================ */}
         {/* ERROR */}
@@ -1247,19 +1321,6 @@ function ImportAttendance() {
 
             <div>
               <span>
-                Academic Year
-              </span>
-
-              <strong>
-                {
-                  importSummary.academicYear ??
-                  academicYear
-                }
-              </strong>
-            </div>
-
-            <div>
-              <span>
                 Semester
               </span>
 
@@ -1280,8 +1341,8 @@ function ImportAttendance() {
                 {
                   importSummary.periodStart ??
                   periodStart
-                }{" "}
-                →{" "}
+                }
+                {" → "}
                 {
                   importSummary.periodEnd ??
                   periodEnd
@@ -1488,7 +1549,9 @@ function ImportAttendance() {
                   key={
                     student.email
                   }
-                  student={student}
+                  student={
+                    student
+                  }
                 />
               )
             )}
