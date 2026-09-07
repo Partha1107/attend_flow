@@ -250,6 +250,26 @@ button {
   cursor: pointer;
 }
 
+/* Kalvium-style action controls: compact, crisp, and consistent. */
+button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-toggle),
+.upload-button {
+  min-height: 36px;
+  border-radius: 6px;
+  font-weight: 600;
+  letter-spacing: 0;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-toggle):focus-visible,
+.upload-button:focus-visible {
+  outline: 2px solid var(--kalvium-red);
+  outline-offset: 2px;
+}
+
 
 /* =========================================================
    LINKS
