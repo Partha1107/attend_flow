@@ -31,16 +31,54 @@ const cleanString = (value) => {
     return String(value).trim();
 };
 
-const calculateAttendanceByStudent = (records) => {
+// ============================================================
+// EXTRACT ATTENDANCE PERIOD FROM FILE NAME
+// ============================================================
+
+const extractAttendancePeriodFromFileName = (
+    fileName
+) => {
+    const name = cleanString(fileName);
+
+    const match = name.match(
+        /_(\d{4}-\d{2}-\d{2})_to_(\d{4}-\d{2}-\d{2})\.(xlsx|xls)$/i
+    );
+
+    if (!match) {
+        return null;
+    }
+
+    const [
+        ,
+        periodStart,
+        periodEnd,
+    ] = match;
+
+    return {
+        periodStart,
+        periodEnd,
+    };
+};
+
+// ============================================================
+// CALCULATE ATTENDANCE BY STUDENT
+// ============================================================
+
+const calculateAttendanceByStudent = (
+    records
+) => {
     const totals = new Map();
 
     for (const record of records || []) {
-        if (!record.student_id) continue;
+        if (!record.student_id) {
+            continue;
+        }
 
-        const current = totals.get(record.student_id) || {
-            conducted: 0,
-            attended: 0,
-        };
+        const current =
+            totals.get(record.student_id) || {
+                conducted: 0,
+                attended: 0,
+            };
 
         current.conducted += toNumber(
             record.sessions_conducted
@@ -50,21 +88,41 @@ const calculateAttendanceByStudent = (records) => {
             record.sessions_attended
         );
 
-        totals.set(record.student_id, current);
+        totals.set(
+            record.student_id,
+            current
+        );
     }
 
     return totals;
 };
 
-const getAttendancePercentage = (total) => {
-    if (!total || total.conducted <= 0) {
+// ============================================================
+// GET ATTENDANCE PERCENTAGE
+// ============================================================
+
+const getAttendancePercentage = (
+    total
+) => {
+    if (
+        !total ||
+        total.conducted <= 0
+    ) {
         return 0;
     }
 
     return Number(
-        ((total.attended / total.conducted) * 100).toFixed(2)
+        (
+            (total.attended /
+                total.conducted) *
+            100
+        ).toFixed(2)
     );
 };
+
+// ============================================================
+// GET ATTENDANCE TOTALS
+// ============================================================
 
 const getAttendanceTotals = async () => {
     const {
@@ -76,16 +134,23 @@ const getAttendanceTotals = async () => {
             "student_id, sessions_conducted, sessions_attended"
         );
 
-    if (error) throw error;
+    if (error) {
+        throw error;
+    }
 
-    return calculateAttendanceByStudent(data);
+    return calculateAttendanceByStudent(
+        data
+    );
 };
 
 // ============================================================
 // TEST SUPABASE
 // ============================================================
 
-const testSupabase = async (req, res) => {
+const testSupabase = async (
+    req,
+    res
+) => {
     try {
         const {
             data,
@@ -104,7 +169,8 @@ const testSupabase = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Supabase connection working",
+            message:
+                "Supabase connection working",
             data,
         });
     } catch (error) {
@@ -124,7 +190,10 @@ const testSupabase = async (req, res) => {
 // TEST ATTENDANCE INSERT
 // ============================================================
 
-const testAttendanceInsert = async (req, res) => {
+const testAttendanceInsert = async (
+    req,
+    res
+) => {
     try {
         const {
             data: student,
@@ -151,19 +220,42 @@ const testAttendanceInsert = async (req, res) => {
 
         const testAttendance = {
             student_id: student.id,
-            subject_id: "TEST-SUBJECT",
-            attendance_type: "subject",
-            academic_year: "2026-2027",
-            semester: "Sem 1",
-            period_start: "2026-08-01",
-            period_end: "2026-08-10",
-            sessions_conducted: 10,
-            sessions_attended: 8,
-            sessions_absent: 2,
-            attendance_percentage: 80,
-            sessions_marked_od: 0,
-            sessions_medical_leave: 0,
-            sessions_applied_leave: 0,
+
+            subject_id:
+                "TEST-SUBJECT",
+
+            attendance_type:
+                "subject",
+
+            semester:
+                "Sem 1",
+
+            period_start:
+                "2026-08-01",
+
+            period_end:
+                "2026-08-10",
+
+            sessions_conducted:
+                10,
+
+            sessions_attended:
+                8,
+
+            sessions_absent:
+                2,
+
+            attendance_percentage:
+                80,
+
+            sessions_marked_od:
+                0,
+
+            sessions_medical_leave:
+                0,
+
+            sessions_applied_leave:
+                0,
         };
 
         const {
@@ -184,8 +276,10 @@ const testAttendanceInsert = async (req, res) => {
 
         return res.status(201).json({
             success: true,
+
             message:
                 "Test attendance inserted successfully.",
+
             data,
         });
     } catch (error) {
@@ -205,7 +299,9 @@ const testAttendanceInsert = async (req, res) => {
 // FIND STUDENT BY EMAIL
 // ============================================================
 
-const findStudentByEmail = async (email) => {
+const findStudentByEmail = async (
+    email
+) => {
     const {
         data,
         error,
@@ -228,10 +324,20 @@ const findStudentByEmail = async (email) => {
 // CREATE / UPDATE STUDENT
 // ============================================================
 
-const createOrUpdateStudent = async (student) => {
-    const email = cleanString(student.email);
-    const name = cleanString(student.name);
-    const squad = cleanString(student.squad);
+const createOrUpdateStudent = async (
+    student
+) => {
+    const email = cleanString(
+        student.email
+    );
+
+    const name = cleanString(
+        student.name
+    );
+
+    const squad = cleanString(
+        student.squad
+    );
 
     const parentName = cleanString(
         student.parent_name ||
@@ -255,24 +361,30 @@ const createOrUpdateStudent = async (student) => {
     }
 
     const existingStudent =
-        await findStudentByEmail(email);
+        await findStudentByEmail(
+            email
+        );
 
     // ----------------------------------------------------------
-    // UPDATE
+    // UPDATE EXISTING STUDENT
     // ----------------------------------------------------------
 
     if (existingStudent) {
         const updateData = {
             name,
+
             squad,
+
             parent_name:
                 parentName ||
                 existingStudent.parent_name ||
                 null,
+
             parent_email:
                 parentEmail ||
                 existingStudent.parent_email ||
                 null,
+
             parent_phone:
                 parentPhone ||
                 existingStudent.parent_phone ||
@@ -285,7 +397,10 @@ const createOrUpdateStudent = async (student) => {
         } = await supabase
             .from("students")
             .update(updateData)
-            .eq("id", existingStudent.id)
+            .eq(
+                "id",
+                existingStudent.id
+            )
             .select()
             .single();
 
@@ -303,7 +418,7 @@ const createOrUpdateStudent = async (student) => {
     }
 
     // ----------------------------------------------------------
-    // CREATE
+    // CREATE NEW STUDENT
     // ----------------------------------------------------------
 
     const {
@@ -313,12 +428,17 @@ const createOrUpdateStudent = async (student) => {
         .from("students")
         .insert({
             email,
+
             name,
+
             squad,
+
             parent_name:
                 parentName || null,
+
             parent_email:
                 parentEmail || null,
+
             parent_phone:
                 parentPhone || null,
         })
@@ -342,7 +462,9 @@ const createOrUpdateStudent = async (student) => {
 // FIND SUBJECT
 // ============================================================
 
-const findSubject = async (subjectId) => {
+const findSubject = async (
+    subjectId
+) => {
     if (!subjectId) {
         return null;
     }
@@ -374,8 +496,11 @@ const createOrUpdateSubject = async ({
     name,
     semester,
 }) => {
-    const subjectId = cleanString(id);
-    const subjectName = cleanString(name);
+    const subjectId =
+        cleanString(id);
+
+    const subjectName =
+        cleanString(name);
 
     if (!subjectId) {
         return {
@@ -386,7 +511,9 @@ const createOrUpdateSubject = async ({
     }
 
     const existingSubject =
-        await findSubject(subjectId);
+        await findSubject(
+            subjectId
+        );
 
     // ----------------------------------------------------------
     // UPDATE
@@ -459,20 +586,42 @@ const findExistingAttendance = async ({
     studentId,
     subjectId,
     attendanceType,
-    academicYear,
+    semester,
+    periodStart,
+    periodEnd,
 }) => {
     let query = supabase
         .from("attendance")
         .select("id")
-        .eq("student_id", studentId)
-        .eq("academic_year", academicYear)
-        .eq("attendance_type", attendanceType);
+        .eq(
+            "student_id",
+            studentId
+        )
+        .eq(
+            "attendance_type",
+            attendanceType
+        )
+        .eq(
+            "semester",
+            semester
+        )
+        .eq(
+            "period_start",
+            periodStart
+        )
+        .eq(
+            "period_end",
+            periodEnd
+        );
 
     // ----------------------------------------------------------
     // NORMAL SUBJECT
     // ----------------------------------------------------------
 
-    if (attendanceType === "subject") {
+    if (
+        attendanceType ===
+        "subject"
+    ) {
         query = query.eq(
             "subject_id",
             subjectId
@@ -483,7 +632,10 @@ const findExistingAttendance = async ({
     // GROWTH HOUR
     // ----------------------------------------------------------
 
-    if (attendanceType === "growth_hour") {
+    if (
+        attendanceType ===
+        "growth_hour"
+    ) {
         query = query.is(
             "subject_id",
             null
@@ -508,169 +660,180 @@ const findExistingAttendance = async ({
 // CREATE / UPDATE ATTENDANCE
 // ============================================================
 
-const createOrUpdateAttendance = async ({
-    studentId,
-    subjectId,
-    attendanceType,
-    academicYear,
-    semester,
-    periodStart,
-    periodEnd,
-    attendance,
-}) => {
-    const sessionsConducted =
-        toNumber(
-            attendance.sessionsConducted
-        );
-
-    const sessionsAttended =
-        toNumber(
-            attendance.sessionsAttended
-        );
-
-    const sessionsAbsent =
-        toNumber(
-            attendance.sessionsAbsent
-        );
-
-    const attendancePercentage =
-        sessionsConducted > 0
-            ? Number(
-                (
-                    (sessionsAttended /
-                        sessionsConducted) *
-                    100
-                ).toFixed(2)
-            )
-            : 0;
-
-    const attendanceData = {
-        student_id: studentId,
-
-        subject_id:
-            attendanceType === "growth_hour"
-                ? null
-                : subjectId,
-
-        attendance_type:
-            attendanceType,
-
-        academic_year:
-            academicYear,
-
+const createOrUpdateAttendance =
+    async ({
+        studentId,
+        subjectId,
+        attendanceType,
         semester,
-
-        period_start:
-            periodStart,
-
-        period_end:
-            periodEnd,
-
-        sessions_conducted:
-            sessionsConducted,
-
-        sessions_attended:
-            sessionsAttended,
-
-        sessions_absent:
-            sessionsAbsent,
-
-        attendance_percentage:
-            attendancePercentage,
-
-        sessions_marked_od:
+        periodStart,
+        periodEnd,
+        attendance,
+    }) => {
+        const sessionsConducted =
             toNumber(
-                attendance.sessionsMarkedOD
-            ),
+                attendance.sessionsConducted
+            );
 
-        sessions_medical_leave:
+        const sessionsAttended =
             toNumber(
-                attendance.sessionsMedicalLeave
-            ),
+                attendance.sessionsAttended
+            );
 
-        sessions_applied_leave:
+        const sessionsAbsent =
             toNumber(
-                attendance.sessionsAppliedLeave
-            ),
+                attendance.sessionsAbsent
+            );
 
-        updated_at:
-            new Date().toISOString(),
-    };
+        const attendancePercentage =
+            sessionsConducted > 0
+                ? Number(
+                    (
+                        (sessionsAttended /
+                            sessionsConducted) *
+                        100
+                    ).toFixed(2)
+                )
+                : 0;
 
-    const existingAttendance =
-        await findExistingAttendance({
-            studentId,
-            subjectId,
-            attendanceType,
-            academicYear,
-        });
+        const attendanceData = {
+            student_id:
+                studentId,
 
-    // ----------------------------------------------------------
-    // UPDATE EXISTING
-    // ----------------------------------------------------------
+            subject_id:
+                attendanceType ===
+                "growth_hour"
+                    ? null
+                    : subjectId,
 
-    if (existingAttendance) {
+            attendance_type:
+                attendanceType,
+
+            semester,
+
+            period_start:
+                periodStart,
+
+            period_end:
+                periodEnd,
+
+            sessions_conducted:
+                sessionsConducted,
+
+            sessions_attended:
+                sessionsAttended,
+
+            sessions_absent:
+                sessionsAbsent,
+
+            attendance_percentage:
+                attendancePercentage,
+
+            sessions_marked_od:
+                toNumber(
+                    attendance.sessionsMarkedOD
+                ),
+
+            sessions_medical_leave:
+                toNumber(
+                    attendance.sessionsMedicalLeave
+                ),
+
+            sessions_applied_leave:
+                toNumber(
+                    attendance.sessionsAppliedLeave
+                ),
+
+            updated_at:
+                new Date().toISOString(),
+        };
+
+        const existingAttendance =
+            await findExistingAttendance({
+                studentId,
+                subjectId,
+                attendanceType,
+                semester,
+                periodStart,
+                periodEnd,
+            });
+
+        // ------------------------------------------------------
+        // UPDATE EXISTING
+        // ------------------------------------------------------
+
+        if (existingAttendance) {
+            const {
+                data,
+                error,
+            } = await supabase
+                .from("attendance")
+                .update(
+                    attendanceData
+                )
+                .eq(
+                    "id",
+                    existingAttendance.id
+                )
+                .select()
+                .single();
+
+            if (error) {
+                throw new Error(
+                    `Failed to update attendance: ${error.message}`
+                );
+            }
+
+            return {
+                data,
+
+                created: false,
+
+                updated: true,
+            };
+        }
+
+        // ------------------------------------------------------
+        // INSERT NEW
+        // ------------------------------------------------------
+
         const {
             data,
             error,
         } = await supabase
             .from("attendance")
-            .update(attendanceData)
-            .eq(
-                "id",
-                existingAttendance.id
-            )
+            .insert({
+                ...attendanceData,
+
+                created_at:
+                    new Date().toISOString(),
+            })
             .select()
             .single();
 
         if (error) {
             throw new Error(
-                `Failed to update attendance: ${error.message}`
+                `Failed to insert attendance: ${error.message}`
             );
         }
 
         return {
             data,
-            created: false,
-            updated: true,
+
+            created: true,
+
+            updated: false,
         };
-    }
-
-    // ----------------------------------------------------------
-    // INSERT NEW
-    // ----------------------------------------------------------
-
-    const {
-        data,
-        error,
-    } = await supabase
-        .from("attendance")
-        .insert({
-            ...attendanceData,
-            created_at:
-                new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-    if (error) {
-        throw new Error(
-            `Failed to insert attendance: ${error.message}`
-        );
-    }
-
-    return {
-        data,
-        created: true,
-        updated: false,
     };
-};
 
 // ============================================================
 // IMPORT ATTENDANCE
 // ============================================================
 
-const importAttendance = async (req, res) => {
+const importAttendance = async (
+    req,
+    res
+) => {
     try {
         console.log(
             "================================================"
@@ -684,19 +847,20 @@ const importAttendance = async (req, res) => {
             "================================================"
         );
 
-        // ========================================================
+        // ======================================================
         // REQUEST DATA
-        // ========================================================
+        // ======================================================
 
         const {
-            academicYear,
+            fileName,
             semester,
-            periodStart,
-            periodEnd,
             students,
         } = req.body || {};
 
-        // IMPORTANT DEBUG LOG
+        // ======================================================
+        // DEBUG
+        // ======================================================
+
         console.log(
             "REQUEST BODY:",
             JSON.stringify(
@@ -707,8 +871,8 @@ const importAttendance = async (req, res) => {
         );
 
         console.log(
-            "Academic Year:",
-            academicYear
+            "File Name:",
+            fileName
         );
 
         console.log(
@@ -717,28 +881,54 @@ const importAttendance = async (req, res) => {
         );
 
         console.log(
-            "Period:",
+            "Students:",
+            students?.length
+        );
+
+        // ======================================================
+        // VALIDATE FILE NAME
+        // ======================================================
+
+        if (!fileName) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Excel file name is required.",
+            });
+        }
+
+        // ======================================================
+        // EXTRACT PERIOD FROM FILE NAME
+        // ======================================================
+
+        const attendancePeriod =
+            extractAttendancePeriodFromFileName(
+                fileName
+            );
+
+        if (!attendancePeriod) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Invalid Excel filename. Expected format: attendance_report_squad_138_2026-07-23_to_2026-08-19.xlsx",
+            });
+        }
+
+        const {
+            periodStart,
+            periodEnd,
+        } = attendancePeriod;
+
+        console.log(
+            "Extracted Period:",
             periodStart,
             "→",
             periodEnd
         );
 
-        console.log(
-            "Students:",
-            students?.length
-        );
-
-        // ========================================================
-        // VALIDATION
-        // ========================================================
-
-        if (!academicYear) {
-            return res.status(400).json({
-                success: false,
-                error:
-                    "Academic year is required.",
-            });
-        }
+        // ======================================================
+        // VALIDATE SEMESTER
+        // ======================================================
 
         if (!semester) {
             return res.status(400).json({
@@ -748,24 +938,14 @@ const importAttendance = async (req, res) => {
             });
         }
 
-        if (!periodStart) {
-            return res.status(400).json({
-                success: false,
-                error:
-                    "Attendance period start is required.",
-            });
-        }
-
-        if (!periodEnd) {
-            return res.status(400).json({
-                success: false,
-                error:
-                    "Attendance period end is required.",
-            });
-        }
+        // ======================================================
+        // VALIDATE STUDENTS
+        // ======================================================
 
         if (
-            !Array.isArray(students) ||
+            !Array.isArray(
+                students
+            ) ||
             students.length === 0
         ) {
             return res.status(400).json({
@@ -775,13 +955,38 @@ const importAttendance = async (req, res) => {
             });
         }
 
-        // ========================================================
+        // ======================================================
         // VALIDATE DATES
-        // ========================================================
+        // ======================================================
+
+        const startDate =
+            new Date(
+                `${periodStart}T00:00:00`
+            );
+
+        const endDate =
+            new Date(
+                `${periodEnd}T00:00:00`
+            );
 
         if (
-            new Date(periodStart) >
-            new Date(periodEnd)
+            Number.isNaN(
+                startDate.getTime()
+            ) ||
+            Number.isNaN(
+                endDate.getTime()
+            )
+        ) {
+            return res.status(400).json({
+                success: false,
+                error:
+                    "Invalid attendance period dates.",
+            });
+        }
+
+        if (
+            startDate >
+            endDate
         ) {
             return res.status(400).json({
                 success: false,
@@ -790,30 +995,37 @@ const importAttendance = async (req, res) => {
             });
         }
 
-        // ========================================================
+        // ======================================================
         // COUNTERS
-        // ========================================================
+        // ======================================================
 
         let studentsCreated = 0;
+
         let studentsUpdated = 0;
 
         let subjectsCreated = 0;
+
         let subjectsFound = 0;
 
         let attendanceCreated = 0;
+
         let attendanceUpdated = 0;
 
         let growthHourCreated = 0;
+
         let growthHourUpdated = 0;
 
         let skippedStudents = 0;
+
         let skippedSubjects = 0;
 
-        // ========================================================
+        // ======================================================
         // PROCESS STUDENTS
-        // ========================================================
+        // ======================================================
 
-        for (const studentData of students) {
+        for (
+            const studentData of students
+        ) {
             try {
                 const email =
                     cleanString(
@@ -830,9 +1042,9 @@ const importAttendance = async (req, res) => {
                     continue;
                 }
 
-                // ====================================================
+                // ==================================================
                 // STUDENT
-                // ====================================================
+                // ==================================================
 
                 const studentResult =
                     await createOrUpdateStudent(
@@ -858,9 +1070,9 @@ const importAttendance = async (req, res) => {
                     `Student processed: ${email}`
                 );
 
-                // ====================================================
+                // ==================================================
                 // NORMAL SUBJECTS
-                // ====================================================
+                // ==================================================
 
                 const subjects =
                     Array.isArray(
@@ -869,7 +1081,9 @@ const importAttendance = async (req, res) => {
                         ? studentData.subjects
                         : [];
 
-                for (const subjectData of subjects) {
+                for (
+                    const subjectData of subjects
+                ) {
                     const subjectId =
                         cleanString(
                             subjectData.id
@@ -900,7 +1114,9 @@ const importAttendance = async (req, res) => {
                     const subjectResult =
                         await createOrUpdateSubject({
                             id: subjectId,
+
                             name: subjectName,
+
                             semester,
                         });
 
@@ -926,8 +1142,6 @@ const importAttendance = async (req, res) => {
                             attendanceType:
                                 "subject",
 
-                            academicYear,
-
                             semester,
 
                             periodStart,
@@ -951,9 +1165,9 @@ const importAttendance = async (req, res) => {
                     }
                 }
 
-                // ====================================================
+                // ==================================================
                 // GROWTH HOUR
-                // ====================================================
+                // ==================================================
 
                 if (
                     studentData.growthHour
@@ -963,12 +1177,11 @@ const importAttendance = async (req, res) => {
                             studentId:
                                 student.id,
 
-                            subjectId: null,
+                            subjectId:
+                                null,
 
                             attendanceType:
                                 "growth_hour",
-
-                            academicYear,
 
                             semester,
 
@@ -992,7 +1205,9 @@ const importAttendance = async (req, res) => {
                         growthHourUpdated++;
                     }
                 }
-            } catch (studentError) {
+            } catch (
+                studentError
+            ) {
                 console.error(
                     `Failed to process student ${studentData.email}:`,
                     studentError
@@ -1024,7 +1239,7 @@ const importAttendance = async (req, res) => {
             message:
                 "Attendance imported successfully.",
 
-            academicYear,
+            fileName,
 
             semester,
 
@@ -1084,7 +1299,10 @@ const importAttendance = async (req, res) => {
 // GET STUDENTS
 // ============================================================
 
-const getStudents = async (req, res) => {
+const getStudents = async (
+    req,
+    res
+) => {
     try {
         const {
             data,
@@ -1115,9 +1333,12 @@ const getStudents = async (req, res) => {
 
                     return {
                         ...student,
+
                         attendance,
+
                         status:
-                            attendance >= 75
+                            attendance >=
+                            75
                                 ? "Present"
                                 : "Absent",
                     };
@@ -1136,9 +1357,12 @@ const getStudents = async (req, res) => {
 
         res.status(500).json({
             success: false,
+
             message:
                 "Failed to fetch students",
-            error: error.message,
+
+            error:
+                error.message,
         });
     }
 };
@@ -1147,217 +1371,283 @@ const getStudents = async (req, res) => {
 // GET ATTENDANCE RECORDS
 // ============================================================
 
-const getAttendanceRecords = async (
-    req,
-    res
-) => {
-    try {
-        const {
-            data,
-            error,
-        } = await supabase
-            .from("attendance")
-            .select(
-                "*, students(name, email, squad), subjects(name)"
-            )
-            .order("updated_at", {
-                ascending: false,
+const getAttendanceRecords =
+    async (
+        req,
+        res
+    ) => {
+        try {
+            const {
+                data,
+                error,
+            } = await supabase
+                .from("attendance")
+                .select(
+                    "*, students(name, email, squad), subjects(name)"
+                )
+                .order(
+                    "updated_at",
+                    {
+                        ascending:
+                            false,
+                    }
+                );
+
+            if (error) {
+                throw error;
+            }
+
+            res.json({
+                success: true,
+
+                records:
+                    data || [],
             });
+        } catch (error) {
+            console.error(
+                "Get attendance records error:",
+                error
+            );
 
-        if (error) throw error;
+            res.status(500).json({
+                success: false,
 
-        res.json({
-            success: true,
-            records: data || [],
-        });
-    } catch (error) {
-        console.error(
-            "Get attendance records error:",
-            error
-        );
+                message:
+                    "Failed to fetch attendance records",
 
-        res.status(500).json({
-            success: false,
-            message:
-                "Failed to fetch attendance records",
-            error: error.message,
-        });
-    }
-};
+                error:
+                    error.message,
+            });
+        }
+    };
 
 // ============================================================
 // GET EMAIL ALERTS
 // ============================================================
 
-const getEmailAlerts = async (
-    req,
-    res
-) => {
-    try {
-        const {
-            data: mentorProfile,
-            error: profileError,
-        } = await supabase
-            .from("mentor_profiles")
-            .select("squad")
-            .eq("user_id", req.user.id)
-            .maybeSingle();
+const getEmailAlerts =
+    async (
+        req,
+        res
+    ) => {
+        try {
+            const {
+                data: mentorProfile,
+                error: profileError,
+            } = await supabase
+                .from(
+                    "mentor_profiles"
+                )
+                .select("squad")
+                .eq(
+                    "user_id",
+                    req.user.id
+                )
+                .maybeSingle();
 
-        if (profileError) {
-            throw profileError;
-        }
+            if (profileError) {
+                throw profileError;
+            }
 
-        if (!mentorProfile) {
-            return res.status(403).json({
+            if (!mentorProfile) {
+                return res.status(403).json({
+                    success: false,
+
+                    profileExists:
+                        false,
+
+                    message:
+                        "Please complete your mentor profile first.",
+                });
+            }
+
+            const [
+                {
+                    data: students,
+                    error: studentsError,
+                },
+
+                {
+                    data: attendance,
+                    error: attendanceError,
+                },
+            ] = await Promise.all([
+                supabase
+                    .from(
+                        "students"
+                    )
+                    .select(
+                        "id, name, email, squad, parent_email"
+                    )
+                    .eq(
+                        "squad",
+                        mentorProfile.squad
+                    )
+                    .order(
+                        "name",
+                        {
+                            ascending:
+                                true,
+                        }
+                    ),
+
+                supabase
+                    .from(
+                        "attendance"
+                    )
+                    .select(
+                        "student_id, sessions_conducted, sessions_attended"
+                    ),
+            ]);
+
+            if (studentsError) {
+                throw studentsError;
+            }
+
+            if (attendanceError) {
+                throw attendanceError;
+            }
+
+            const totals =
+                calculateAttendanceByStudent(
+                    attendance
+                );
+
+            const alerts =
+                (students || []).map(
+                    (student) => ({
+                        id:
+                            student.id,
+
+                        name:
+                            student.name,
+
+                        email:
+                            student.email,
+
+                        parentEmail:
+                            student.parent_email ||
+                            "",
+
+                        squad:
+                            student.squad,
+
+                        attendance:
+                            getAttendancePercentage(
+                                totals.get(
+                                    student.id
+                                )
+                            ),
+                    })
+                );
+
+            res.json({
+                success: true,
+
+                squad:
+                    mentorProfile.squad,
+
+                students:
+                    alerts,
+            });
+        } catch (error) {
+            console.error(
+                "Get email alerts error:",
+                error
+            );
+
+            res.status(500).json({
                 success: false,
-                profileExists: false,
-                message: "Please complete your mentor profile first.",
+
+                message:
+                    "Failed to fetch email alert data",
+
+                error:
+                    error.message,
             });
         }
-
-        const [
-            {
-                data: students,
-                error: studentsError,
-            },
-            {
-                data: attendance,
-                error: attendanceError,
-            },
-        ] = await Promise.all([
-            supabase
-                .from("students")
-                .select(
-                    "id, name, email, squad, parent_email"
-                )
-                .eq("squad", mentorProfile.squad)
-                .order("name", {
-                    ascending: true,
-                }),
-
-            supabase
-                .from("attendance")
-                .select(
-                    "student_id, sessions_conducted, sessions_attended"
-                ),
-        ]);
-
-        if (studentsError) {
-            throw studentsError;
-        }
-
-        if (attendanceError) {
-            throw attendanceError;
-        }
-
-        const totals =
-            calculateAttendanceByStudent(
-                attendance
-            );
-
-        const alerts =
-            (students || []).map(
-                (student) => ({
-                    id: student.id,
-                    name: student.name,
-                    email: student.email,
-                    parentEmail:
-                        student.parent_email ||
-                        "",
-                    squad: student.squad,
-                    attendance:
-                        getAttendancePercentage(
-                            totals.get(
-                                student.id
-                            )
-                        ),
-                })
-            );
-
-        res.json({
-            success: true,
-            squad: mentorProfile.squad,
-            students: alerts,
-        });
-    } catch (error) {
-        console.error(
-            "Get email alerts error:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            message:
-                "Failed to fetch email alert data",
-            error: error.message,
-        });
-    }
-};
+    };
 
 // ============================================================
 // UPDATE STUDENT DETAILS
 // ============================================================
 
-const updateStudentDetails = async (
-    req,
-    res
-) => {
-    try {
-        const { id } =
-            req.params;
+const updateStudentDetails =
+    async (
+        req,
+        res
+    ) => {
+        try {
+            const {
+                id,
+            } = req.params;
 
-        const {
-            parent_name,
-            parent_email,
-            parent_phone,
-        } = req.body || {};
+            const {
+                parent_name,
+                parent_email,
+                parent_phone,
+            } = req.body || {};
 
-        const {
-            data,
-            error,
-        } = await supabase
-            .from("students")
-            .update({
-                parent_name:
-                    parent_name || null,
+            const {
+                data,
+                error,
+            } = await supabase
+                .from(
+                    "students"
+                )
+                .update({
+                    parent_name:
+                        parent_name ||
+                        null,
 
-                parent_email:
-                    parent_email || null,
+                    parent_email:
+                        parent_email ||
+                        null,
 
-                parent_phone:
-                    parent_phone || null,
+                    parent_phone:
+                        parent_phone ||
+                        null,
 
-                updated_at:
-                    new Date().toISOString(),
-            })
-            .eq("id", id)
-            .select()
-            .single();
+                    updated_at:
+                        new Date().toISOString(),
+                })
+                .eq(
+                    "id",
+                    id
+                )
+                .select()
+                .single();
 
-        if (error) {
-            throw error;
+            if (error) {
+                throw error;
+            }
+
+            res.json({
+                success: true,
+
+                message:
+                    "Student details updated successfully",
+
+                student:
+                    data,
+            });
+        } catch (error) {
+            console.error(
+                "Update student details error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+
+                message:
+                    "Failed to update student details",
+
+                error:
+                    error.message,
+            });
         }
-
-        res.json({
-            success: true,
-            message:
-                "Student details updated successfully",
-            student: data,
-        });
-    } catch (error) {
-        console.error(
-            "Update student details error:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            message:
-                "Failed to update student details",
-            error: error.message,
-        });
-    }
-};
+    };
 
 // ============================================================
 // EXPORTS
@@ -1365,10 +1655,16 @@ const updateStudentDetails = async (
 
 module.exports = {
     testSupabase,
+
     testAttendanceInsert,
+
     importAttendance,
+
     getStudents,
+
     getAttendanceRecords,
+
     getEmailAlerts,
+
     updateStudentDetails,
 };
