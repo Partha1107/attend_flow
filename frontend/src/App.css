@@ -17,9 +17,9 @@
   }
 }
 
-.hero {
-  position: relative;
+.hero { 
 
+  position: relative;
   .base,
   .framework,
   .vite {

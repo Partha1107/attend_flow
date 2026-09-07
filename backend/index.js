@@ -8,6 +8,27 @@ const attendanceRoutes = require("./src/routes/attendanceRoutes");
 const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
 const mentorRoutes = require("./src/routes/mentorRoutes");
 
+const mentorProfileRoutes = require(
+    "./src/routes/mentorProfileRoutes"
+);
+
+const mentorDashboardRoutes = require(
+    "./src/routes/mentorDashboardRoutes"
+);
+
+app.use(
+    "/api/mentor/dashboard",
+    mentorDashboardRoutes
+);
+
+const mentorProfileRoutes = require(
+    "./src/routes/mentorProfileRoutes"
+);
+
+app.use(
+    "/api/mentor",
+    mentorProfileRoutes
+);
 const app = express();
 
 const allowedOrigins = [
