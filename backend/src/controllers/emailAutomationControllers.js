@@ -167,6 +167,7 @@ const sendAttendanceEmail = async (req, res) => {
         `,
       });
 
+    const sentAt = new Date().toISOString();
     const historyRecord = {
       student_id: studentId || null,
       student_name: studentName,
@@ -180,7 +181,7 @@ const sendAttendanceEmail = async (req, res) => {
       message_id: result.messageId || null,
       mentor_name: mentorName,
       mentor_email: mentorEmail || null,
-      sent_at: new Date().toISOString(),
+      sent_at: sentAt,
     };
 
     let { error: historyError } = await supabase
@@ -194,11 +195,13 @@ const sendAttendanceEmail = async (req, res) => {
         student_email: studentEmail || null,
         parent_email: parentEmail,
         attendance_percentage: Number(attendancePercentage),
+        subject: historyRecord.subject,
+        message: historyRecord.message,
         status: "Sent",
         communication_type: "Email",
         mentor_name: mentorName,
         mentor_email: mentorEmail || null,
-        sent_at: new Date().toISOString(),
+        sent_at: sentAt,
       };
 
       const fallbackResult = await supabase
@@ -261,7 +264,12 @@ const getEmailAutomationRecords = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data,
+      data: (data || []).map((record) => ({
+        ...record,
+        sent_at: record.sent_at || record.created_at,
+        communication_type: record.communication_type || "Email",
+        status: record.status || "Sent",
+      })),
     });
   } catch (error) {
     console.error("Get email automation records error:", error);
