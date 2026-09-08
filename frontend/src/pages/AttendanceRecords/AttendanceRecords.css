@@ -1,5 +1,5 @@
 /* Attendance Records Page */
-.records-page { padding: 24px; max-width: 1300px; margin: 0 auto; }
+.records-page { padding: 0; max-width: 1300px; margin: 0 auto; }
 
 .records-header {
   display: flex;

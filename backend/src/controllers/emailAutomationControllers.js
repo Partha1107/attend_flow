@@ -241,42 +241,63 @@ const sendAttendanceEmail = async (req, res) => {
     });
   }
 };
+// ==========================================
+// GET EMAIL / COMMUNICATION HISTORY
+// ==========================================
 
 const getEmailAutomationRecords = async (req, res) => {
   try {
-    let { data, error } = await supabase
-      .from("communication_history")
+    const { data, error } = await supabase
+      .from("email_automation")
       .select("*")
-      .order("sent_at", { ascending: false });
-
-    if (["42P01", "PGRST205"].includes(error?.code)) {
-      const fallbackResult = await supabase
-        .from("email_automation")
-        .select("*")
-        .order("created_at", { ascending: false });
-      data = fallbackResult.data;
-      error = fallbackResult.error;
-    }
+      .order("created_at", { ascending: false });
 
     if (error) {
-      throw error;
+      console.error(
+        "Get email automation records error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch communication history.",
+        error: error.message,
+      });
     }
+
+    const records = (data || []).map((record) => ({
+      ...record,
+
+      // Keep the real sent time.
+      // Pending records can have null sent_at.
+      sent_at: record.sent_at || null,
+
+      communication_type:
+        record.communication_type || "Email",
+
+      status:
+        record.status || "pending",
+    }));
 
     return res.status(200).json({
       success: true,
-      data: (data || []).map((record) => ({
-        ...record,
-        sent_at: record.sent_at || record.created_at,
-        communication_type: record.communication_type || "Email",
-        status: record.status || "Sent",
-      })),
+
+      // Primary response property
+      records,
+
+      // Keep data too for compatibility
+      // with your existing frontend.
+      data: records,
     });
   } catch (error) {
-    console.error("Get email automation records error:", error);
+    console.error(
+      "Get email automation records error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch email automation records",
+      message: "Failed to fetch communication history.",
       error: error.message,
     });
   }

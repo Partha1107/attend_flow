@@ -521,7 +521,6 @@ function StudentPage() {
               <div>
                 <h2>Student Profile</h2>
                 <h3>{selectedStudent.name}</h3>
-                <p>{selectedStudent.id}</p>
               </div>
 
               <span className="active-badge">Active</span>
@@ -534,11 +533,6 @@ function StudentPage() {
                 <div>
                   <span>Full Name</span>
                   <strong>{selectedStudent.name}</strong>
-                </div>
-
-                <div>
-                  <span>Student ID</span>
-                  <strong>{selectedStudent.id}</strong>
                 </div>
 
                 <div>
@@ -646,12 +640,6 @@ function StudentPage() {
                 <input
                   type="text"
                   placeholder="Full Name"
-                  required
-                />
-
-                <input
-                  type="text"
-                  placeholder="Student ID"
                   required
                 />
 
