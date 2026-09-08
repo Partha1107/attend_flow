@@ -8,6 +8,59 @@ const brevo = new BrevoClient({
 const isValidEmail = (value) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 
+const isMissingTableError = (error) =>
+  ["42P01", "PGRST205"].includes(error?.code);
+
+const normalizeHistoryRecord = (record) => ({
+  ...record,
+  sent_at: record.sent_at || null,
+  communication_type: record.communication_type || "Email",
+  status: record.status || "pending",
+});
+
+const fetchHistoryFromTable = async (tableName) => {
+  const { data, error } = await supabase
+    .from(tableName)
+    .select("*")
+    .order("sent_at", { ascending: false, nullsFirst: false });
+
+  if (isMissingTableError(error)) {
+    return { data: [], error: null };
+  }
+
+  return { data: data || [], error };
+};
+
+const saveCommunicationHistory = async (historyRecord) => {
+  const fallbackRecord = {
+    student_id: historyRecord.student_id,
+    student_name: historyRecord.student_name,
+    student_email: historyRecord.student_email,
+    parent_email: historyRecord.parent_email,
+    attendance_percentage: historyRecord.attendance_percentage,
+    subject: historyRecord.subject,
+    message: historyRecord.message,
+    status: historyRecord.status,
+    communication_type: historyRecord.communication_type,
+    mentor_name: historyRecord.mentor_name,
+    mentor_email: historyRecord.mentor_email,
+    sent_at: historyRecord.sent_at,
+  };
+
+  let { error: historyError } = await supabase
+    .from("communication_history")
+    .insert(historyRecord);
+
+  if (isMissingTableError(historyError)) {
+    const fallbackResult = await supabase
+      .from("email_automation")
+      .insert(fallbackRecord);
+    historyError = fallbackResult.error;
+  }
+
+  return { saved: !historyError, error: historyError };
+};
+
 // ==========================================
 // TEST EMAIL
 // ==========================================
@@ -184,33 +237,8 @@ const sendAttendanceEmail = async (req, res) => {
       sent_at: sentAt,
     };
 
-    let { error: historyError } = await supabase
-      .from("communication_history")
-      .insert(historyRecord);
-
-    if (["42P01", "PGRST205"].includes(historyError?.code)) {
-      const fallbackRecord = {
-        student_id: studentId || null,
-        student_name: studentName,
-        student_email: studentEmail || null,
-        parent_email: parentEmail,
-        attendance_percentage: Number(attendancePercentage),
-        subject: historyRecord.subject,
-        message: historyRecord.message,
-        status: "Sent",
-        communication_type: "Email",
-        mentor_name: mentorName,
-        mentor_email: mentorEmail || null,
-        sent_at: sentAt,
-      };
-
-      const fallbackResult = await supabase
-        .from("email_automation")
-        .insert(fallbackRecord);
-      historyError = fallbackResult.error;
-    }
-
-    const historySaved = !historyError;
+    const { saved: historySaved, error: historyError } =
+      await saveCommunicationHistory(historyRecord);
 
     if (historyError) {
       console.warn(
@@ -247,47 +275,69 @@ const sendAttendanceEmail = async (req, res) => {
 
 const getEmailAutomationRecords = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("email_automation")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [communicationHistory, emailAutomation] = await Promise.all([
+      fetchHistoryFromTable("communication_history"),
+      fetchHistoryFromTable("email_automation"),
+    ]);
 
-    if (error) {
+    const fetchError =
+      communicationHistory.error || emailAutomation.error;
+
+    if (fetchError) {
       console.error(
         "Get email automation records error:",
-        error
+        fetchError
       );
 
       return res.status(500).json({
         success: false,
         message: "Failed to fetch communication history.",
-        error: error.message,
+        error: fetchError.message,
       });
     }
 
-    const records = (data || []).map((record) => ({
-      ...record,
+    const seen = new Set();
+    const mergedRecords = [
+      ...communicationHistory.data,
+      ...emailAutomation.data,
+    ]
+      .filter((record) => {
+        const key = [
+          record.id,
+          record.student_id,
+          record.parent_email,
+          record.sent_at,
+          record.created_at,
+        ].join("|");
 
-      // Keep the real sent time.
-      // Pending records can have null sent_at.
-      sent_at: record.sent_at || null,
+        if (seen.has(key)) {
+          return false;
+        }
 
-      communication_type:
-        record.communication_type || "Email",
+        seen.add(key);
+        return true;
+      })
+      .sort((left, right) => {
+        const leftTime = new Date(
+          left.sent_at || left.created_at || 0
+        ).getTime();
+        const rightTime = new Date(
+          right.sent_at || right.created_at || 0
+        ).getTime();
 
-      status:
-        record.status || "pending",
-    }));
+        return rightTime - leftTime;
+      })
+      .map(normalizeHistoryRecord);
 
     return res.status(200).json({
       success: true,
 
       // Primary response property
-      records,
+      records: mergedRecords,
 
       // Keep data too for compatibility
       // with your existing frontend.
-      data: records,
+      data: mergedRecords,
     });
   } catch (error) {
     console.error(
