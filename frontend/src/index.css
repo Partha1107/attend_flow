@@ -30,24 +30,24 @@
      ----------------------------------------- */
 
   /* Core Colors */
-  --aesa-black: #111827;
-  --aesa-dark: #1E293B;
-  --aesa-sidebar: #FFFFFF;
+  --aesa-black: #111111;
+  --aesa-dark: #111111;
+  --aesa-sidebar: #151515;
   --aesa-white: #FFFFFF;
 
   /* Backgrounds */
-  --aesa-bg: #F8F9FA;
+  --aesa-bg: #F7F7F7;
   --aesa-light-gray: #F3F4F6;
   --aesa-gray: #6B7280;
 
   /* Borders */
-  --aesa-border: #E5E7EB;
+  --aesa-border: #E5E5E5;
   --aesa-border-dark: #D1D5DB;
 
   /* Primary Action - Vibrant Red */
-  --aesa-primary: #ED1C24;
-  --aesa-primary-hover: #D01219;
-  --aesa-primary-light: #FFECEC;
+  --aesa-primary: #E00000;
+  --aesa-primary-hover: #C90000;
+  --aesa-primary-light: #FFF1F1;
 
   /* Semantic Status Colors */
   --aesa-success: #16A34A;
@@ -78,7 +78,7 @@
 
   /* Text System */
   --ink: var(--aesa-dark);
-  --text-primary: #111827;
+  --text-primary: #111111;
   --text-secondary: #6B7280;
   --text-muted: #9CA3AF;
   --text-light: #9CA3AF;
@@ -268,6 +268,103 @@ button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-
 .upload-button:focus-visible {
   outline: 2px solid var(--kalvium-red);
   outline-offset: 2px;
+}
+
+/* =========================================================
+   AESA LIGHT PROFESSIONAL THEME
+   ========================================================= */
+
+body,
+.app-main,
+.communication-history,
+.not-found,
+.login-page,
+.mentor-setup-page {
+  background: #F7F7F7;
+  color: #111111;
+}
+
+button,
+input,
+select,
+textarea {
+  border-color: #E5E5E5;
+}
+
+.access-denied-card button,
+.mentor-setup-card button,
+.generate-button,
+.send-button,
+.modal-send-button,
+.send-automatic-button,
+.import-submit-button,
+.settings-save-button,
+.settings-save-btn,
+.back-dashboard,
+.add-student-btn {
+  background: #E00000 !important;
+  border-color: #E00000 !important;
+  color: #FFFFFF !important;
+}
+
+.access-denied-card button:hover,
+.mentor-setup-card button:hover,
+.generate-button:hover,
+.send-button:hover,
+.modal-send-button:hover,
+.send-automatic-button:hover,
+.import-submit-button:hover:not(:disabled),
+.settings-save-button:hover:not(:disabled),
+.settings-save-btn:hover:not(:disabled),
+.back-dashboard:hover,
+.add-student-btn:hover {
+  background: #C90000 !important;
+  border-color: #C90000 !important;
+  color: #FFFFFF !important;
+}
+
+.google-login-button,
+.preview-button,
+.edit-button,
+.cancel-button,
+.refresh-button,
+.clear-button,
+.view-button,
+.outline-button,
+.import-student-btn,
+.attendance-details-button,
+.squad-add-btn,
+.view-profile-btn,
+.clear-filter-btn,
+.close-profile-btn {
+  background: #FFFFFF !important;
+  border: 1px solid #D1D5DB !important;
+  color: #111111 !important;
+}
+
+.google-login-button:hover,
+.preview-button:hover,
+.edit-button:hover,
+.cancel-button:hover,
+.refresh-button:hover,
+.clear-button:hover,
+.view-button:hover,
+.outline-button:hover,
+.import-student-btn:hover,
+.attendance-details-button:hover,
+.squad-add-btn:hover:not(:disabled),
+.view-profile-btn:hover,
+.clear-filter-btn:hover,
+.close-profile-btn:hover {
+  background: #F7F7F7 !important;
+  border-color: #6B7280 !important;
+  color: #111111 !important;
+}
+
+.stat-icon.blue,
+.stat-icon.purple {
+  background: #F3F3F3;
+  color: #6B7280;
 }
 
 

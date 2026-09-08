@@ -6,9 +6,9 @@
   --student-text: #111111;
   --student-muted: #6B7280;
   --student-border: #D1D5DB;
-  --student-primary: #000000;
-  --student-primary-dark: #1F1F1F;
-  --student-primary-soft: rgba(0, 0, 0, 0.08);
+  --student-primary: #E00000;
+  --student-primary-dark: #C90000;
+  --student-primary-soft: #FFF1F1;
   --student-success: #16A34A;
   --student-warning: #D97706;
   --student-danger: #DC2626;
@@ -20,7 +20,7 @@
   min-height: 100%;
   padding: 32px 48px;
   box-sizing: border-box;
-  background: linear-gradient(180deg, #F7F7F7 0%, #F3F3F3 100%);
+  background: #F7F7F7;
   color: var(--student-text);
   font-family: "Poppins", "Segoe UI", sans-serif;
 }
@@ -76,9 +76,9 @@
 }
 
 .add-student-btn {
-  border: 1px solid rgba(90, 168, 248, 0.25);
-  background: linear-gradient(135deg, #d0d0d0 0%, #1F1F1F 100%);
-  color: #000000;
+  border: 1px solid #E00000;
+  background: #E00000;
+  color: #FFFFFF;
   padding: 14px 22px;
   border-radius: 12px;
   font-size: 16px;
@@ -92,6 +92,8 @@
 }
 
 .add-student-btn:hover {
+  background: #C90000;
+  border-color: #C90000;
   transform: translateY(-1px);
   box-shadow: 0 18px 30px rgba(0, 0, 0, 0.08);
 }
@@ -132,17 +134,7 @@
   position: absolute;
   inset: 8px 10px;
   border-radius: 999px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0,
-      transparent 18px,
-      rgba(17, 24, 39, 0.08) 18px,
-      rgba(17, 24, 39, 0.08) 19px,
-      transparent 19px,
-      transparent 100%
-    ),
-    radial-gradient(circle at 15px 50%, rgba(17, 24, 39, 0.12) 0 2.5px, transparent 2.6px);
+  background: transparent;
   opacity: 0.7;
   pointer-events: none;
 }
@@ -232,7 +224,7 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #ffffff 0%, #F7F7F7 100%);
+  background: #FFFFFF;
   border: 1px solid var(--student-border);
   border-radius: 18px;
   min-height: 118px;
@@ -300,7 +292,7 @@
 .student-table-header {
   min-height: 46px;
   padding: 0 18px;
-  background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
+  background: #F3F3F3;
   border-bottom: 1px solid rgba(90, 168, 248, 0.2);
   font-size: 13px;
   font-weight: 800;
@@ -342,9 +334,9 @@
 }
 
 .attendance-badge {
-  border: 1px solid rgba(90, 168, 248, 0.25);
-  background: rgba(142, 203, 255, 0.17);
-  color: #1d4ed8;
+  border: 1px solid #FDE68A;
+  background: #FFFBEB;
+  color: #D97706;
   padding: 5px 10px;
   border-radius: 8px;
   font-size: 13px;
@@ -371,8 +363,8 @@
 }
 
 .status-present {
-  color: #1d4ed8;
-  background: rgba(142, 203, 255, 0.18);
+  color: #16834A;
+  background: #E8F7EE;
 }
 
 .status-absent {
@@ -445,7 +437,7 @@
 }
 
 .pagination-buttons .active-page {
-  background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-dark) 100%);
+  background: var(--student-primary);
   color: white;
   border-color: var(--student-primary);
 }
@@ -472,7 +464,7 @@
 
 .empty-state button {
   border: none;
-  background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-dark) 100%);
+  background: var(--student-primary);
   color: white;
   padding: 10px 18px;
   border-radius: 8px;
@@ -501,7 +493,7 @@
   width: min(700px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  background: linear-gradient(180deg, #F7F7F7 0%, #F3F3F3 100%);
+  background: #FFFFFF;
   border-radius: 18px;
   padding: 30px;
   box-sizing: border-box;
@@ -630,7 +622,7 @@
 .attendance-summary {
   margin-top: 22px;
   padding: 20px;
-  background: linear-gradient(135deg, #F7F7F7 0%, #F7F7F7 100%);
+  background: #F7F7F7;
   border: 1px solid rgba(79, 70, 229, 0.18);
   border-radius: 12px;
 }
@@ -661,7 +653,7 @@
 
 .progress-bar div {
   height: 100%;
-  background: linear-gradient(90deg, var(--student-primary) 0%, #000000 100%);
+  background: var(--student-primary);
   border-radius: inherit;
 }
 
@@ -694,7 +686,7 @@
 
 .edit-profile-btn {
   border: none;
-  background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-dark) 100%);
+  background: var(--student-primary);
   color: white;
 }
 
@@ -703,7 +695,7 @@
 }
 
 .close-profile-btn {
-  border: 1px solid rgba(79, 70, 229, 0.2);
+  border: 1px solid #D1D5DB;
   background: white;
   color: var(--student-text);
 }

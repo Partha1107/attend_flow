@@ -143,12 +143,7 @@
 
   color: #FFFFFF;
 
-  background:
-    linear-gradient(
-      145deg,
-      #000000,
-      #1a1a1a
-    );
+  background: #151515;
 
   box-shadow:
     0 3px 8px rgba(0, 0, 0, 0.15);
@@ -314,10 +309,10 @@
 }
 
 .calendar-dropdown .react-calendar__tile--active {
-  background: #000000;
+  background: #E00000;
   color: #FFFFFF;
   font-weight: 600;
-  border-color: #000000;
+  border-color: #E00000;
 }
 
 .calendar-dropdown .react-calendar__tile--now {

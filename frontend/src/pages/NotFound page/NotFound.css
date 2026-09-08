@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: #F7F7F7;
   padding: 24px;
 }
 
@@ -36,7 +36,7 @@
 .back-dashboard {
   display: inline-block;
   padding: 12px 22px;
-  background: #151515;
+  background: #E00000;
   color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
@@ -45,7 +45,7 @@
 }
 
 .back-dashboard:hover {
-  background: #151515;
+  background: #C90000;
 }
 
 
