@@ -33,11 +33,11 @@ function CommunicationHistory() {
             minute: "2-digit",
           }) || "",
           type: record.communication_type || "Email",
-          recipient: record.parent_email || "Unknown recipient",
-          name: record.student_name || "Unknown student",
-          subject: record.subject || "Attendance Alert",
-          message: record.message || "No message content stored.",
-          status: record.status || "Sent",
+            recipient: record.parent_email || "-",
+            name: record.student_name || "-",
+            subject: record.subject || "-",
+            message: record.message || "-",
+            status: record.status || "-",
         };
       });
 
