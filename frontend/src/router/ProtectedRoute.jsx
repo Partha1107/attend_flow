@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "../lib/supabase";
+import { ALLOWED_USERS } from "../constants/allowedUsers";
 import { getMentorProfile } from "../api/mentor";
 
 const ProtectedRoute = () => {
@@ -209,7 +210,10 @@ const email = session.user?.email?.toLowerCase();
 const isKalviumUser =
   email && email.endsWith("@kalvium.com");
 
-if (!isKalviumUser) {
+const isDeveloper =
+  ALLOWED_USERS.includes(email);
+
+if (!isKalviumUser && !isDeveloper) {
   return (
     <Navigate
       to="/access-denied"
