@@ -4,7 +4,7 @@ import "./AccessDenied.css";
 const AccessDenied = () => {
     const navigate = useNavigate();
 
-    const handleBackToLogin = async () => {
+    const handleBackToLogin = () => {
         navigate("/login");
     };
 
@@ -18,15 +18,12 @@ const AccessDenied = () => {
                 <h1>Access Denied</h1>
 
                 <p>
-                    This portal is only available to authorized
-                    Kalvium mentors.
+                    You don't have permission to access this portal.
                 </p>
 
                 <p>
-                    Please sign in using your official
-                    <strong> @kalvium.com </strong>
-                    
-                    account.
+                    Please contact the system administrator if you
+                    believe you should have access.
                 </p>
 
                 <button onClick={handleBackToLogin}>
