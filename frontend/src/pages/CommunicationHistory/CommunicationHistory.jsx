@@ -20,36 +20,57 @@ function CommunicationHistory() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const mapRecords = (records) =>
+      records.map((record) => {
+        const sentAt = record.sent_at || record.created_at;
+        const sentDate = sentAt ? new Date(sentAt) : null;
+
+        return {
+          ...record,
+          date: sentDate?.toLocaleDateString() || "Unknown date",
+          time: sentDate?.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) || "",
+          type: record.communication_type || "Email",
+            recipient: record.parent_email || "-",
+            name: record.student_name || "-",
+            subject: record.subject || "-",
+            message: record.message || "-",
+            status: record.status || "-",
+        };
+      });
+
     const fetchHistory = async () => {
       try {
         const response = await fetch(`${API_URL}/api/email-automation/records`);
         const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.message || "Failed to fetch history");
-        setHistory((result.data || []).map((record) => {
-          const sentAt = record.sent_at || record.created_at;
-          const sentDate = sentAt ? new Date(sentAt) : null;
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "Failed to fetch history");
+        }
 
-          return {
-            ...record,
-            date: sentDate?.toLocaleDateString() || "Unknown date",
-            time: sentDate?.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }) || "",
-            type: record.communication_type || "Email",
-            recipient: record.parent_email || "Unknown recipient",
-            name: record.student_name || "Unknown student",
-            subject: record.subject || "Attendance Alert",
-            message: record.message || "No message content stored.",
-            status: record.status || "Sent",
-          };
-        }));
+        setHistory(mapRecords(result.records || result.data || []));
+        setError("");
       } catch (fetchError) {
         setError(fetchError.message || "Failed to fetch communication history");
       }
     };
 
     fetchHistory();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchHistory();
+      }
+    };
+
+    window.addEventListener("focus", fetchHistory);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", fetchHistory);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const [activeTab, setActiveTab] = useState("All");
@@ -211,8 +232,8 @@ return (
 
           <tbody>
 
-            {filteredData.map((item) => (
-              <tr key={item.id}>
+            {filteredData.map((item, index) => (
+              <tr key={item.id ?? `${item.recipient}-${item.sent_at}-${index}`}>
 
                 <td>
                   {item.date}

@@ -6,7 +6,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 32px 36px 60px;
+  padding: 0 0 18px;
   box-sizing: border-box;
 }
 
@@ -459,16 +459,9 @@
 }
 
 .import-submit-button:hover:not(:disabled) {
-  background: #262626;
-
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 6px 14px rgba(0, 0, 0, 0.13);
-}
-
-.import-submit-button:active:not(:disabled) {
-  transform: translateY(0);
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .import-submit-button:disabled {
@@ -603,7 +596,7 @@
 
   text-align: center;
 
-  border: 1px dashed #cbd5e1;
+  border-color: #bfdbfe;
 
   border-radius: 12px;
 }

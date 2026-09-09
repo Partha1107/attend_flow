@@ -33,7 +33,7 @@
   justify-content: center;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #e8342a;
+  background: #E00000;
   color: #ffffff;
   font-size: 20px;
   font-weight: 700;
@@ -87,8 +87,8 @@
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #e8342a;
-  box-shadow: 0 0 0 3px rgba(232, 52, 42, 0.1);
+  border-color: #E00000;
+  box-shadow: 0 0 0 3px rgba(224, 0, 0, 0.1);
 }
 
 .mentor-setup-error {
@@ -105,7 +105,7 @@
   padding: 14px;
   border: none;
   border-radius: 9px;
-  background: #e8342a;
+  background: #E00000;
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
@@ -113,7 +113,7 @@
 }
 
 .mentor-setup-card button:hover {
-  background: #d92f26;
+  background: #C90000;
 }
 
 .mentor-setup-card button:disabled {

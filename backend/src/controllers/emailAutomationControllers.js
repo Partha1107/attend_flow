@@ -8,21 +8,108 @@ const brevo = new BrevoClient({
 const isValidEmail = (value) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 
+const isMissingTableError = (error) =>
+  ["42P01", "PGRST205"].includes(error?.code);
+
+const normalizeHistoryRecord = (record) => ({
+  ...record,
+  sent_at: record.sent_at || null,
+  communication_type: record.communication_type || "Email",
+  status: record.status || "pending",
+});
+
+const fetchHistoryFromTable = async (tableName) => {
+  const { data, error } = await supabase
+    .from(tableName)
+    .select("*")
+    .order("sent_at", { ascending: false, nullsFirst: false });
+
+  if (isMissingTableError(error)) {
+    return { data: [], error: null, missing: true };
+  }
+
+  return { data: data || [], error, missing: false };
+};
+const saveCommunicationHistory = async (record) => {
+  try {
+    const now = new Date().toISOString();
+
+    const dbRecord = {
+      student_id: record.student_id || null,
+      student_name: record.student_name,
+      student_email: record.student_email || null,
+      parent_email: record.parent_email,
+      attendance_percentage: Number(record.attendance_percentage),
+      attendance_date: now.split("T")[0],
+      academic_year: "2026-2027",
+      status: "Sent",
+      communication_type: "Email",
+      mentor_name: record.mentor_name || null,
+      mentor_email: record.mentor_email || null,
+      sent_at: record.sent_at || now,
+      created_at: now,
+      updated_at: now,
+    };
+
+    console.log("Saving communication history:", dbRecord);
+
+    const { data, error } = await supabase
+      .from("email_automation")
+      .insert([dbRecord])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase history insert error:", error);
+
+      return {
+        saved: false,
+        error,
+      };
+    }
+
+    console.log("Communication history saved successfully:", data);
+
+    return {
+      saved: true,
+      data,
+      error: null,
+    };
+  } catch (error) {
+    console.error("saveCommunicationHistory error:", error);
+
+    return {
+      saved: false,
+      error,
+    };
+  }
+};
+
 // ==========================================
 // TEST EMAIL
 // ==========================================
 const sendTestEmail = async (req, res) => {
   try {
+    const senderEmail = String(process.env.BREVO_SENDER_EMAIL || "").trim();
+    const receiverEmail = String(process.env.TEST_RECEIVER_EMAIL || "").trim();
+
+    if (!isValidEmail(senderEmail) || !isValidEmail(receiverEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid sender and test receiver email are required.",
+      });
+    }
+
     const result =
       await brevo.transactionalEmails.sendTransacEmail({
         sender: {
           name: "AttendFlow Test",
-          email: process.env.BREVO_SENDER_EMAIL,
+          email: senderEmail,
         },
 
         to: [
           {
-            email: process.env.TEST_RECEIVER_EMAIL,
+            email: receiverEmail,
             name: "Test User",
           },
         ],
@@ -184,33 +271,8 @@ const sendAttendanceEmail = async (req, res) => {
       sent_at: sentAt,
     };
 
-    let { error: historyError } = await supabase
-      .from("communication_history")
-      .insert(historyRecord);
-
-    if (["42P01", "PGRST205"].includes(historyError?.code)) {
-      const fallbackRecord = {
-        student_id: studentId || null,
-        student_name: studentName,
-        student_email: studentEmail || null,
-        parent_email: parentEmail,
-        attendance_percentage: Number(attendancePercentage),
-        subject: historyRecord.subject,
-        message: historyRecord.message,
-        status: "Sent",
-        communication_type: "Email",
-        mentor_name: mentorName,
-        mentor_email: mentorEmail || null,
-        sent_at: sentAt,
-      };
-
-      const fallbackResult = await supabase
-        .from("email_automation")
-        .insert(fallbackRecord);
-      historyError = fallbackResult.error;
-    }
-
-    const historySaved = !historyError;
+    const { saved: historySaved, error: historyError } =
+      await saveCommunicationHistory(historyRecord);
 
     if (historyError) {
       console.warn(
@@ -241,52 +303,66 @@ const sendAttendanceEmail = async (req, res) => {
     });
   }
 };
+// ==========================================
+// GET EMAIL / COMMUNICATION HISTORY
+// ==========================================
+
+// ==========================================
+// GET EMAIL / COMMUNICATION HISTORY
+// ==========================================
 
 const getEmailAutomationRecords = async (req, res) => {
   try {
-    let { data, error } = await supabase
-      .from("communication_history")
+    const { data, error } = await supabase
+      .from("email_automation")
       .select("*")
-      .order("sent_at", { ascending: false });
-
-    if (["42P01", "PGRST205"].includes(error?.code)) {
-      const fallbackResult = await supabase
-        .from("email_automation")
-        .select("*")
-        .order("created_at", { ascending: false });
-      data = fallbackResult.data;
-      error = fallbackResult.error;
-    }
+      .order("created_at", { ascending: false });
 
     if (error) {
-      throw error;
+      console.error(
+        "Get email automation records error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch communication history.",
+        error: error.message,
+      });
     }
+
+    const records = (data || []).map((record) => ({
+      ...record,
+
+      sent_at: record.sent_at || null,
+
+      communication_type:
+        record.communication_type || "Email",
+
+      status:
+        record.status || "pending",
+    }));
 
     return res.status(200).json({
       success: true,
-      data: (data || []).map((record) => ({
-        ...record,
-        sent_at: record.sent_at || record.created_at,
-        communication_type: record.communication_type || "Email",
-        status: record.status || "Sent",
-      })),
+      records,
+      data: records,
     });
   } catch (error) {
-    console.error("Get email automation records error:", error);
+    console.error(
+      "Get email automation records error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch email automation records",
+      message: "Failed to fetch communication history.",
       error: error.message,
     });
   }
 };
 
-// ==========================================
-// EXPORT
-// ==========================================
 module.exports = {
-  sendTestEmail,
   sendAttendanceEmail,
   getEmailAutomationRecords,
-};  
+};

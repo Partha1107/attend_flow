@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .settings-container {
-  padding: 32px 40px 48px;
+  padding: 0 0 18px;
   width: 100%;
   box-sizing: border-box;
   animation: settingsFadeIn 0.2s ease-in-out;
@@ -227,8 +227,8 @@
   gap: 6px;
   padding: 6px 12px;
   background-color: #f5f5f5;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
+  color: #C90000;
+  border: 1px solid #F2B8B8;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
@@ -240,7 +240,7 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: #3b82f6;
+  color: #C90000;
   padding: 2px;
   border-radius: 50%;
   cursor: pointer;
@@ -248,8 +248,8 @@
 }
 
 .squad-chip-remove:hover {
-  background-color: #dbeafe;
-  color: #1d4ed8;
+  background-color: #FFF1F1;
+  color: #C90000;
 }
 
 /* Empty & Loading States */
