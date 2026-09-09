@@ -2,7 +2,6 @@ import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "../lib/supabase";
-import { ALLOWED_USERS } from "../constants/allowedUsers";
 import { getMentorProfile } from "../api/mentor";
 
 const ProtectedRoute = () => {
@@ -201,23 +200,23 @@ const ProtectedRoute = () => {
     );
   }
 
-  // ============================================================
-  // CHECK ALLOWED MENTOR EMAIL
-  // ============================================================
+// ============================================================
+// CHECK KALVIUM EMAIL DOMAIN
+// ============================================================
 
-  const email = session.user?.email?.toLowerCase();
+const email = session.user?.email?.toLowerCase();
 
-  if (
-    !email ||
-    !ALLOWED_USERS.includes(email)
-  ) {
-    return (
-      <Navigate
-        to="/access-denied"
-        replace
-      />
-    );
-  }
+const isKalviumUser =
+  email && email.endsWith("@kalvium.com");
+
+if (!isKalviumUser) {
+  return (
+    <Navigate
+      to="/access-denied"
+      replace
+    />
+  );
+}
 
   // ============================================================
   // MENTOR PROFILE CHECKING
