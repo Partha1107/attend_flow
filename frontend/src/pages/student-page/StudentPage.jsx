@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getMentorStudents } from "../../api/mentor";
+import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -93,17 +94,33 @@ function StudentPage() {
 
       const result = await getMentorStudents();
 
-        const fetchedStudents = result.students || [];
-        setStudents(fetchedStudents);
+      const fetchedStudents = (result.students || []).map((student) => ({
+        ...student,
+        attendance: Number(
+          student.attendance ??
+          calculateOverallAttendance(student)
+        ),
+      }));
 
-        const studentId = searchParams.get("student");
-        const matchingStudent = fetchedStudents.find(
-          (student) => String(student.id) === studentId
-        );
+      console.table(
+        fetchedStudents.map((student) => ({
+          name: student.name,
+          attendance: student.attendance,
+          subjects: student.subjects?.length || 0,
+        }))
+      );
 
-        if (matchingStudent) {
-          setSelectedStudent(matchingStudent);
-        }
+      setStudents(fetchedStudents);
+
+      const studentId = searchParams.get("student");
+
+      const matchingStudent = fetchedStudents.find(
+        (student) => String(student.id) === studentId
+      );
+
+      if (matchingStudent) {
+        setSelectedStudent(matchingStudent);
+      }
     } catch (error) {
       console.error("Failed to fetch students:", error);
       setError(error.message || "Failed to fetch students.");
@@ -128,11 +145,16 @@ function StudentPage() {
     };
 
     window.addEventListener("attendanceImportCompleted", handleImportCompleted);
+    window.addEventListener("parentEmailImportCompleted", handleImportCompleted);
 
     return () => {
       window.clearTimeout(timer);
       window.removeEventListener(
         "attendanceImportCompleted",
+        handleImportCompleted
+      );
+      window.removeEventListener(
+        "parentEmailImportCompleted",
         handleImportCompleted
       );
     };

@@ -1,0 +1,259 @@
+.parent-email-page {
+  width: 100%;
+  padding-bottom: 24px;
+}
+
+.parent-email-header {
+  margin-bottom: 24px;
+}
+
+.parent-email-header h1 {
+  margin: 0 0 8px;
+  color: #111827;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.parent-email-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.parent-email-card {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.parent-email-upload-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.parent-email-upload-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 14px;
+  place-items: center;
+  color: #e00000;
+  background: #fff1f1;
+  border-radius: 12px;
+}
+
+.parent-email-upload-card h2,
+.parent-email-summary-card h2,
+.parent-email-preview-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+}
+
+.parent-email-upload-card p {
+  margin: 7px 0 20px;
+  color: #64748b;
+}
+
+.parent-email-file-input {
+  display: none;
+}
+
+.parent-email-file-name {
+  width: min(100%, 600px);
+  margin-top: 14px;
+  padding: 10px 14px;
+  overflow: hidden;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parent-email-primary-button,
+.parent-email-secondary-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.parent-email-primary-button {
+  color: #ffffff;
+  background: #e00000;
+}
+
+.parent-email-primary-button:hover:not(:disabled) {
+  background: #c90000;
+}
+
+.parent-email-primary-button:disabled,
+.parent-email-secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.parent-email-upload-card .parent-email-primary-button {
+  margin-top: 14px;
+}
+
+.parent-email-secondary-button {
+  color: #111827;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+}
+
+.parent-email-message {
+  margin-bottom: 20px;
+  padding: 13px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.parent-email-error {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.parent-email-success {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.parent-email-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.parent-email-summary-grid div {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.parent-email-summary-grid strong,
+.parent-email-summary-grid span {
+  display: block;
+}
+
+.parent-email-summary-grid strong {
+  color: #111827;
+  font-size: 22px;
+}
+
+.parent-email-summary-grid span {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.parent-email-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.parent-email-table-wrapper {
+  overflow-x: auto;
+}
+
+.parent-email-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.parent-email-table th,
+.parent-email-table td {
+  padding: 13px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.parent-email-table th {
+  color: #475569;
+  background: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.parent-email-table td {
+  color: #334155;
+}
+
+.parent-email-status {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-ready,
+.status-updated {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.status-student-not-found,
+.status-empty-row {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.status-duplicate-name {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.status-invalid-email {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+@media (max-width: 900px) {
+  .parent-email-summary-grid {
+    grid-template-columns: repeat(3, minmax(110px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .parent-email-card {
+    padding: 20px;
+  }
+
+  .parent-email-header h1 {
+    font-size: 25px;
+  }
+
+  .parent-email-summary-grid {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
+
+  .parent-email-preview-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
