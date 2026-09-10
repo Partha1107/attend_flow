@@ -11,7 +11,7 @@ import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import AccessDenied from "../pages/AccessDenied/AccessDenied";
 import ImportAttendance from "../pages/ImportAttendance/ImportAttendance";
-import AttendanceRecords from "../pages/AttendanceRecords/AttendanceRecords";
+// import AttendanceRecords from "../pages/AttendanceRecords/AttendanceRecords";
 import StudentPage from "../pages/student-page/StudentPage";
 
 import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHistory";
@@ -60,10 +60,10 @@ function AppRoutes() {
             element={<ImportAttendance />}
           />
 
-          <Route
+          {/* <Route
             path="attendance-records"
             element={<AttendanceRecords />}
-          />
+          /> */}
               
           <Route
             path="/settings"

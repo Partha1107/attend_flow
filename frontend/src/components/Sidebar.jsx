@@ -7,7 +7,6 @@ import {
   Mail,
   MailPlus,
   Settings,
-  UserCheck,
   Users,
   X,
 } from "lucide-react";
@@ -25,11 +24,6 @@ const mainItems = [
     label: "Students",
     icon: Users,
     to: "/students",
-  },
-  {
-    label: "Attendance Records",
-    icon: UserCheck,
-    to: "/attendance-records",
   },
   {
     label: "Import Attendance",

@@ -1369,56 +1369,6 @@ const getStudents = async (
 // GET ATTENDANCE RECORDS
 // ============================================================
 
-const getAttendanceRecords =
-    async (
-        req,
-        res
-    ) => {
-        try {
-            const {
-                data,
-                error,
-            } = await supabase
-                .from("attendance")
-                .select(
-                    "*, students(name, email, squad), subjects(name)"
-                )
-                .order(
-                    "updated_at",
-                    {
-                        ascending:
-                            false,
-                    }
-                );
-
-            if (error) {
-                throw error;
-            }
-
-            res.json({
-                success: true,
-
-                records:
-                    data || [],
-            });
-        } catch (error) {
-            console.error(
-                "Get attendance records error:",
-                error
-            );
-
-            res.status(500).json({
-                success: false,
-
-                message:
-                    "Failed to fetch attendance records",
-
-                error:
-                    error.message,
-            });
-        }
-    };
-
 // ============================================================
 // GET EMAIL ALERTS
 // ============================================================
@@ -1659,8 +1609,6 @@ module.exports = {
     importAttendance,
 
     getStudents,
-
-    getAttendanceRecords,
 
     getEmailAlerts,
 

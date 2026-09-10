@@ -26,11 +26,6 @@ router.get(
 );
 
 router.get(
-    "/records",
-    attendanceController.getAttendanceRecords
-);
-
-router.get(
     "/email-alerts",
     requireAuth,
     attendanceController.getEmailAlerts
