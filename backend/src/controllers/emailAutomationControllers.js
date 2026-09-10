@@ -363,7 +363,6 @@ const getEmailAutomationRecords = async (req, res) => {
 };
 
 module.exports = {
-   sendTestEmail,
   sendAttendanceEmail,
   getEmailAutomationRecords,
 };

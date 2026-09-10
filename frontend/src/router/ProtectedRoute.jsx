@@ -201,23 +201,26 @@ const ProtectedRoute = () => {
     );
   }
 
-  // ============================================================
-  // CHECK ALLOWED MENTOR EMAIL
-  // ============================================================
+// ============================================================
+// CHECK KALVIUM EMAIL DOMAIN
+// ============================================================
 
-  const email = session.user?.email?.toLowerCase();
+const email = session.user?.email?.toLowerCase();
 
-  if (
-    !email ||
-    !ALLOWED_USERS.includes(email)
-  ) {
-    return (
-      <Navigate
-        to="/access-denied"
-        replace
-      />
-    );
-  }
+const isKalviumUser =
+  email && email.endsWith("@kalvium.com");
+
+const isDeveloper =
+  ALLOWED_USERS.includes(email);
+
+if (!isKalviumUser && !isDeveloper) {
+  return (
+    <Navigate
+      to="/access-denied"
+      replace
+    />
+  );
+}
 
   // ============================================================
   // MENTOR PROFILE CHECKING
