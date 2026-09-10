@@ -1,14 +1,14 @@
 :root {
-  --student-bg: #f7f7f7;
+  --student-bg: #FAFAF9;
   --student-panel: #ffffff;
   --student-panel-alt: #f3f3f3;
   --student-card: #ffffff;
   --student-text: #111111;
   --student-muted: #6b7280;
   --student-border: #d1d5db;
-  --student-primary: #e00000;
-  --student-primary-dark: #c90000;
-  --student-primary-soft: #fff1f1;
+  --student-primary: #f2383f;
+  --student-primary-dark: #d92d34;
+  --student-primary-soft: #fff0f1;
   --student-success: #16a34a;
   --student-warning: #d97706;
   --student-danger: #dc2626;

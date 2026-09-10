@@ -43,8 +43,8 @@
   height: 58px;
   margin-bottom: 14px;
   place-items: center;
-  color: #e00000;
-  background: #fff1f1;
+  color: #F2383F;
+  background: #FFF0F1;
   border-radius: 12px;
 }
 
@@ -95,11 +95,11 @@
 
 .parent-email-primary-button {
   color: #ffffff;
-  background: #e00000;
+  background: #F2383F;
 }
 
 .parent-email-primary-button:hover:not(:disabled) {
-  background: #c90000;
+  background: #D92D34;
 }
 
 .parent-email-primary-button:disabled,

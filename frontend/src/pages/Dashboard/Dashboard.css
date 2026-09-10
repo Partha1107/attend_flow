@@ -103,7 +103,7 @@
   margin: 24px 0;
   padding: 20px 24px;
   border: 1px solid #E5E5E5;
-  border-left: 4px solid #E00000;
+  border-left: 4px solid #F2383F;
   border-radius: 10px;
   background: #f5f5f5;
 }
@@ -304,21 +304,36 @@
 }
 
 .distribution-date {
-  min-height: 34px;
+  min-height: 40px;
+  padding: 0 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
   background: #FFFFFF;
   border:
     1px solid var(--border);
 
   border-radius: 8px;
 
-  color: #697386;
+  color: #555555;
 
-  background: #FFFFFF;
-
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1;
 
   white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.distribution-date:hover {
+  border-color: #BDBDB8;
+  background: #F5F5F3;
+  color: #111111;
 }
 
 .distribution-main {
@@ -718,10 +733,25 @@
   font-weight: 700;
 }
 
-.view-all-button {
-  height: 31px;
+.student-action {
+  min-width: 112px;
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
 
-  padding: 0 13px;
+.view-all-button {
+  min-width: 96px;
+  height: 40px;
+
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .view-all-button:hover,
@@ -932,9 +962,13 @@
 }
 
 .student-action {
-  min-width: 50px;
-
-  height: 28px;
+  min-width: 112px;
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .attention-footer {
@@ -961,7 +995,14 @@
 }
 
 .attention-footer button {
-  padding: 5px 9px;
+  min-width: 112px;
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  white-space: nowrap;
 }
 
 /* =========================================
@@ -1085,7 +1126,7 @@
   .distribution-date {
     margin-top: 12px;
 
-    width: fit-content;
+    width: 100%;
   }
 
   .donut-chart {
@@ -1313,21 +1354,21 @@
   align-items: center !important;
   justify-content: flex-start !important;
   flex-wrap: nowrap !important;
-  gap: 10px !important;
+  gap: 12px !important;
   width: 100%;
 }
 
 .student-avatar {
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
-  min-height: 34px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
 
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
 
-  flex: 0 0 34px !important;
+  flex: 0 0 32px !important;
 
   border-radius: 50% !important;
 
@@ -1336,8 +1377,8 @@
 
   color: #000000 !important;
 
-  font-size: 11px !important;
-  font-weight: 700 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
 
   line-height: 1 !important;
 

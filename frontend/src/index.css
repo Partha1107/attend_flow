@@ -36,8 +36,8 @@
   --aesa-white: #FFFFFF;
 
   /* Backgrounds */
-  --aesa-bg: #F7F7F7;
-  --aesa-light-gray: #F3F4F6;
+  --aesa-bg: #FAFAF9;
+  --aesa-light-gray: #F5F5F3;
   --aesa-gray: #6B7280;
 
   /* Borders */
@@ -45,9 +45,9 @@
   --aesa-border-dark: #D1D5DB;
 
   /* Primary Action - Vibrant Red */
-  --aesa-primary: #E00000;
-  --aesa-primary-hover: #C90000;
-  --aesa-primary-light: #FFF1F1;
+  --aesa-primary: #F2383F;
+  --aesa-primary-hover: #D92D34;
+  --aesa-primary-light: #FFF0F1;
 
   /* Semantic Status Colors */
   --aesa-success: #16A34A;
@@ -453,6 +453,265 @@ textarea::placeholder {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
+}
+
+/* Shared Attend Flow layout and visual tokens. */
+:root {
+  --flow-bg: #FAFAF9;
+  --flow-surface: #FFFFFF;
+  --flow-text: #111111;
+  --flow-secondary: #555555;
+  --flow-muted: #777777;
+  --flow-border: #E5E5E2;
+  --flow-border-strong: #DCDCDC;
+  --flow-primary: #F2383F;
+  --flow-primary-hover: #D92D34;
+  --flow-success: #16845B;
+  --flow-warning: #C77A00;
+  --flow-danger: #D64545;
+  --flow-info: #3478F6;
+  --flow-radius-sm: 6px;
+  --flow-radius-md: 8px;
+  --flow-radius-lg: 12px;
+}
+
+html,
+body,
+#root {
+  background: var(--flow-bg);
+  color: var(--flow-text);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  letter-spacing: -0.03em;
+}
+
+button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-toggle),
+.upload-button {
+  min-height: 40px;
+  border-radius: var(--flow-radius-md);
+  box-shadow: none;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.16);
+  outline-offset: 2px;
+}
+
+.app-main,
+.communication-history,
+.student-page,
+.not-found,
+.login-page,
+.access-denied-page,
+.mentor-setup-page,
+.import-attendance-page,
+.email-automation-page,
+.parent-email-page {
+  background: var(--flow-bg) !important;
+  color: var(--flow-text);
+}
+
+.panel,
+.stat-card,
+.history-container,
+.student-table-container,
+.settings-card,
+.parent-email-card,
+.import-card,
+.email-summary-card,
+.generate-section,
+.email-card,
+.login-card,
+.access-denied-card {
+  border: 1px solid var(--flow-border) !important;
+  border-radius: var(--flow-radius-lg) !important;
+  box-shadow: none !important;
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 36px;
+}
+
+.dashboard-heading h1,
+.student-page-header h1,
+.communication-header h1,
+.page-header h1,
+.email-page-header h1,
+.parent-email-header h1,
+.settings-header h1 {
+  color: var(--flow-text) !important;
+  font-size: clamp(28px, 3vw, 32px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.dashboard-heading p,
+.student-page-header p,
+.communication-header p,
+.page-header p,
+.email-page-header p,
+.parent-email-header p,
+.settings-header p {
+  color: var(--flow-secondary) !important;
+}
+
+.stat-card,
+.email-summary-card,
+.settings-card,
+.filter-container,
+.history-filters {
+  background: var(--flow-surface) !important;
+}
+
+.stat-card p,
+.stat-copy p,
+.stat-card span,
+.email-summary-card p,
+.settings-field label,
+.settings-group label {
+  color: var(--flow-muted) !important;
+}
+
+.stat-card h2,
+.stat-copy h2,
+.email-summary-card h2 {
+  color: var(--flow-text) !important;
+}
+
+.stat-icon.blue,
+.stat-icon.purple,
+.stat-icon.green,
+.stat-icon.orange,
+.summary-icon {
+  background: #F3F3F0 !important;
+  color: var(--flow-text) !important;
+}
+
+input,
+select,
+textarea,
+.filter-container,
+.history-filters {
+  border-color: var(--flow-border-strong);
+}
+
+.filter-container input,
+.filter-container select,
+.history-filters select,
+.search-box,
+.search-box input,
+.settings-input,
+.settings-field select,
+.date-section input,
+.academic-year-field select {
+  height: 42px;
+  border-radius: var(--flow-radius-md) !important;
+}
+
+.student-table th,
+.history-table th,
+.parent-email-table th {
+  color: var(--flow-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+}
+
+.student-table td,
+.history-table td,
+.parent-email-table td,
+.student-row {
+  border-color: var(--flow-border) !important;
+}
+
+.student-table tbody tr:hover,
+.student-row:hover {
+  background: #FAFAF8 !important;
+}
+
+.status-present,
+.status-badge.sent,
+.status-badge.delivered {
+  color: var(--flow-success) !important;
+  background: #EDF8F2 !important;
+}
+
+.status-absent,
+.status-badge.failed,
+.status-badge.bounced {
+  color: var(--flow-danger) !important;
+  background: #FFF0F0 !important;
+}
+
+.status-badge.pending {
+  color: var(--flow-warning) !important;
+  background: #FFF7E8 !important;
+}
+
+.access-denied-card button,
+.mentor-setup-card button,
+.generate-button,
+.send-button,
+.modal-send-button,
+.send-automatic-button,
+.import-submit-button,
+.settings-save-button,
+.settings-save-btn,
+.back-dashboard,
+.add-student-btn,
+.parent-email-primary-button,
+.upload-button {
+  background: var(--flow-primary) !important;
+  border-color: var(--flow-primary) !important;
+}
+
+.access-denied-card button:hover,
+.mentor-setup-card button:hover,
+.generate-button:hover,
+.send-button:hover,
+.modal-send-button:hover,
+.send-automatic-button:hover,
+.import-submit-button:hover:not(:disabled),
+.settings-save-button:hover:not(:disabled),
+.settings-save-btn:hover:not(:disabled),
+.back-dashboard:hover,
+.add-student-btn:hover,
+.parent-email-primary-button:hover:not(:disabled),
+.upload-button:hover {
+  background: var(--flow-primary-hover) !important;
+  border-color: var(--flow-primary-hover) !important;
+}
+
+@media (max-width: 1100px) {
+  .page-content {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: 20px 16px 28px;
+  }
 }
 
 
