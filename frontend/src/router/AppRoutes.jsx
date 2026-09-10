@@ -19,6 +19,7 @@ import EmailAutomation from "../pages/EmailAutomation/EmailAutomation";
 import NotFound from "../pages/NotFound page/NotFound";
 import Settings from "../pages/Settingspage/Settingspage"
 import MentorProfileSetup from "../pages/Mentor/MentorProfileSetup";
+import ParentEmailImport from "../pages/ParentEmailImport/ParentEmailImport";
 
 function AppRoutes() {
   return (
@@ -82,6 +83,11 @@ function AppRoutes() {
           <Route
             path="email-automation"
             element={<EmailAutomation />}
+          />
+
+          <Route
+            path="parent-email-import"
+            element={<ParentEmailImport />}
           />
 
         </Route>

@@ -5,8 +5,8 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  MailPlus,
   Settings,
-  ShieldCheck,
   UserCheck,
   Users,
   X,
@@ -40,6 +40,11 @@ const mainItems = [
     label: "Email Automation",
     icon: Mail,
     to: "/email-automation",
+  },
+  {
+    label: "Parent Email Import",
+    icon: MailPlus,
+    to: "/parent-email-import",
   },
   {
     label: "Communication History",

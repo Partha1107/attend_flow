@@ -71,10 +71,49 @@ export const getMentorStudents = async (squad = "") => {
   const query = squad
     ? `?squad=${encodeURIComponent(squad)}`
     : "";
-  const response = await fetch(
+
+  // Get the current login token
+  let headers = await getAuthHeaders();
+
+  let response = await fetch(
     `${API_URL}/api/mentor/dashboard/students${query}`,
-    { headers: await getAuthHeaders() }
+    {
+      method: "GET",
+      headers,
+    }
   );
+
+  // If the token was rejected, refresh the Supabase session once
+  if (response.status === 401) {
+    console.warn("Student API returned 401. Refreshing Supabase session...");
+
+    const { data, error } = await supabase.auth.refreshSession();
+
+    if (error) {
+      console.error("Supabase session refresh failed:", error);
+      throw new Error("Your login session has expired. Please log in again.");
+    }
+
+    const newToken = data?.session?.access_token;
+
+    if (!newToken) {
+      throw new Error("Unable to refresh login session. Please log in again.");
+    }
+
+    headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${newToken}`,
+    };
+
+    // Try the student request again with the new token
+    response = await fetch(
+      `${API_URL}/api/mentor/dashboard/students${query}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+  }
 
   return readResponse(response, "Failed to load students.");
 };

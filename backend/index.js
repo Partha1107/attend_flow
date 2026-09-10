@@ -9,6 +9,7 @@ const emailAutomationRoutes = require("./src/routes/emailAutomationRoutes");
 const mentorRoutes = require("./src/routes/mentorRoutes");
 const mentorProfileRoutes = require("./src/routes/mentorProfileRoutes");
 const mentorDashboardRoutes = require("./src/routes/mentorDashboardRoutes");
+const parentEmailRoutes = require("./src/routes/parentEmailRoutes");
 
 const app = express();
 
@@ -101,6 +102,12 @@ app.use(
 app.use(
     "/api/mentor/dashboard",
     mentorDashboardRoutes
+);
+
+// Parent Email Import
+app.use(
+    "/api/parent-email",
+    parentEmailRoutes
 );
 
 // ===============================
