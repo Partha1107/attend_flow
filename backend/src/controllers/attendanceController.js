@@ -684,17 +684,15 @@ const createOrUpdateAttendance =
             toNumber(
                 attendance.sessionsAbsent
             );
-
+            
         const attendancePercentage =
-            sessionsConducted > 0
-                ? Number(
-                    (
-                        (sessionsAttended /
-                            sessionsConducted) *
-                        100
-                    ).toFixed(2)
-                )
-                : 0;
+            toNumber(
+                attendance.attendancePercentage
+            );
+
+
+
+
 
         const attendanceData = {
             student_id:
@@ -702,7 +700,7 @@ const createOrUpdateAttendance =
 
             subject_id:
                 attendanceType ===
-                "growth_hour"
+                    "growth_hour"
                     ? null
                     : subjectId,
 
@@ -1206,7 +1204,7 @@ const importAttendance = async (
                     }
                 }
             } catch (
-                studentError
+            studentError
             ) {
                 console.error(
                     `Failed to process student ${studentData.email}:`,
@@ -1338,7 +1336,7 @@ const getStudents = async (
 
                         status:
                             attendance >=
-                            75
+                                75
                                 ? "Present"
                                 : "Absent",
                     };
