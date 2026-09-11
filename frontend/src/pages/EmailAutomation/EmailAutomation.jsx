@@ -23,6 +23,7 @@ function EmailAutomation() {
   const [selectedSquad, setSelectedSquad] = useState(
     () => localStorage.getItem("selectedSquad") || ""
   );
+  const [attendanceFilter, setAttendanceFilter] = useState("below75");
 
   const fetchAttendanceData = async () => {
     try {
@@ -157,6 +158,24 @@ function EmailAutomation() {
   */
   const [editMessage, setEditMessage] = useState("");
 
+  // Global email template
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateSubject, setTemplateSubject] = useState(
+    "Attendance Warning - Low Attendance"
+  );
+  const [templateMessage, setTemplateMessage] = useState(
+    `Dear {{studentName}},
+
+Your current attendance is {{attendance}}%.
+
+The required attendance percentage is 75%.
+Please make sure to attend your upcoming classes regularly.
+
+Regards,
+{{mentorName}}
+AESA`
+  );
+
   useEffect(() => {
     const getMentor = async () => {
       if (!supabase) return;
@@ -190,11 +209,21 @@ function EmailAutomation() {
     Generate drafts
   */
   const handleGenerateDrafts = () => {
-    const studentsNeedingEmail = attendanceData.filter(
-      (student) =>
-        (!selectedSquad || String(student.squad) === String(selectedSquad)) &&
-        student.attendance < 75
-    );
+    const studentsNeedingEmail = attendanceData.filter((student) => {
+      const matchesSquad =
+        !selectedSquad ||
+        String(student.squad) === String(selectedSquad);
+
+      const attendance = Number(student.attendance || 0);
+
+      const matchesAttendance =
+        attendanceFilter === "below75"
+          ? attendance < 75
+          : attendance >= 75;
+
+      return matchesSquad && matchesAttendance;
+    });
+
 
     const generatedEmails = studentsNeedingEmail.map((student) =>
       generateEmail(student)
@@ -420,6 +449,8 @@ function EmailAutomation() {
 
     setEmailDrafts(updatedEmails);
 
+
+
     const updatedSelectedEmail = updatedEmails.find(
       (email) => email.id === selectedEmail.id
     );
@@ -489,6 +520,35 @@ function EmailAutomation() {
     }
   };
 
+  // ============================================================
+  // GLOBAL EMAIL TEMPLATE
+  // ============================================================
+
+  const handleOpenTemplate = () => {
+    setShowTemplateModal(true);
+  };
+
+  const replaceTemplateVariables = (text, student) => {
+    return text
+      .replaceAll("{{studentName}}", student.name || "")
+      .replaceAll("{{attendance}}", String(student.attendance ?? ""))
+      .replaceAll("{{mentorName}}", mentorName || "Mentor")
+      .replaceAll("{{mentorEmail}}", mentorEmail || "");
+  };
+
+  const handleSaveTemplate = () => {
+    const updatedEmails = emailDrafts.map((email) => ({
+      ...email,
+      subject: replaceTemplateVariables(templateSubject, email),
+      message: replaceTemplateVariables(templateMessage, email),
+    }));
+
+    setEmailDrafts(updatedEmails);
+    setShowTemplateModal(false);
+
+    alert("Email template applied to all students.");
+  };
+
   /*
     Calculate statistics
   */
@@ -513,6 +573,8 @@ function EmailAutomation() {
 
   return (
     <section className="email-automation-page">
+
+
 
       {/* =====================================
           HEADER
@@ -651,28 +713,45 @@ function EmailAutomation() {
 
         <div className="communication-section">
 
+
           <div className="communication-header">
 
             <div>
-              <h2>
-                Communication Method
-              </h2>
+              <h2>Communication Method</h2>
 
               <p>
-                Choose how each attendance
-                alert should be handled.
+                Choose how attendance alerts should be handled.
               </p>
             </div>
 
-            <div className="communication-counts">
+            <div className="communication-right">
 
-              <span className="automatic-count">
-                Automatic: {automaticCount}
-              </span>
+              <div className="communication-counts">
+                <span className="automatic-count">
+                  Automatic: {automaticCount}
+                </span>
 
-              <span className="draft-count">
-                Draft: {draftCount}
-              </span>
+                <span className="draft-count">
+                  Draft: {draftCount}
+                </span>
+              </div>
+
+              <div className="attendance-filter">
+                <label htmlFor="attendance-filter">
+                  Attendance Range
+                </label>
+ 
+                <select
+                  id="attendance-filter"
+                  value={attendanceFilter}
+                  onChange={(event) =>
+                    setAttendanceFilter(event.target.value)
+                  }
+                >
+                  <option value="below75">Below 75%</option>
+                  <option value="above75">75% and Above</option>
+                </select>
+              </div>
 
             </div>
 
@@ -682,18 +761,18 @@ function EmailAutomation() {
 
             <button
               type="button"
-              className="select-automatic-button"
-              onClick={handleSelectAllAutomatic}
+              className="template-button"
+              onClick={handleOpenTemplate}
             >
-              Select All as Automatic
+              Edit Email Template
             </button>
 
             <button
               type="button"
-              className="select-draft-button"
-              onClick={handleSelectAllDraft}
+              className="select-automatic-button"
+              onClick={handleSelectAllAutomatic}
             >
-              Select All as Draft
+              Select All as Automatic
             </button>
 
           </div>
@@ -708,31 +787,8 @@ function EmailAutomation() {
               Send Automatic Emails
             </button>
 
-            <button
-              type="button"
-              className="review-drafts-button"
-              onClick={handleReviewDrafts}
-            >
-              Review Drafts
-            </button>
-
-            <button
-              type="button"
-              className="review-drafts-button"
-              onClick={handleSendReviewedDrafts}
-            >
-              Send Reviewed Drafts
-            </button>
-
-            <button
-              type="button"
-              className="show-all-button"
-              onClick={() => setShowDraftOnly(false)}
-            >
-              Show All Emails
-            </button>
-
           </div>
+
 
         </div>
 
@@ -740,9 +796,7 @@ function EmailAutomation() {
 
       {sendError && <div className="email-send-error">{sendError}</div>}
 
-      {/* =====================================
-          EMAIL LIST
-      ====================================== */}
+
 
       {/* =====================================
     EMAIL LIST
@@ -830,38 +884,7 @@ function EmailAutomation() {
                   {email.status}
                 </div>
 
-                {/* COMMUNICATION */}
 
-                <div className="communication-method">
-
-                  <span>
-                    Communication
-                  </span>
-
-                  <select
-                    value={
-                      communicationMode[email.id] ||
-                      "automatic"
-                    }
-                    onChange={(event) =>
-                      handleCommunicationChange(
-                        email.id,
-                        event.target.value
-                      )
-                    }
-                  >
-
-                    <option value="automatic">
-                      Automatic
-                    </option>
-
-                    <option value="draft">
-                      Draft
-                    </option>
-
-                  </select>
-
-                </div>
 
                 {/* SUBJECT */}
 
@@ -928,6 +951,108 @@ function EmailAutomation() {
         )}
 
       </div>
+
+      {/* =====================================
+    GLOBAL EMAIL TEMPLATE MODAL
+====================================== */}
+
+      {showTemplateModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowTemplateModal(false)}
+        >
+          <div
+            className="email-modal template-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+
+            <div className="modal-header">
+              <div>
+                <div className="page-label">
+                  EMAIL TEMPLATE
+                </div>
+
+                <h2>Edit Email Template</h2>
+              </div>
+
+              <button
+                type="button"
+                className="close-button"
+                onClick={() => setShowTemplateModal(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="template-help">
+              <p>
+                This template will be applied to all generated emails.
+              </p>
+
+              <p>
+                You can use:
+                <strong> {"{{studentName}}"} </strong>
+                <strong> {"{{attendance}}"} </strong>
+                <strong> {"{{mentorName}}"} </strong>
+                <strong> {"{{mentorEmail}}"} </strong>
+              </p>
+            </div>
+
+            <div className="template-form">
+
+              <label htmlFor="template-subject">
+                Subject
+              </label>
+
+              <input
+                id="template-subject"
+                className="edit-input"
+                value={templateSubject}
+                onChange={(event) =>
+                  setTemplateSubject(event.target.value)
+                }
+                placeholder="Email subject"
+              />
+
+              <label htmlFor="template-message">
+                Message
+              </label>
+
+              <textarea
+                id="template-message"
+                className="edit-textarea template-textarea"
+                value={templateMessage}
+                onChange={(event) =>
+                  setTemplateMessage(event.target.value)
+                }
+                placeholder="Write your email template..."
+              />
+
+            </div>
+
+            <div className="modal-actions">
+
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={() => setShowTemplateModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="modal-send-button"
+                onClick={handleSaveTemplate}
+              >
+                Save Template
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* =====================================
           PREVIEW / EDIT MODAL

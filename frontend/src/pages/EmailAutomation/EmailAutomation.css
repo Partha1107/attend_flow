@@ -856,13 +856,172 @@
   color: #6B7280;
 }
 
+/* =========================================================
+   GLOBAL EMAIL TEMPLATE
+========================================================= */
 
+.template-modal {
+  width: min(720px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
+.template-help {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: #f7f7f7;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
 
+.template-help p {
+  margin: 0 0 8px;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.5;
+}
 
+.template-help p:last-child {
+  margin-bottom: 0;
+}
 
+.template-help strong {
+  color: #111;
+  margin-left: 5px;
+}
 
+.template-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
+.template-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.template-textarea {
+  min-height: 260px;
+  resize: vertical;
+}
+
+.template-button {
+  border: 1px solid #111;
+  background: #fff;
+  color: #111;
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.template-button:hover {
+  background: #f3f3f3;
+}
+
+/* Attendance filter on the left */
+.communication-section {
+  position: relative;
+}
+
+.attendance-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: flex-start;
+}
+
+.attendance-filter label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.attendance-filter select {
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  font-size: 14px;
+  cursor: pointer;
+}
+.attendance-filter {
+  justify-content: flex-start;
+  width: 100%;
+  margin-left: 0;
+}
+
+.attendance-filter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.attendance-filter label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.attendance-filter select {
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.communication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.communication-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.communication-counts {
+  display: flex;
+  gap: 10px;
+}
+
+.attendance-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.attendance-filter label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.attendance-filter select {
+  min-width: 145px;
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+}
 
 
 
