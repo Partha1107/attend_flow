@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileSpreadsheet,
@@ -11,7 +11,7 @@ import StudentAttendanceCard from "../../components/StudentAttendanceCard";
 import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 
 const API_URL = import.meta.env.VITE_API_URL;
-
+const IMPORT_DRAFT_KEY = "aesa_attendance_import_draft";
 // ============================================================
 // CONSTANT COLUMNS
 // ============================================================
@@ -318,6 +318,13 @@ function ImportAttendance() {
     useNavigate();
 
   // ==========================================================
+  // RESTORATION FLAG
+  // ==========================================================
+
+  const hasRestoredRef =
+    useRef(false);
+
+  // ==========================================================
   // FILE
   // ==========================================================
 
@@ -385,10 +392,93 @@ function ImportAttendance() {
     setIsImporting,
   ] = useState(false);
 
-  const [
-    importSummary,
-    setImportSummary,
-  ] = useState(null);
+  // ==========================================================
+  // RESTORE DRAFT FROM LOCALSTORAGE
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      hasRestoredRef.current
+    ) {
+      return;
+    }
+
+    try {
+      const savedDraft =
+        localStorage.getItem(
+          IMPORT_DRAFT_KEY
+        );
+
+      if (!savedDraft) {
+        return;
+      }
+
+      const draft =
+        JSON.parse(
+          savedDraft
+        );
+
+      if (
+        !draft ||
+        !Array.isArray(
+          draft.attendanceData
+        ) ||
+        draft.attendanceData.length ===
+          0
+      ) {
+        return;
+      }
+
+      hasRestoredRef.current =
+        true;
+
+      Promise.resolve().then(
+        () => {
+          setFileName(
+            draft.fileName || ""
+          );
+
+          setSemester(
+            draft.semester ||
+            "Sem 1"
+          );
+
+          setPeriodStart(
+            draft.periodStart ||
+            ""
+          );
+
+          setPeriodEnd(
+            draft.periodEnd || ""
+          );
+
+          setAttendanceData(
+            draft.attendanceData ||
+            []
+          );
+
+          if (draft.success) {
+            setSuccess(
+              draft.success
+            );
+          }
+
+          console.log(
+            "AESA: Previous attendance import restored."
+          );
+        }
+      );
+    } catch (err) {
+      console.error(
+        "Failed to restore attendance import:",
+        err
+      );
+
+      localStorage.removeItem(
+        IMPORT_DRAFT_KEY
+      );
+    }
+  }, []);
 
   // ==========================================================
   // FILTER STUDENTS
@@ -467,9 +557,11 @@ function ImportAttendance() {
 
       setSuccess("");
 
-      setImportSummary(null);
-
       setAttendanceData([]);
+
+      localStorage.removeItem(
+        IMPORT_DRAFT_KEY
+      );
 
       // ======================================================
       // EXTRACT PERIOD FROM FILE NAME
@@ -785,17 +877,42 @@ function ImportAttendance() {
         );
 
         // ====================================================
-        // SUCCESS
+        // SAVE IMPORT DRAFT
         // ====================================================
 
         const detectedCount =
           subjectNumbers.length +
-          (hasGrowthHour
-            ? 1
-            : 0);
+          (hasGrowthHour ? 1 : 0);
+
+        const validationMessage =
+          `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`;
+
+        const draft = {
+          fileName: file.name,
+          semester,
+          periodStart:
+            extractedPeriodStart,
+          periodEnd:
+            extractedPeriodEnd,
+          attendanceData:
+            transformedData,
+          success:
+            validationMessage,
+          savedAt:
+            new Date().toISOString(),
+        };
+
+        localStorage.setItem(
+          IMPORT_DRAFT_KEY,
+          JSON.stringify(draft)
+        );
+
+        // ====================================================
+        // SUCCESS
+        // ====================================================
 
         setSuccess(
-          `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`
+          validationMessage
         );
       } catch (err) {
         console.error(
@@ -898,8 +1015,6 @@ function ImportAttendance() {
 
       setSuccess("");
 
-      setImportSummary(null);
-
       try {
         // ======================================================
         // PAYLOAD
@@ -996,10 +1111,6 @@ function ImportAttendance() {
             "Attendance imported successfully."
         );
 
-        setImportSummary(
-          result
-        );
-
         // ======================================================
         // SAVE LAST IMPORT
         // ======================================================
@@ -1018,6 +1129,27 @@ function ImportAttendance() {
           JSON.stringify(
             importDetails
           )
+        );
+
+        // ====================================================
+        // UPDATE DRAFT WITH IMPORT SUMMARY
+        // ====================================================
+
+        localStorage.setItem(
+          IMPORT_DRAFT_KEY,
+          JSON.stringify({
+            fileName,
+            semester,
+            periodStart,
+            periodEnd,
+            attendanceData,
+            success:
+              result.message ||
+              "Attendance imported successfully.",
+            imported: true,
+            importedAt:
+              new Date().toISOString(),
+          })
         );
 
         window.dispatchEvent(
@@ -1128,11 +1260,43 @@ function ImportAttendance() {
           <select
             id="semester"
             value={semester}
-            onChange={(event) =>
+            onChange={(event) => {
+              const newSemester =
+                event.target.value;
+
               setSemester(
-                event.target.value
-              )
-            }
+                newSemester
+              );
+
+              try {
+                const savedDraft =
+                  localStorage.getItem(
+                    IMPORT_DRAFT_KEY
+                  );
+
+                if (savedDraft) {
+                  const draft =
+                    JSON.parse(
+                      savedDraft
+                    );
+
+                  draft.semester =
+                    newSemester;
+
+                  localStorage.setItem(
+                    IMPORT_DRAFT_KEY,
+                    JSON.stringify(
+                      draft
+                    )
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  "Failed to save semester:",
+                  err
+                );
+              }
+            }}
             disabled={isImporting}
           >
             {SEMESTERS.map(
@@ -1305,163 +1469,6 @@ function ImportAttendance() {
         )}
 
       </div>
-
-      {/* ================================================== */}
-      {/* IMPORT SUMMARY */}
-      {/* ================================================== */}
-
-      {importSummary && (
-        <div className="import-summary">
-
-          <h2>
-            Import Summary
-          </h2>
-
-          <div className="summary-period">
-
-            <div>
-              <span>
-                Semester
-              </span>
-
-              <strong>
-                {
-                  importSummary.semester ??
-                  semester
-                }
-              </strong>
-            </div>
-
-            <div>
-              <span>
-                Attendance Period
-              </span>
-
-              <strong>
-                {
-                  importSummary.periodStart ??
-                  periodStart
-                }
-                {" → "}
-                {
-                  importSummary.periodEnd ??
-                  periodEnd
-                }
-              </strong>
-            </div>
-
-          </div>
-
-          <div className="summary-grid">
-
-            <div className="summary-item">
-              <span>
-                Students Created
-              </span>
-
-              <strong>
-                {
-                  importSummary.studentsCreated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Students Updated
-              </span>
-
-              <strong>
-                {
-                  importSummary.studentsUpdated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Subjects Created
-              </span>
-
-              <strong>
-                {
-                  importSummary.subjectsCreated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Existing Subjects
-              </span>
-
-              <strong>
-                {
-                  importSummary.subjectsFound ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Attendance Created
-              </span>
-
-              <strong>
-                {
-                  importSummary.attendanceCreated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Attendance Updated
-              </span>
-
-              <strong>
-                {
-                  importSummary.attendanceUpdated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Growth Hour Created
-              </span>
-
-              <strong>
-                {
-                  importSummary.growthHourCreated ??
-                  0
-                }
-              </strong>
-            </div>
-
-            <div className="summary-item">
-              <span>
-                Growth Hour Updated
-              </span>
-
-              <strong>
-                {
-                  importSummary.growthHourUpdated ??
-                  0
-                }
-              </strong>
-            </div>
-
-          </div>
-
-        </div>
-      )}
 
       {/* ================================================== */}
       {/* EXCEL DATA PREVIEW */}
