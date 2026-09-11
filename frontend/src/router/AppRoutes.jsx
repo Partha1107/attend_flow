@@ -17,7 +17,6 @@ import StudentPage from "../pages/student-page/StudentPage";
 import CommunicationHistory from "../pages/CommunicationHistory/CommunicationHistory";
 import EmailAutomation from "../pages/EmailAutomation/EmailAutomation";
 import NotFound from "../pages/NotFound page/NotFound";
-import Settings from "../pages/Settingspage/Settingspage"
 import MentorProfileSetup from "../pages/Mentor/MentorProfileSetup";
 import ParentEmailImport from "../pages/ParentEmailImport/ParentEmailImport";
 
@@ -58,16 +57,6 @@ function AppRoutes() {
           <Route
             path="import-attendance"
             element={<ImportAttendance />}
-          />
-
-          {/* <Route
-            path="attendance-records"
-            element={<AttendanceRecords />}
-          /> */}
-              
-          <Route
-            path="/settings"
-            element={<Settings />}
           />
 
           <Route

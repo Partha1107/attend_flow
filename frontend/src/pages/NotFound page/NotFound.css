@@ -36,7 +36,7 @@
 .back-dashboard {
   display: inline-block;
   padding: 12px 22px;
-  background: #E00000;
+  background: #F2383F;
   color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
@@ -45,7 +45,7 @@
 }
 
 .back-dashboard:hover {
-  background: #C90000;
+  background: #D92D34;
 }
 
 

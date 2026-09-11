@@ -6,7 +6,6 @@ import {
   LogOut,
   Mail,
   MailPlus,
-  Settings,
   Users,
   X,
 } from "lucide-react";
@@ -44,11 +43,6 @@ const mainItems = [
     label: "Communication History",
     icon: History,
     to: "/communication-history",
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    to: "/settings",
   },
 ];
 

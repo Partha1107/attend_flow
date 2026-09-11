@@ -588,14 +588,7 @@ function Dashboard() {
                             IN FRONT OF NAME */}
 
                         <div className="student-avatar">
-                          {student.name?.trim()
-                            .split(" ")
-                            .map(
-                              (word) =>
-                                word[0]
-                            )
-                            .join("")
-                            .toUpperCase()}
+                          {student.name?.trim().charAt(0).toUpperCase()}
                         </div>
 
                         <strong>
