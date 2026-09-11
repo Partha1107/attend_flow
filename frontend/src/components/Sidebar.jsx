@@ -1,16 +1,17 @@
 import {
+  ChevronDown,
   FileSpreadsheet,
   GraduationCap,
   History,
   LayoutDashboard,
   LogOut,
   Mail,
-  MailPlus,
   Users,
   X,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "./Sidebar.css";
 
 const mainItems = [
@@ -25,19 +26,9 @@ const mainItems = [
     to: "/students",
   },
   {
-    label: "Import Attendance",
-    icon: FileSpreadsheet,
-    to: "/import-attendance",
-  },
-  {
     label: "Email Automation",
     icon: Mail,
     to: "/email-automation",
-  },
-  {
-    label: "Parent Email Import",
-    icon: MailPlus,
-    to: "/parent-email-import",
   },
   {
     label: "Communication History",
@@ -46,17 +37,47 @@ const mainItems = [
   },
 ];
 
-function Sidebar({ open = false, onClose = () => { } }) {
+function Sidebar({ open = false, onClose = () => {} }) {
+  const location = useLocation();
+
+  const isImportPage =
+    location.pathname === "/import-attendance" ||
+    location.pathname === "/parent-email-import";
+
+  const [dataImportOpen, setDataImportOpen] =
+    useState(isImportPage);
+
+  // Automatically open Data Import when visiting
+  // either import page.
+  useEffect(() => {
+    if (isImportPage) {
+      setDataImportOpen(true);
+    }
+  }, [isImportPage]);
+
   return (
-    <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
-      {/* Brand */}
+    <aside
+      className={`sidebar ${
+        open ? "sidebar-open" : ""
+      }`}
+    >
+      {/* ================================================== */}
+      {/* BRAND */}
+      {/* ================================================== */}
+
       <div className="sidebar-brand">
         <div className="brand-mark">
-          <GraduationCap size={24} strokeWidth={2.4} />
+          <GraduationCap
+            size={24}
+            strokeWidth={2.4}
+          />
         </div>
 
         <div className="brand-text">
-          <div className="brand-name">AESA</div>
+          <div className="brand-name">
+            AESA
+          </div>
+
           <div className="brand-subtitle">
             Attendance &amp; Alert
             <br />
@@ -74,27 +95,148 @@ function Sidebar({ open = false, onClose = () => { } }) {
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="sidebar-nav" aria-label="Main navigation">
-        {mainItems.map(({ label, icon: Icon, to }) => (
-          <NavLink
-            key={label}
-            to={to}
-            className={({ isActive }) =>
-              `nav-item ${isActive ? "active" : ""}`
+      {/* ================================================== */}
+      {/* NAVIGATION */}
+      {/* ================================================== */}
+
+      <nav
+        className="sidebar-nav"
+        aria-label="Main navigation"
+      >
+        {/* MAIN ITEMS */}
+        {mainItems.slice(0, 2).map(
+          ({ label, icon: Icon, to }) => (
+            <NavLink
+              key={label}
+              to={to}
+              className={({ isActive }) =>
+                `nav-item ${
+                  isActive ? "active" : ""
+                }`
+              }
+              onClick={onClose}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </NavLink>
+          )
+        )}
+
+        {/* ================================================= */}
+        {/* DATA IMPORT */}
+        {/* ================================================= */}
+
+        <div
+          className={`nav-group ${
+            isImportPage
+              ? "nav-group-active"
+              : ""
+          }`}
+        >
+          <button
+            type="button"
+            className={`nav-item nav-group-button ${
+              isImportPage ? "active-parent" : ""
+            }`}
+            onClick={() =>
+              setDataImportOpen(
+                (previous) => !previous
+              )
             }
-            onClick={onClose}
+            aria-expanded={dataImportOpen}
           >
-            <Icon size={18} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+            <div className="nav-item-left">
+              <FileSpreadsheet size={18} />
+
+              <span>Data Import</span>
+            </div>
+
+            <ChevronDown
+              size={16}
+              className={`nav-chevron ${
+                dataImportOpen
+                  ? "nav-chevron-open"
+                  : ""
+              }`}
+            />
+          </button>
+
+          {/* ================================================= */}
+          {/* SUB MENU */}
+          {/* ================================================= */}
+
+          {dataImportOpen && (
+            <div className="nav-submenu">
+              <NavLink
+                to="/import-attendance"
+                className={({ isActive }) =>
+                  `nav-subitem ${
+                    isActive ? "active" : ""
+                  }`
+                }
+                onClick={onClose}
+              >
+                <FileSpreadsheet size={16} />
+
+                <span>
+                  Attendance Excel
+                </span>
+              </NavLink>
+
+              <NavLink
+                to="/parent-email-import"
+                className={({ isActive }) =>
+                  `nav-subitem ${
+                    isActive ? "active" : ""
+                  }`
+                }
+                onClick={onClose}
+              >
+                <Users size={16} />
+
+                <span>
+                  Parent Contacts
+                </span>
+              </NavLink>
+            </div>
+          )}
+        </div>
+
+        {/* ================================================= */}
+        {/* REMAINING MAIN ITEMS */}
+        {/* ================================================= */}
+
+        {mainItems.slice(2).map(
+          ({ label, icon: Icon, to }) => (
+            <NavLink
+              key={label}
+              to={to}
+              className={({ isActive }) =>
+                `nav-item ${
+                  isActive ? "active" : ""
+                }`
+              }
+              onClick={onClose}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </NavLink>
+          )
+        )}
       </nav>
 
-      {/* Logout at bottom */}
+      {/* ================================================== */}
+      {/* LOGOUT */}
+      {/* ================================================== */}
+
       <div className="sidebar-footer">
-        <NavLink to="/login" className="logout-btn" onClick={onClose}>
+        <NavLink
+          to="/login"
+          className="logout-btn"
+          onClick={onClose}
+        >
           <LogOut size={18} />
+
           <span>Logout</span>
         </NavLink>
       </div>
