@@ -3,6 +3,11 @@ import { supabase } from "../lib/supabase";
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+
+// =====================================================
+// AUTH HEADERS
+// =====================================================
+
 const getAuthHeaders = async () => {
   if (!supabase) {
     throw new Error("Supabase is not configured.");
@@ -27,6 +32,11 @@ const getAuthHeaders = async () => {
   };
 };
 
+
+// =====================================================
+// RESPONSE HANDLER
+// =====================================================
+
 const readResponse = async (response, fallbackMessage) => {
   const result = await response.json();
 
@@ -37,25 +47,57 @@ const readResponse = async (response, fallbackMessage) => {
   return result;
 };
 
+
+// =====================================================
+// GET MENTOR PROFILE
+// =====================================================
+
 export const getMentorProfile = async () => {
-  const response = await fetch(`${API_URL}/api/mentor/profile`, {
-    headers: await getAuthHeaders(),
-  });
+  console.log("🔥 getMentorProfile() START");
 
-  if (response.status === 404) {
-    return { exists: false, profile: null };
-  }
+  const headers = await getAuthHeaders();
 
-  const result = await readResponse(
-    response,
-    "Failed to load mentor profile."
+  console.log(
+    "🔥 AUTH HEADER EXISTS:",
+    !!headers.Authorization
   );
 
+  const response = await fetch(
+    `${API_URL}/api/mentor/profile`,
+    {
+      method: "GET",
+      headers,
+    }
+  );
+
+  console.log(
+    "🔥 PROFILE API STATUS:",
+    response.status
+  );
+
+  const result = await response.json();
+
+  console.log(
+    "🔥 PROFILE API RESPONSE:",
+    result
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to load mentor profile."
+    );
+  }
+
   return {
-    exists: true,
-    profile: result.profile,
+    exists: !!result.profile,
+    profile: result.profile || null,
   };
 };
+
+
+// =====================================================
+// SAVE / UPDATE MENTOR PROFILE
+// =====================================================
 
 export const saveMentorProfile = async ({
   collegeName,
@@ -81,12 +123,16 @@ export const saveMentorProfile = async ({
   );
 };
 
+
+// =====================================================
+// GET MENTOR STUDENTS
+// =====================================================
+
 export const getMentorStudents = async (squad = "") => {
   const query = squad
     ? `?squad=${encodeURIComponent(squad)}`
     : "";
 
-  // Get the current login token
   let headers = await getAuthHeaders();
 
   let response = await fetch(
@@ -97,21 +143,33 @@ export const getMentorStudents = async (squad = "") => {
     }
   );
 
-  // If the token was rejected, refresh the Supabase session once
+  // Refresh token if API returns 401
   if (response.status === 401) {
-    console.warn("Student API returned 401. Refreshing Supabase session...");
+    console.warn(
+      "Student API returned 401. Refreshing Supabase session..."
+    );
 
-    const { data, error } = await supabase.auth.refreshSession();
+    const { data, error } =
+      await supabase.auth.refreshSession();
 
     if (error) {
-      console.error("Supabase session refresh failed:", error);
-      throw new Error("Your login session has expired. Please log in again.");
+      console.error(
+        "Supabase session refresh failed:",
+        error
+      );
+
+      throw new Error(
+        "Your login session has expired. Please log in again."
+      );
     }
 
-    const newToken = data?.session?.access_token;
+    const newToken =
+      data?.session?.access_token;
 
     if (!newToken) {
-      throw new Error("Unable to refresh login session. Please log in again.");
+      throw new Error(
+        "Unable to refresh login session. Please log in again."
+      );
     }
 
     headers = {
@@ -119,7 +177,6 @@ export const getMentorStudents = async (squad = "") => {
       Authorization: `Bearer ${newToken}`,
     };
 
-    // Try the student request again with the new token
     response = await fetch(
       `${API_URL}/api/mentor/dashboard/students${query}`,
       {
@@ -129,13 +186,27 @@ export const getMentorStudents = async (squad = "") => {
     );
   }
 
-  return readResponse(response, "Failed to load students.");
+  return readResponse(
+    response,
+    "Failed to load students."
+  );
 };
 
-export const getMentorEmailAlerts = async () => {
-  const response = await fetch(`${API_URL}/api/attendance/email-alerts`, {
-    headers: await getAuthHeaders(),
-  });
 
-  return readResponse(response, "Failed to load email alert details.");
+// =====================================================
+// GET EMAIL ALERTS
+// =====================================================
+
+export const getMentorEmailAlerts = async () => {
+  const response = await fetch(
+    `${API_URL}/api/attendance/email-alerts`,
+    {
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to load email alert details."
+  );
 };
