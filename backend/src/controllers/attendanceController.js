@@ -30,7 +30,20 @@ const cleanString = (value) => {
 
     return String(value).trim();
 };
+// ============================================================
+// COMMAND LINE LOGGER
+// ============================================================
 
+const cliLog = (message = "") => {
+    console.log(`[AESA] ${message}`);
+};
+
+const cliSection = (title) => {
+    console.log("");
+    console.log("================================================");
+    console.log(`[AESA] ${title}`);
+    console.log("================================================");
+};
 // ============================================================
 // EXTRACT ATTENDANCE PERIOD FROM FILE NAME
 // ============================================================
@@ -650,7 +663,7 @@ const createOrUpdateAttendance =
             toNumber(
                 attendance.sessionsAbsent
             );
-            
+
         const attendancePercentage =
             toNumber(
                 attendance.attendancePercentage
@@ -1073,17 +1086,7 @@ const importAttendance = async (
     res
 ) => {
     try {
-        console.log(
-            "================================================"
-        );
-
-        console.log(
-            "ATTENDANCE IMPORT STARTED"
-        );
-
-        console.log(
-            "================================================"
-        );
+        cliSection("ATTENDANCE IMPORT STARTED");
 
         // ======================================================
         // REQUEST DATA
@@ -1099,29 +1102,9 @@ const importAttendance = async (
         // DEBUG
         // ======================================================
 
-        console.log(
-            "REQUEST BODY:",
-            JSON.stringify(
-                req.body,
-                null,
-                2
-            )
-        );
-
-        console.log(
-            "File Name:",
-            fileName
-        );
-
-        console.log(
-            "Semester:",
-            semester
-        );
-
-        console.log(
-            "Students:",
-            students?.length
-        );
+        cliLog(`File      : ${fileName || "N/A"}`);
+        cliLog(`Semester  : ${semester || "N/A"}`);
+        cliLog(`Students  : ${students?.length || 0}`);
 
         // ======================================================
         // VALIDATE FILE NAME
@@ -1157,12 +1140,7 @@ const importAttendance = async (
             periodEnd,
         } = attendancePeriod;
 
-        console.log(
-            "Extracted Period:",
-            periodStart,
-            "→",
-            periodEnd
-        );
+        cliLog(`Period    : ${periodStart} → ${periodEnd}`);
 
         // ======================================================
         // VALIDATE SEMESTER
@@ -1284,17 +1262,13 @@ const importAttendance = async (
             getExistingSubjectsByIds(subjectIds),
         ]);
 
-        console.log(
-            `Existing students loaded: ${existingStudentsByEmail.size}`
+        cliLog(
+            `Existing students loaded : ${existingStudentsByEmail.size}`
         );
 
-        console.log(
-            `Existing subjects loaded: ${existingSubjectsById.size}`
+        cliLog(
+            `Existing subjects loaded : ${existingSubjectsById.size}`
         );
-
-        // ======================================================
-        // PROCESS STUDENTS
-        // ======================================================
 
         // ========================================================
         // BULK UPSERT STUDENTS
@@ -1549,8 +1523,12 @@ const importAttendance = async (
         const dedupedAttendanceRows =
             dedupeAttendanceRows(attendanceRows);
 
-        console.log(
-            `Attendance rows: ${attendanceRows.length} → ${dedupedAttendanceRows.length} after deduplication`
+        cliLog(
+            `Attendance rows      : ${attendanceRows.length}`
+        );
+
+        cliLog(
+            `After deduplication   : ${dedupedAttendanceRows.length}`
         );
 
         if (dedupedAttendanceRows.length > 0) {
@@ -1568,8 +1546,8 @@ const importAttendance = async (
                 );
             }
 
-            console.log(
-                `Bulk attendance processed: ${attendanceCount} records`
+            cliLog(
+                `Attendance processed  : ${attendanceCount} records`
             );
         }
 
@@ -1607,8 +1585,8 @@ const importAttendance = async (
                 );
             }
 
-            console.log(
-                `Overall attendance updated for ${dedupedOverallAttendanceRows.length} students.`
+            cliLog(
+                `Overall attendance    : ${dedupedOverallAttendanceRows.length} students updated`
             );
         }
 
@@ -1616,17 +1594,26 @@ const importAttendance = async (
         // SUCCESS RESPONSE
         // ========================================================
 
-        console.log(
-            "================================================"
-        );
+        cliSection("ATTENDANCE IMPORT COMPLETED");
 
-        console.log(
-            "ATTENDANCE IMPORT COMPLETED"
+        cliLog(`File              : ${fileName}`);
+        cliLog(`Semester          : ${semester}`);
+        cliLog(`Period            : ${periodStart} → ${periodEnd}`);
+        cliLog(`Students created  : ${studentsCreated}`);
+        cliLog(`Students updated  : ${studentsUpdated}`);
+        cliLog(`Subjects created  : ${subjectsCreated}`);
+        cliLog(`Subjects found    : ${subjectsFound}`);
+        cliLog(`Attendance rows   : ${attendanceRows.length}`);
+        cliLog(
+            `Growth Hour rows  : ${attendanceRows.filter(
+                (row) => row.attendance_type === "growth_hour"
+            ).length
+            }`
         );
+        cliLog(`Skipped students  : ${skippedStudents}`);
+        cliLog(`Skipped subjects  : ${skippedSubjects}`);
 
-        console.log(
-            "================================================"
-        );
+        console.log("================================================");
 
         return res.status(200).json({
             success: true,
