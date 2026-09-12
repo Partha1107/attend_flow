@@ -72,14 +72,15 @@ function Sidebar({ open = false, onClose = () => { } }) {
           JSON.stringify(result?.profile, null, 2)
         );
 
+        const role = result?.profile?.job_role;
+
         console.log(
-          "SIDEBAR JOB ROLE:",
-          result?.profile?.job_role
+          "🔥 ROLE FROM API:",
+          role
         );
 
-        setJobRole(
-          result?.profile?.job_role || null
-        );
+        setJobRole(role || null);
+
       } catch (error) {
         console.error(
           "Failed to load mentor role:",
@@ -291,7 +292,7 @@ function Sidebar({ open = false, onClose = () => { } }) {
             <ShieldCheck size={18} />
 
             <span>
-              Manager Profile
+              Manager Settings
             </span>
           </NavLink>
         )}
