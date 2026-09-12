@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState , useEffect} from "react";
+import { getMentorRole } from "../api/mentor";
 
-import { getMentorProfile } from "../api/mentor";
 import "./Sidebar.css";
 
 const mainItems = [
@@ -43,7 +43,6 @@ const mainItems = [
 function Sidebar({ open = false, onClose = () => { } }) {
   const location = useLocation();
 
-  const [jobRole, setJobRole] = useState(null);
 
   const isImportPage =
     location.pathname === "/import-attendance" ||
@@ -56,31 +55,20 @@ function Sidebar({ open = false, onClose = () => { } }) {
   // LOAD MENTOR ROLE
   // ============================================================
 
+  const [jobRole, setJobRole] = useState(null);
+
   useEffect(() => {
     let mounted = true;
 
-    const loadMentorRole = async () => {
+    const loadRole = async () => {
       try {
-        const result = await getMentorProfile();
+        const result = await getMentorRole();
 
-        if (!mounted) {
-          return;
+        console.log("SIDEBAR ROLE:", result?.jobRole);
+
+        if (mounted) {
+          setJobRole(result?.jobRole || "mentor");
         }
-
-        console.log(
-          "SIDEBAR PROFILE:",
-          JSON.stringify(result?.profile, null, 2)
-        );
-
-        const role = result?.profile?.job_role;
-
-        console.log(
-          "🔥 ROLE FROM API:",
-          role
-        );
-
-        setJobRole(role || null);
-
       } catch (error) {
         console.error(
           "Failed to load mentor role:",
@@ -93,24 +81,15 @@ function Sidebar({ open = false, onClose = () => { } }) {
       }
     };
 
-    void loadMentorRole();
+    void loadRole();
 
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Automatically open Data Import when visiting
-  // either import page.
-  useEffect(() => {
-    if (isImportPage) {
-      setDataImportOpen(true);
-    }
-  }, [isImportPage]);
-
   const isCampusManager =
     jobRole === "campus_manager";
-
   return (
     <aside
       className={`sidebar ${open ? "sidebar-open" : ""

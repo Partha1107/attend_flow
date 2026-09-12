@@ -49,49 +49,42 @@ const readResponse = async (response, fallbackMessage) => {
 
 
 // =====================================================
-// GET MENTOR PROFILE
+// GET MENTOR ROLE
 // =====================================================
 
-export const getMentorProfile = async () => {
-  console.log("🔥 getMentorProfile() START");
-
-  const headers = await getAuthHeaders();
-
+export const getMentorRole = async () => {
   console.log(
-    "🔥 AUTH HEADER EXISTS:",
-    !!headers.Authorization
+    "🔥 ROLE API URL:",
+    `${API_URL}/api/mentor/role`
   );
 
   const response = await fetch(
-    `${API_URL}/api/mentor/profile`,
+    `${API_URL}/api/mentor/role`,
     {
       method: "GET",
-      headers,
+      headers: await getAuthHeaders(),
     }
   );
 
   console.log(
-    "🔥 PROFILE API STATUS:",
+    "🔥 ROLE API STATUS:",
     response.status
   );
 
   const result = await response.json();
 
   console.log(
-    "🔥 PROFILE API RESPONSE:",
+    "🔥 ROLE API RESPONSE:",
     result
   );
 
   if (!response.ok) {
     throw new Error(
-      result.message || "Failed to load mentor profile."
+      result.message || "Failed to load mentor role."
     );
   }
 
-  return {
-    exists: !!result.profile,
-    profile: result.profile || null,
-  };
+  return result;
 };
 
 
