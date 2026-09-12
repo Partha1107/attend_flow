@@ -57,14 +57,28 @@ export const getMentorProfile = async () => {
   };
 };
 
-export const saveMentorProfile = async ({ collegeName, squad }) => {
-  const response = await fetch(`${API_URL}/api/mentor/profile`, {
-    method: "POST",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify({ collegeName, squad }),
-  });
+export const saveMentorProfile = async ({
+  collegeName,
+  squad,
+  jobRole,
+}) => {
+  const response = await fetch(
+    `${API_URL}/api/mentor/profile`,
+    {
+      method: "PUT",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({
+        collegeName,
+        squad,
+        jobRole,
+      }),
+    }
+  );
 
-  return readResponse(response, "Failed to save mentor profile.");
+  return readResponse(
+    response,
+    "Failed to save mentor profile."
+  );
 };
 
 export const getMentorStudents = async (squad = "") => {

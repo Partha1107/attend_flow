@@ -7,10 +7,13 @@ import "./MentorProfileSetup.css";
 
 const MentorProfileSetup = () => {
   const navigate = useNavigate();
+
   const [mentorName, setMentorName] = useState("");
   const [mentorEmail, setMentorEmail] = useState("");
   const [collegeName, setCollegeName] = useState("");
   const [squad, setSquad] = useState("");
+  const [jobRole, setJobRole] = useState("mentor");
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -45,6 +48,7 @@ const MentorProfileSetup = () => {
           user.email?.split("@")[0] ||
           "Mentor"
       );
+
       setMentorEmail(user.email || "");
       setLoading(false);
     };
@@ -70,16 +74,26 @@ const MentorProfileSetup = () => {
       return;
     }
 
+    if (!jobRole) {
+      setError("Please select your job role.");
+      return;
+    }
+
     try {
       setSaving(true);
+
       await saveMentorProfile({
         collegeName: collegeName.trim(),
         squad: squad.trim(),
+        jobRole,
       });
+
       navigate("/dashboard", { replace: true });
     } catch (saveError) {
       console.error("Profile save error:", saveError);
-      setError(saveError.message || "Failed to save your profile.");
+      setError(
+        saveError.message || "Failed to save your profile."
+      );
     } finally {
       setSaving(false);
     }
@@ -102,50 +116,102 @@ const MentorProfileSetup = () => {
           <div className="mentor-avatar">
             {mentorName.charAt(0).toUpperCase()}
           </div>
+
           <div>
             <h1>Complete your profile</h1>
             <p>Welcome, {mentorName}</p>
           </div>
         </div>
 
-        <div className="mentor-email">{mentorEmail}</div>
+        <div className="mentor-email">
+          {mentorEmail}
+        </div>
 
         <form onSubmit={handleSubmit}>
+          {/* COLLEGE NAME */}
           <div className="form-group">
-            <label htmlFor="collegeName">College Name</label>
+            <label htmlFor="collegeName">
+              College Name
+            </label>
+
             <input
               id="collegeName"
               type="text"
               value={collegeName}
-              onChange={(event) => setCollegeName(event.target.value)}
+              onChange={(event) =>
+                setCollegeName(event.target.value)
+              }
               placeholder="Enter your college name"
               autoComplete="organization"
               disabled={saving}
             />
           </div>
 
+          {/* SQUAD */}
           <div className="form-group">
-            <label htmlFor="squad">Squad</label>
+            <label htmlFor="squad">
+              Squad
+            </label>
+
             <select
               id="squad"
               value={squad}
-              onChange={(event) => setSquad(event.target.value)}
+              onChange={(event) =>
+                setSquad(event.target.value)
+              }
               disabled={saving}
             >
-              <option value="">Select your squad</option>
-              {Array.from({ length: 5 }, (_, index) => String(138 + index)).map(
-                (value) => (
-                  <option key={value} value={value}>
-                    Squad {value}
-                  </option>
-                )
-              )}
+              <option value="">
+                Select your squad
+              </option>
+
+              {Array.from(
+                { length: 5 },
+                (_, index) => String(138 + index)
+              ).map((value) => (
+                <option key={value} value={value}>
+                  Squad {value}
+                </option>
+              ))}
             </select>
           </div>
 
-          {error && <div className="mentor-setup-error">{error}</div>}
+          {/* JOB ROLE */}
+          <div className="form-group">
+            <label htmlFor="jobRole">
+              Job Role
+            </label>
 
-          <button type="submit" disabled={saving}>
+            <select
+              id="jobRole"
+              value={jobRole}
+              onChange={(event) =>
+                setJobRole(event.target.value)
+              }
+              disabled={saving}
+            >
+              <option value="mentor">
+                Mentor
+              </option>
+
+              <option value="campus_manager">
+                Campus Manager
+              </option>
+            </select>
+          </div>
+
+          {/* ERROR */}
+          {error && (
+            <div className="mentor-setup-error">
+              {error}
+            </div>
+          )}
+
+          {/* SUBMIT */}
+          <button
+            type="submit"
+            disabled={saving}
+          >
             {saving ? "Saving..." : "Continue"}
           </button>
         </form>
