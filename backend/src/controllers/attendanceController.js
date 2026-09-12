@@ -61,86 +61,52 @@ const extractAttendancePeriodFromFileName = (
 };
 
 // ============================================================
-// CALCULATE ATTENDANCE BY STUDENT
+// CALCULATE OVERALL ATTENDANCE FROM IMPORT
 // ============================================================
 
-const calculateAttendanceByStudent = (
-    records
-) => {
-    const totals = new Map();
+const calculateOverallAttendanceFromImport = (studentData) => {
+    let totalAttended = 0;
+    let totalConducted = 0;
 
-    for (const record of records || []) {
-        if (!record.student_id) {
-            continue;
+    // 7 normal subjects
+    if (Array.isArray(studentData?.subjects)) {
+        for (const subject of studentData.subjects) {
+            totalAttended +=
+                toNumber(subject?.sessionsAttended);
+
+            totalConducted +=
+                toNumber(subject?.sessionsConducted);
         }
-
-        const current =
-            totals.get(record.student_id) || {
-                conducted: 0,
-                attended: 0,
-            };
-
-        current.conducted += toNumber(
-            record.sessions_conducted
-        );
-
-        current.attended += toNumber(
-            record.sessions_attended
-        );
-
-        totals.set(
-            record.student_id,
-            current
-        );
     }
 
-    return totals;
-};
+    // Growth Hour
+    if (studentData?.growthHour) {
+        totalAttended +=
+            toNumber(
+                studentData.growthHour?.sessionsAttended
+            );
 
-// ============================================================
-// GET ATTENDANCE PERCENTAGE
-// ============================================================
-
-const getAttendancePercentage = (
-    total
-) => {
-    if (
-        !total ||
-        total.conducted <= 0
-    ) {
-        return 0;
+        totalConducted +=
+            toNumber(
+                studentData.growthHour?.sessionsConducted
+            );
     }
 
-    return Number(
-        (
-            (total.attended /
-                total.conducted) *
-            100
-        ).toFixed(2)
-    );
-};
+    const attendancePercentage =
+        totalConducted > 0
+            ? Number(
+                (
+                    (totalAttended / totalConducted) *
+                    100
+                ).toFixed(2)
+            )
+            : 0;
 
-// ============================================================
-// GET ATTENDANCE TOTALS
-// ============================================================
-
-const getAttendanceTotals = async () => {
-    const {
-        data,
-        error,
-    } = await supabase
-        .from("attendance")
-        .select(
-            "student_id, sessions_conducted, sessions_attended"
-        );
-
-    if (error) {
-        throw error;
-    }
-
-    return calculateAttendanceByStudent(
-        data
-    );
+    return {
+        totalAttended,
+        totalConducted,
+        attendancePercentage,
+    };
 };
 
 // ============================================================
@@ -825,6 +791,280 @@ const createOrUpdateAttendance =
     };
 
 // ============================================================
+// BULK FETCH EXISTING STUDENTS
+// ============================================================
+
+const getExistingStudentsByEmails = async (emails) => {
+    const uniqueEmails = [
+        ...new Set(
+            emails
+                .map((email) => cleanString(email))
+                .filter(Boolean)
+        ),
+    ];
+
+    if (uniqueEmails.length === 0) {
+        return new Map();
+    }
+
+    const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .in("email", uniqueEmails);
+
+    if (error) {
+        throw new Error(
+            `Failed to fetch existing students: ${error.message}`
+        );
+    }
+
+    return new Map(
+        (data || []).map((student) => [
+            cleanString(student.email),
+            student,
+        ])
+    );
+};
+
+// ============================================================
+// BULK FETCH EXISTING SUBJECTS
+// ============================================================
+
+const getExistingSubjectsByIds = async (subjectIds) => {
+    const uniqueSubjectIds = [
+        ...new Set(
+            subjectIds
+                .map((id) => cleanString(id))
+                .filter(Boolean)
+        ),
+    ];
+
+    if (uniqueSubjectIds.length === 0) {
+        return new Map();
+    }
+
+    const { data, error } = await supabase
+        .from("subjects")
+        .select("*")
+        .in("id", uniqueSubjectIds);
+
+    if (error) {
+        throw new Error(
+            `Failed to fetch existing subjects: ${error.message}`
+        );
+    }
+
+    return new Map(
+        (data || []).map((subject) => [
+            cleanString(subject.id),
+            subject,
+        ])
+    );
+};
+
+// ============================================================
+// BULK UPSERT STUDENTS
+// ============================================================
+
+const bulkUpsertStudents = async (
+    students,
+    existingStudentsByEmail
+) => {
+    const rows = [];
+    let studentsCreated = 0;
+    let studentsUpdated = 0;
+
+    for (const studentData of students) {
+        const email = cleanString(studentData.email);
+
+        if (!email) {
+            continue;
+        }
+
+        const existingStudent =
+            existingStudentsByEmail.get(email);
+
+        const parentName = cleanString(
+            studentData.parent_name ||
+            studentData.parentName
+        );
+
+        const parentEmail = cleanString(
+            studentData.parent_email ||
+            studentData.parentEmail
+        );
+
+        const parentPhone = cleanString(
+            studentData.parent_phone ||
+            studentData.parentPhone
+        );
+
+        rows.push({
+            ...(existingStudent?.id
+                ? { id: existingStudent.id }
+                : {}),
+
+            email,
+
+            name: cleanString(studentData.name),
+
+            squad: cleanString(studentData.squad),
+
+            parent_name:
+                parentName ||
+                existingStudent?.parent_name ||
+                null,
+
+            parent_email:
+                parentEmail ||
+                existingStudent?.parent_email ||
+                null,
+
+            parent_phone:
+                parentPhone ||
+                existingStudent?.parent_phone ||
+                null,
+
+            updated_at:
+                new Date().toISOString(),
+        });
+
+        if (existingStudent) {
+            studentsUpdated++;
+        } else {
+            studentsCreated++;
+        }
+    }
+
+    if (rows.length === 0) {
+        return {
+            students: [],
+            studentsCreated,
+            studentsUpdated,
+        };
+    }
+
+    const { data, error } = await supabase
+        .from("students")
+        .upsert(rows, {
+            onConflict: "email",
+        })
+        .select();
+
+    if (error) {
+        throw new Error(
+            `Failed to bulk upsert students: ${error.message}`
+        );
+    }
+
+    return {
+        students: data || [],
+        studentsCreated,
+        studentsUpdated,
+    };
+};
+
+// ============================================================
+// BULK UPSERT SUBJECTS
+// ============================================================
+
+const bulkUpsertSubjects = async (
+    students,
+    semester,
+    existingSubjectsById
+) => {
+    const subjectMap = new Map();
+
+    for (const studentData of students) {
+        const subjects = Array.isArray(
+            studentData.subjects
+        )
+            ? studentData.subjects
+            : [];
+
+        for (const subjectData of subjects) {
+            const id = cleanString(subjectData.id);
+            const name = cleanString(subjectData.name);
+
+            if (!id || !name) {
+                continue;
+            }
+
+            subjectMap.set(id, {
+                id,
+                name,
+                semester,
+            });
+        }
+    }
+
+    const rows = [...subjectMap.values()];
+
+    if (rows.length === 0) {
+        return {
+            subjects: [],
+            subjectsCreated: 0,
+            subjectsFound: 0,
+        };
+    }
+
+    let subjectsCreated = 0;
+    let subjectsFound = 0;
+
+    for (const subject of rows) {
+        if (existingSubjectsById.has(subject.id)) {
+            subjectsFound++;
+        } else {
+            subjectsCreated++;
+        }
+    }
+
+    const { data, error } = await supabase
+        .from("subjects")
+        .upsert(rows, {
+            onConflict: "id",
+        })
+        .select();
+
+    if (error) {
+        throw new Error(
+            `Failed to bulk upsert subjects: ${error.message}`
+        );
+    }
+
+    return {
+        subjects: data || [],
+        subjectsCreated,
+        subjectsFound,
+    };
+};
+
+// ============================================================
+// DEDUPLICATE ATTENDANCE ROWS
+// ============================================================
+
+const dedupeAttendanceRows = (rows) => {
+    const map = new Map();
+
+    for (const row of rows) {
+        const key = [
+            row.student_id,
+            row.attendance_type,
+            row.semester,
+            row.period_start,
+            row.period_end,
+            row.attendance_type === "growth_hour"
+                ? "growth_hour"
+                : row.subject_id,
+        ].join("|");
+
+        map.set(key, row);
+    }
+
+    return [...map.values()];
+};
+
+// ============================================================
 // IMPORT ATTENDANCE
 // ============================================================
 
@@ -1017,9 +1257,86 @@ const importAttendance = async (
 
         let skippedSubjects = 0;
 
+        const overallAttendanceRows = [];
+        const attendanceRows = [];
+
+        // ========================================================
+        // BULK LOAD EXISTING STUDENTS + SUBJECTS
+        // ========================================================
+
+        const studentEmails = students.map((student) =>
+            cleanString(student.email)
+        );
+
+        const subjectIds = students.flatMap((student) =>
+            Array.isArray(student.subjects)
+                ? student.subjects.map((subject) =>
+                    cleanString(subject.id)
+                )
+                : []
+        );
+
+        const [
+            existingStudentsByEmail,
+            existingSubjectsById,
+        ] = await Promise.all([
+            getExistingStudentsByEmails(studentEmails),
+            getExistingSubjectsByIds(subjectIds),
+        ]);
+
+        console.log(
+            `Existing students loaded: ${existingStudentsByEmail.size}`
+        );
+
+        console.log(
+            `Existing subjects loaded: ${existingSubjectsById.size}`
+        );
+
         // ======================================================
         // PROCESS STUDENTS
         // ======================================================
+
+        // ========================================================
+        // BULK UPSERT STUDENTS
+        // ========================================================
+
+        const bulkStudentResult =
+            await bulkUpsertStudents(
+                students,
+                existingStudentsByEmail
+            );
+
+        studentsCreated =
+            bulkStudentResult.studentsCreated;
+
+        studentsUpdated =
+            bulkStudentResult.studentsUpdated;
+
+        const studentMap = new Map(
+            bulkStudentResult.students.map(
+                (student) => [
+                    cleanString(student.email),
+                    student,
+                ]
+            )
+        );
+
+        // ========================================================
+        // BULK UPSERT SUBJECTS
+        // ========================================================
+
+        const bulkSubjectResult =
+            await bulkUpsertSubjects(
+                students,
+                semester,
+                existingSubjectsById
+            );
+
+        subjectsCreated =
+            bulkSubjectResult.subjectsCreated;
+
+        subjectsFound =
+            bulkSubjectResult.subjectsFound;
 
         for (
             const studentData of students
@@ -1044,28 +1361,19 @@ const importAttendance = async (
                 // STUDENT
                 // ==================================================
 
-                const studentResult =
-                    await createOrUpdateStudent(
-                        studentData
+                const student = studentMap.get(email);
+
+                if (!student) {
+                    console.warn(
+                        `Student not found after bulk upsert: ${email}`
                     );
 
-                const student =
-                    studentResult.student;
-
-                if (
-                    studentResult.created
-                ) {
-                    studentsCreated++;
-                }
-
-                if (
-                    studentResult.updated
-                ) {
-                    studentsUpdated++;
+                    skippedStudents++;
+                    continue;
                 }
 
                 console.log(
-                    `Student processed: ${email}`
+                    `Student loaded from bulk result: ${email}`
                 );
 
                 // ==================================================
@@ -1109,58 +1417,41 @@ const importAttendance = async (
                     // SUBJECT
                     // ----------------------------------------------
 
-                    const subjectResult =
-                        await createOrUpdateSubject({
-                            id: subjectId,
-
-                            name: subjectName,
-
-                            semester,
-                        });
-
-                    if (
-                        subjectResult.created
-                    ) {
-                        subjectsCreated++;
-                    } else {
-                        subjectsFound++;
-                    }
+                    // Subject already bulk upserted, skip individual queries
 
                     // ----------------------------------------------
                     // ATTENDANCE
                     // ----------------------------------------------
 
-                    const attendanceResult =
-                        await createOrUpdateAttendance({
-                            studentId:
-                                student.id,
+                    attendanceRows.push({
+                        student_id: student.id,
+                        subject_id: subjectId,
+                        attendance_type: "subject",
+                        semester,
+                        period_start: periodStart,
+                        period_end: periodEnd,
 
-                            subjectId,
+                        sessions_conducted:
+                            toNumber(subjectData.sessionsConducted),
 
-                            attendanceType:
-                                "subject",
+                        sessions_attended:
+                            toNumber(subjectData.sessionsAttended),
 
-                            semester,
+                        sessions_absent:
+                            toNumber(subjectData.sessionsAbsent),
 
-                            periodStart,
+                        attendance_percentage:
+                            toNumber(subjectData.attendancePercentage),
 
-                            periodEnd,
+                        sessions_marked_od:
+                            toNumber(subjectData.sessionsMarkedOD),
 
-                            attendance:
-                                subjectData,
-                        });
+                        sessions_medical_leave:
+                            toNumber(subjectData.sessionsMedicalLeave),
 
-                    if (
-                        attendanceResult.created
-                    ) {
-                        attendanceCreated++;
-                    }
-
-                    if (
-                        attendanceResult.updated
-                    ) {
-                        attendanceUpdated++;
-                    }
+                        sessions_applied_leave:
+                            toNumber(subjectData.sessionsAppliedLeave),
+                    });
                 }
 
                 // ==================================================
@@ -1170,39 +1461,75 @@ const importAttendance = async (
                 if (
                     studentData.growthHour
                 ) {
-                    const growthResult =
-                        await createOrUpdateAttendance({
-                            studentId:
-                                student.id,
+                    attendanceRows.push({
+                        student_id: student.id,
+                        subject_id: null,
+                        attendance_type: "growth_hour",
+                        semester,
+                        period_start: periodStart,
+                        period_end: periodEnd,
 
-                            subjectId:
-                                null,
+                        sessions_conducted:
+                            toNumber(
+                                studentData.growthHour.sessionsConducted
+                            ),
 
-                            attendanceType:
-                                "growth_hour",
+                        sessions_attended:
+                            toNumber(
+                                studentData.growthHour.sessionsAttended
+                            ),
 
-                            semester,
+                        sessions_absent:
+                            toNumber(
+                                studentData.growthHour.sessionsAbsent
+                            ),
 
-                            periodStart,
+                        attendance_percentage:
+                            toNumber(
+                                studentData.growthHour.attendancePercentage
+                            ),
 
-                            periodEnd,
+                        sessions_marked_od:
+                            toNumber(
+                                studentData.growthHour.sessionsMarkedOD
+                            ),
 
-                            attendance:
-                                studentData.growthHour,
-                        });
+                        sessions_medical_leave:
+                            toNumber(
+                                studentData.growthHour.sessionsMedicalLeave
+                            ),
 
-                    if (
-                        growthResult.created
-                    ) {
-                        growthHourCreated++;
-                    }
-
-                    if (
-                        growthResult.updated
-                    ) {
-                        growthHourUpdated++;
-                    }
+                        sessions_applied_leave:
+                            toNumber(
+                                studentData.growthHour.sessionsAppliedLeave
+                            ),
+                    });
                 }
+
+                // ==================================================
+                // CALCULATE OVERALL ATTENDANCE AFTER ALL PROCESSING
+                // ==================================================
+
+                const overall =
+                    calculateOverallAttendanceFromImport(
+                        studentData
+                    );
+
+                overallAttendanceRows.push({
+                    student_id: student.id,
+
+                    total_sessions_attended:
+                        overall.totalAttended,
+
+                    total_sessions_conducted:
+                        overall.totalConducted,
+
+                    attendance_percentage:
+                        overall.attendancePercentage,
+
+                    updated_at:
+                        new Date().toISOString(),
+                });
             } catch (
             studentError
             ) {
@@ -1213,6 +1540,76 @@ const importAttendance = async (
 
                 skippedStudents++;
             }
+        }
+
+        // ========================================================
+        // BULK ATTENDANCE UPSERT
+        // ========================================================
+
+        const dedupedAttendanceRows =
+            dedupeAttendanceRows(attendanceRows);
+
+        console.log(
+            `Attendance rows: ${attendanceRows.length} → ${dedupedAttendanceRows.length} after deduplication`
+        );
+
+        if (dedupedAttendanceRows.length > 0) {
+            const { data: attendanceCount, error } =
+                await supabase.rpc(
+                    "upsert_attendance_bulk",
+                    {
+                        p_rows: dedupedAttendanceRows,
+                    }
+                );
+
+            if (error) {
+                throw new Error(
+                    `Failed to bulk upsert attendance: ${error.message}`
+                );
+            }
+
+            console.log(
+                `Bulk attendance processed: ${attendanceCount} records`
+            );
+        }
+
+        // ========================================================
+        // DEDUPLICATE OVERALL ATTENDANCE ROWS
+        // ========================================================
+
+        const dedupedOverallAttendanceRows = [
+            ...new Map(
+                overallAttendanceRows.map((row) => [
+                    row.student_id,
+                    row,
+                ])
+            ).values(),
+        ];
+
+        // ========================================================
+        // UPDATE OVERALL ATTENDANCE
+        // ========================================================
+
+        if (dedupedOverallAttendanceRows.length > 0) {
+            const { error: overallAttendanceError } =
+                await supabase
+                    .from("overall_attendance")
+                    .upsert(
+                        dedupedOverallAttendanceRows,
+                        {
+                            onConflict: "student_id",
+                        }
+                    );
+
+            if (overallAttendanceError) {
+                throw new Error(
+                    `Failed to update overall attendance: ${overallAttendanceError.message}`
+                );
+            }
+
+            console.log(
+                `Overall attendance updated for ${dedupedOverallAttendanceRows.length} students.`
+            );
         }
 
         // ========================================================
@@ -1253,13 +1650,15 @@ const importAttendance = async (
 
             subjectsFound,
 
-            attendanceCreated,
+            attendanceProcessed:
+                attendanceRows.length,
 
-            attendanceUpdated,
-
-            growthHourCreated,
-
-            growthHourUpdated,
+            growthHourProcessed:
+                attendanceRows.filter(
+                    (row) =>
+                        row.attendance_type ===
+                        "growth_hour"
+                ).length,
 
             skippedStudents,
 
@@ -1302,12 +1701,17 @@ const getStudents = async (
     res
 ) => {
     try {
-        const {
-            data,
-            error,
-        } = await supabase
+        const { data, error } = await supabase
             .from("students")
-            .select("*")
+            .select(`
+                *,
+                overall_attendance (
+                    total_sessions_attended,
+                    total_sessions_conducted,
+                    attendance_percentage,
+                    updated_at
+                )
+            `)
             .order("name", {
                 ascending: true,
             });
@@ -1316,34 +1720,41 @@ const getStudents = async (
             throw error;
         }
 
-        const totals =
-            await getAttendanceTotals();
+        const students = (data || []).map((student) => {
+            const overall =
+                Array.isArray(student.overall_attendance)
+                    ? student.overall_attendance[0]
+                    : student.overall_attendance;
 
-        const students =
-            (data || []).map(
-                (student) => {
-                    const attendance =
-                        getAttendancePercentage(
-                            totals.get(
-                                student.id
-                            )
-                        );
-
-                    return {
-                        ...student,
-
-                        attendance,
-
-                        status:
-                            attendance >=
-                                75
-                                ? "Present"
-                                : "Absent",
-                    };
-                }
+            const attendance = Number(
+                overall?.attendance_percentage || 0
             );
 
-        res.json({
+            return {
+                ...student,
+
+                // Keep the existing frontend property
+                attendance,
+
+                // Optional: useful if you need these later
+                totalSessionsAttended:
+                    Number(
+                        overall?.total_sessions_attended || 0
+                    ),
+
+                totalSessionsConducted:
+                    Number(
+                        overall?.total_sessions_conducted || 0
+                    ),
+
+                status:
+                    attendance >= 75
+                        ? "Present"
+                        : "Absent",
+            };
+        });
+
+        return res.json({
             success: true,
             students,
         });
@@ -1353,22 +1764,13 @@ const getStudents = async (
             error
         );
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-
-            message:
-                "Failed to fetch students",
-
-            error:
-                error.message,
+            message: "Failed to fetch students",
+            error: error.message,
         });
     }
 };
-
-// ============================================================
-// GET ATTENDANCE RECORDS
-// ============================================================
-
 // ============================================================
 // GET EMAIL ALERTS
 // ============================================================
@@ -1414,16 +1816,13 @@ const getEmailAlerts =
                     data: students,
                     error: studentsError,
                 },
-
                 {
-                    data: attendance,
-                    error: attendanceError,
+                    data: overallAttendance,
+                    error: overallAttendanceError,
                 },
             ] = await Promise.all([
                 supabase
-                    .from(
-                        "students"
-                    )
+                    .from("students")
                     .select(
                         "id, name, email, squad, parent_email"
                     )
@@ -1431,20 +1830,14 @@ const getEmailAlerts =
                         "squad",
                         mentorProfile.squad
                     )
-                    .order(
-                        "name",
-                        {
-                            ascending:
-                                true,
-                        }
-                    ),
+                    .order("name", {
+                        ascending: true,
+                    }),
 
                 supabase
-                    .from(
-                        "attendance"
-                    )
+                    .from("overall_attendance")
                     .select(
-                        "student_id, sessions_conducted, sessions_attended"
+                        "student_id, attendance_percentage"
                     ),
             ]);
 
@@ -1452,40 +1845,41 @@ const getEmailAlerts =
                 throw studentsError;
             }
 
-            if (attendanceError) {
-                throw attendanceError;
+            if (overallAttendanceError) {
+                throw overallAttendanceError;
             }
 
-            const totals =
-                calculateAttendanceByStudent(
-                    attendance
-                );
+            // Create quick lookup:
+            // student_id → attendance percentage
+            const overallAttendanceMap = new Map(
+                (overallAttendance || []).map(
+                    (record) => [
+                        record.student_id,
+                        Number(
+                            record.attendance_percentage
+                        ) || 0,
+                    ]
+                )
+            );
 
             const alerts =
                 (students || []).map(
                     (student) => ({
-                        id:
-                            student.id,
+                        id: student.id,
 
-                        name:
-                            student.name,
+                        name: student.name,
 
-                        email:
-                            student.email,
+                        email: student.email,
 
                         parentEmail:
-                            student.parent_email ||
-                            "",
+                            student.parent_email || "",
 
-                        squad:
-                            student.squad,
+                        squad: student.squad,
 
                         attendance:
-                            getAttendancePercentage(
-                                totals.get(
-                                    student.id
-                                )
-                            ),
+                            overallAttendanceMap.get(
+                                student.id
+                            ) || 0,
                     })
                 );
 
