@@ -94,13 +94,9 @@ function StudentPage() {
       const result = await getMentorStudents();
 
       const fetchedStudents = (result.students || []).map((student) => ({
-        ...student,
-        attendance: Number(
-          student.attendance ??
-          calculateOverallAttendance(student)
-        ),
-      }));
-
+    ...student,
+    attendance: Number(student.attendance) || 0,
+}));
       console.table(
         fetchedStudents.map((student) => ({
           name: student.name,

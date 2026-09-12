@@ -1,42 +1,64 @@
 export const calculateOverallAttendance = (student) => {
-    const percentages = [];
+    let totalAttended = 0;
+    let totalConducted = 0;
 
-    // Normal subjects
+    // ==========================================
+    // NORMAL SUBJECTS
+    // ==========================================
     if (Array.isArray(student?.subjects)) {
         student.subjects.forEach((subject) => {
-            const percentage = parseFloat(
-                subject.attendancePercentage
-            );
+            const attended =
+                Number(
+                    subject?.sessionsAttended ??
+                    subject?.sessions_attended ??
+                    0
+                ) || 0;
 
-            if (Number.isFinite(percentage)) {
-                percentages.push(percentage);
-            }
+            const conducted =
+                Number(
+                    subject?.sessionsConducted ??
+                    subject?.sessions_conducted ??
+                    0
+                ) || 0;
+
+            totalAttended += attended;
+            totalConducted += conducted;
         });
     }
 
-    // Growth Hour
+    // ==========================================
+    // GROWTH HOUR
+    // ==========================================
     if (student?.growthHour) {
-        const growthHourPercentage = parseFloat(
-            student.growthHour.attendancePercentage
-        );
+        const attended =
+            Number(
+                student.growthHour?.sessionsAttended ??
+                student.growthHour?.sessions_attended ??
+                0
+            ) || 0;
 
-        if (Number.isFinite(growthHourPercentage)) {
-            percentages.push(growthHourPercentage);
-        }
+        const conducted =
+            Number(
+                student.growthHour?.sessionsConducted ??
+                student.growthHour?.sessions_conducted ??
+                0
+            ) || 0;
+
+        totalAttended += attended;
+        totalConducted += conducted;
     }
 
-    // No attendance data
-    if (percentages.length === 0) {
+    // ==========================================
+    // NO ATTENDANCE DATA
+    // ==========================================
+    if (totalConducted <= 0) {
         return 0;
     }
 
-    // Average of all subject + Growth Hour percentages
-    const totalPercentage = percentages.reduce(
-        (sum, percentage) => sum + percentage,
-        0
-    );
-
+    // ==========================================
+    // OVERALL ATTENDANCE
+    // ==========================================
     return Number(
-        (totalPercentage / percentages.length).toFixed(2)
+        ((totalAttended / totalConducted) * 100).toFixed(2)
     );
 };
