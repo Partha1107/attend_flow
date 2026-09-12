@@ -110,6 +110,10 @@ app.use(
     parentEmailRoutes
 );
 
+app.use("/api/mentor", mentorRoutes);
+
+app.use("/api/mentor", mentorProfileRoutes);
+
 // ===============================
 // JSON ERROR HANDLER
 // ===============================
@@ -153,7 +157,7 @@ app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: "API endpoint not found.",
-        error: `${ req.method } ${ req.originalUrl }`,
+        error: `${req.method} ${req.originalUrl}`,
     });
 });
 
@@ -166,6 +170,6 @@ const PORT =
 
 app.listen(PORT, () => {
     console.log(
-        `AESA Backend running on port ${ PORT }`
+        `AESA Backend running on port ${PORT}`
     );
 });

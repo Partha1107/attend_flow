@@ -8,41 +8,37 @@ const getMentorProfile = async (req, res) => {
     try {
         const userId = req.user?.id;
 
-        console.log("========== GET MENTOR PROFILE ==========");
-        console.log("USER ID:", userId);
-
         if (!userId) {
             return res.status(401).json({
                 success: false,
-                message: "User is not authenticated.",
+                message: "Authentication required.",
             });
         }
 
         const { data, error } = await supabase
             .from("mentor_profiles")
-            .select("*")
+            .select(`
+                id,
+                user_id,
+                email,
+                college_name,
+                squad,
+                job_role,
+                is_blocked,
+                created_at,
+                updated_at
+            `)
             .eq("user_id", userId)
             .maybeSingle();
 
-        console.log("SUPABASE PROFILE:", data);
-        console.log("SUPABASE ERROR:", error);
-
         if (error) {
-            return res.status(500).json({
-                success: false,
-                message: "Failed to load mentor profile.",
-                error: error.message,
-            });
+            throw error;
         }
-
-        console.log("JOB ROLE FROM DATABASE:", data?.job_role);
 
         return res.status(200).json({
             success: true,
-            profileExists: !!data,
             profile: data || null,
         });
-
     } catch (error) {
         console.error("Get mentor profile error:", error);
 
@@ -50,6 +46,42 @@ const getMentorProfile = async (req, res) => {
             success: false,
             message: "Failed to load mentor profile.",
             error: error.message,
+        });
+    }
+};
+
+
+const getMentorRole = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required.",
+            });
+        }
+
+        const { data, error } = await supabase
+            .from("mentor_profiles")
+            .select("job_role")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+        if (error) {
+            throw error;
+        }
+
+        return res.status(200).json({
+            success: true,
+            jobRole: data?.job_role || "mentor",
+        });
+    } catch (error) {
+        console.error("Get mentor role error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to load mentor role.",
         });
     }
 };
@@ -196,4 +228,5 @@ const saveMentorProfile = async (req, res) => {
 module.exports = {
     getMentorProfile,
     saveMentorProfile,
+    getMentorRole,
 };
