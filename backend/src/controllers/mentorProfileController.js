@@ -8,6 +8,8 @@ const getMentorProfile = async (req, res) => {
     try {
         const userId = req.user?.id;
 
+        console.log("[MENTOR PROFILE] User ID:", userId);
+
         if (!userId) {
             return res.status(401).json({
                 success: false,
@@ -15,28 +17,29 @@ const getMentorProfile = async (req, res) => {
             });
         }
 
-        const {
-            data,
-            error,
-        } = await supabase
+        const { data, error } = await supabase
             .from("mentor_profiles")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle();
 
         if (error) {
+            console.error("[MENTOR PROFILE] Supabase error:", error);
             throw error;
         }
+
+        console.log(
+            "[MENTOR PROFILE] Profile:",
+            JSON.stringify(data, null, 2)
+        );
 
         return res.status(200).json({
             success: true,
             profile: data || null,
         });
+
     } catch (error) {
-        console.error(
-            "Get mentor profile error:",
-            error
-        );
+        console.error("[MENTOR PROFILE] Get error:", error);
 
         return res.status(500).json({
             success: false,

@@ -5,6 +5,7 @@ import {
   History,
   LayoutDashboard,
   LogOut,
+  ShieldCheck,
   Mail,
   Users,
   X,
@@ -12,6 +13,8 @@ import {
 
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+
+import { getMentorProfile } from "../api/mentor";
 import "./Sidebar.css";
 
 const mainItems = [
@@ -37,8 +40,10 @@ const mainItems = [
   },
 ];
 
-function Sidebar({ open = false, onClose = () => {} }) {
+function Sidebar({ open = false, onClose = () => { } }) {
   const location = useLocation();
+
+  const [jobRole, setJobRole] = useState(null);
 
   const isImportPage =
     location.pathname === "/import-attendance" ||
@@ -46,6 +51,53 @@ function Sidebar({ open = false, onClose = () => {} }) {
 
   const [dataImportOpen, setDataImportOpen] =
     useState(isImportPage);
+
+  // ============================================================
+  // LOAD MENTOR ROLE
+  // ============================================================
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadMentorRole = async () => {
+      try {
+        const result = await getMentorProfile();
+
+        if (!mounted) {
+          return;
+        }
+
+        console.log(
+          "SIDEBAR PROFILE:",
+          JSON.stringify(result?.profile, null, 2)
+        );
+
+        console.log(
+          "SIDEBAR JOB ROLE:",
+          result?.profile?.job_role
+        );
+
+        setJobRole(
+          result?.profile?.job_role || null
+        );
+      } catch (error) {
+        console.error(
+          "Failed to load mentor role:",
+          error
+        );
+
+        if (mounted) {
+          setJobRole(null);
+        }
+      }
+    };
+
+    void loadMentorRole();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Automatically open Data Import when visiting
   // either import page.
@@ -55,11 +107,13 @@ function Sidebar({ open = false, onClose = () => {} }) {
     }
   }, [isImportPage]);
 
+  const isCampusManager =
+    jobRole === "campus_manager";
+
   return (
     <aside
-      className={`sidebar ${
-        open ? "sidebar-open" : ""
-      }`}
+      className={`sidebar ${open ? "sidebar-open" : ""
+        }`}
     >
       {/* ================================================== */}
       {/* BRAND */}
@@ -103,15 +157,17 @@ function Sidebar({ open = false, onClose = () => {} }) {
         className="sidebar-nav"
         aria-label="Main navigation"
       >
+        {/* ================================================= */}
         {/* MAIN ITEMS */}
+        {/* ================================================= */}
+
         {mainItems.slice(0, 2).map(
           ({ label, icon: Icon, to }) => (
             <NavLink
               key={label}
               to={to}
               className={({ isActive }) =>
-                `nav-item ${
-                  isActive ? "active" : ""
+                `nav-item ${isActive ? "active" : ""
                 }`
               }
               onClick={onClose}
@@ -127,17 +183,15 @@ function Sidebar({ open = false, onClose = () => {} }) {
         {/* ================================================= */}
 
         <div
-          className={`nav-group ${
-            isImportPage
-              ? "nav-group-active"
-              : ""
-          }`}
+          className={`nav-group ${isImportPage
+            ? "nav-group-active"
+            : ""
+            }`}
         >
           <button
             type="button"
-            className={`nav-item nav-group-button ${
-              isImportPage ? "active-parent" : ""
-            }`}
+            className={`nav-item nav-group-button ${isImportPage ? "active-parent" : ""
+              }`}
             onClick={() =>
               setDataImportOpen(
                 (previous) => !previous
@@ -153,11 +207,10 @@ function Sidebar({ open = false, onClose = () => {} }) {
 
             <ChevronDown
               size={16}
-              className={`nav-chevron ${
-                dataImportOpen
-                  ? "nav-chevron-open"
-                  : ""
-              }`}
+              className={`nav-chevron ${dataImportOpen
+                ? "nav-chevron-open"
+                : ""
+                }`}
             />
           </button>
 
@@ -170,8 +223,7 @@ function Sidebar({ open = false, onClose = () => {} }) {
               <NavLink
                 to="/import-attendance"
                 className={({ isActive }) =>
-                  `nav-subitem ${
-                    isActive ? "active" : ""
+                  `nav-subitem ${isActive ? "active" : ""
                   }`
                 }
                 onClick={onClose}
@@ -186,8 +238,7 @@ function Sidebar({ open = false, onClose = () => {} }) {
               <NavLink
                 to="/parent-email-import"
                 className={({ isActive }) =>
-                  `nav-subitem ${
-                    isActive ? "active" : ""
+                  `nav-subitem ${isActive ? "active" : ""
                   }`
                 }
                 onClick={onClose}
@@ -212,8 +263,7 @@ function Sidebar({ open = false, onClose = () => {} }) {
               key={label}
               to={to}
               className={({ isActive }) =>
-                `nav-item ${
-                  isActive ? "active" : ""
+                `nav-item ${isActive ? "active" : ""
                 }`
               }
               onClick={onClose}
@@ -222,6 +272,28 @@ function Sidebar({ open = false, onClose = () => {} }) {
               <span>{label}</span>
             </NavLink>
           )
+        )}
+
+        {/* ================================================= */}
+        {/* MANAGER PROFILE */}
+        {/* ONLY VISIBLE TO CAMPUS MANAGER */}
+        {/* ================================================= */}
+
+        {isCampusManager && (
+          <NavLink
+            to="/manager-settings"
+            className={({ isActive }) =>
+              `nav-item ${isActive ? "active" : ""
+              }`
+            }
+            onClick={onClose}
+          >
+            <ShieldCheck size={18} />
+
+            <span>
+              Manager Profile
+            </span>
+          </NavLink>
         )}
       </nav>
 
