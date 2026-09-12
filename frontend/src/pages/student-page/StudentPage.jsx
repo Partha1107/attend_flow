@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { FileSpreadsheet, RefreshCw } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { getMentorStudents } from "../../api/mentor";
 import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
@@ -9,7 +9,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 
 function StudentPage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -242,15 +241,6 @@ function StudentPage() {
 
         <div className="student-header-actions">
           <button
-            className="import-student-btn"
-            type="button"
-            onClick={() => navigate("/import-attendance")}
-          >
-            <FileSpreadsheet size={18} />
-            Import Excel
-          </button>
-
-          <button
             className="add-student-btn"
             type="button"
             onClick={fetchStudents}
@@ -396,40 +386,6 @@ function StudentPage() {
         </button>
       </div>
 
-      {/* Statistics */}
-      <div className="statistics-grid">
-        <div className="stat-card">
-          <div className="stat-icon">♙</div>
-          <div>
-            <p>Total Students</p>
-            <h2>{students.length}</h2>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">✓</div>
-          <div>
-            <p>Present Today</p>
-            <h2>{presentCount}</h2>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">⌁</div>
-          <div>
-            <p>Absent Today</p>
-            <h2>{absentCount}</h2>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">◔</div>
-          <div>
-            <p>Average Attendance</p>
-            <h2>{averageAttendance}%</h2>
-          </div>
-        </div>
-      </div>
 
       {/* Student Table */}
       <div className="student-table-container">
@@ -501,227 +457,213 @@ function StudentPage() {
           </div>
         )}
 
-        {/* Pagination */}
-        <div className="pagination">
-          <strong>
-            Showing {filteredStudents.length} of {students.length} students
-          </strong>
 
-          <div className="pagination-buttons">
-            <button disabled>Previous</button>
-            <button className="active-page">1</button>
-            <button>2</button>
-            <button>3</button>
-            <span>...</span>
-            <button>Next</button>
-          </div>
-        </div>
-      </div>
 
-      {/* Student Profile Modal */}
-      {selectedStudent && (
-        <div
-          className="modal-overlay"
-          onClick={() => setSelectedStudent(null)}
-        >
+        {/* Student Profile Modal */}
+        {selectedStudent && (
           <div
-            className="student-profile-modal"
-            onClick={(e) => e.stopPropagation()}
+            className="modal-overlay"
+            onClick={() => setSelectedStudent(null)}
           >
-            <button
-              className="modal-close"
-              onClick={() => setSelectedStudent(null)}
+            <div
+              className="student-profile-modal"
+              onClick={(e) => e.stopPropagation()}
             >
-              ×
-            </button>
-
-            <div className="profile-header">
-              <div className="profile-avatar">
-                {selectedStudent.name.charAt(0)}
-              </div>
-
-              <div>
-                <h2>Student Profile</h2>
-                <h3>{selectedStudent.name}</h3>
-              </div>
-
-              <span className="active-badge">Active</span>
-            </div>
-
-            <div className="profile-section">
-              <h4>Personal Information</h4>
-
-              <div className="profile-grid">
-                <div>
-                  <span>Full Name</span>
-                  <strong>{selectedStudent.name}</strong>
-                </div>
-
-                <div>
-                  <span>Email</span>
-                  <strong>{selectedStudent.email}</strong>
-                </div>
-
-                <div>
-                  <span>Parent's Number</span>
-                  <strong>{selectedStudent.phone}</strong>
-                </div>
-
-                <div>
-                  <span>Date of Birth</span>
-                  <strong>{selectedStudent.dob}</strong>
-                </div>
-
-                <div>
-                  <span>Gender</span>
-                  <strong>{selectedStudent.gender}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="profile-section">
-              <h4>Academic Information</h4>
-
-              <div className="profile-grid">
-                <div>
-                  <span>Squad</span>
-                  <strong>{selectedStudent.squad}</strong>
-                </div>
-
-              </div>
-            </div>
-
-            <div className="attendance-summary">
-              <div>
-                <span>Overall Attendance</span>
-                <strong>{selectedStudent.attendance}%</strong>
-              </div>
-
-              <div className="progress-bar">
-                <div
-                  style={{
-                    width: `${selectedStudent.attendance}%`,
-                  }}
-                ></div>
-              </div>
-
-              <div className="attendance-details">
-                <span>Attendance is calculated from imported records.</span>
-              </div>
-            </div>
-
-            <div className="modal-actions">
               <button
-                className="edit-profile-btn"
-                onClick={() =>
-                  alert("Edit Profile functionality can be added here.")
-                }
-              >
-                Edit Profile
-              </button>
-
-              <button
-                className="close-profile-btn"
+                className="modal-close"
                 onClick={() => setSelectedStudent(null)}
               >
-                Close
+                ×
               </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Add Student Modal */}
-      {showAddStudent && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowAddStudent(false)}
-        >
-          <div
-            className="add-student-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close"
-              onClick={() => setShowAddStudent(false)}
-            >
-              ×
-            </button>
+              <div className="profile-header">
+                <div className="profile-avatar">
+                  {(selectedStudent.name || "?").charAt(0).toUpperCase()}
+                </div>
 
-            <h2>Add New Student</h2>
-            <p>Add student information to the system.</p>
+                <div>
+                  <h2>Student Profile</h2>
+                  <h3>{selectedStudent.name || "Unnamed student"}</h3>
+                </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Student added successfully.");
-                setShowAddStudent(false);
-              }}
-            >
-              <div className="form-grid">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  required
-                />
+                <span className="active-badge">Active</span>
+              </div>
 
-                <input
-                  type="email"
-                  placeholder="Email"
-                  required
-                />
+              <div className="profile-section">
+                <h4>Personal Information</h4>
 
-                <input
-                  type="tel"
-                  placeholder="Student Phone Number"
-                  required
-                />
+                <div className="profile-grid">
+                  <div>
+                    <span>Full Name</span>
+                    <strong>{selectedStudent.name || "Not provided"}</strong>
+                  </div>
 
-                <input
-                  type="tel"
-                  placeholder="Parent's Number"
-                  required
-                />
+                  <div>
+                    <span>Email</span>
+                    <strong>{selectedStudent.email || "Not provided"}</strong>
+                  </div>
 
-                <input
-                  type="email"
-                  placeholder="Parent Email"
-                  required
-                />
+                  <div>
+                    <span>Parent's Number</span>
+                    <strong>{selectedStudent.parent_phone || selectedStudent.phone || "Not provided"}</strong>
+                  </div>
 
-                <select required defaultValue="">
-                  <option value="" disabled>
-                    Squad
-                  </option>
-                  <option value="138">138</option>
-                  <option value="139">139</option>
-                </select>
+                  <div>
+                    <span>Date of Birth</span>
+                    <strong>{selectedStudent.dob || "Not provided"}</strong>
+                  </div>
 
+                  <div>
+                    <span>Gender</span>
+                    <strong>{selectedStudent.gender || "Not provided"}</strong>
+                  </div>
+                </div>
+              </div>
 
+              <div className="profile-section">
+                <h4>Academic Information</h4>
+
+                <div className="profile-grid">
+                  <div>
+                    <span>Squad</span>
+                    <strong>{selectedStudent.squad || "Not assigned"}</strong>
+                  </div>
+
+                </div>
+              </div>
+
+              <div className="attendance-summary">
+                <div>
+                  <span>Overall Attendance</span>
+                  <strong>{Number(selectedStudent.attendance || 0)}%</strong>
+                </div>
+
+                <div className="progress-bar">
+                  <div
+                    style={{
+                      width: `${Math.max(0, Math.min(100, Number(selectedStudent.attendance) || 0))}%`,
+                    }}
+                  ></div>
+                </div>
+
+                <div className="attendance-details">
+                  <span>Attendance is calculated from imported records.</span>
+                </div>
               </div>
 
               <div className="modal-actions">
                 <button
-                  type="button"
-                  className="close-profile-btn"
-                  onClick={() => setShowAddStudent(false)}
+                  className="edit-profile-btn"
+                  onClick={() =>
+                    alert("Edit Profile functionality can be added here.")
+                  }
                 >
-                  Cancel
+                  Edit Profile
                 </button>
 
                 <button
-                  type="submit"
-                  className="edit-profile-btn"
+                  className="close-profile-btn"
+                  onClick={() => setSelectedStudent(null)}
                 >
-                  Add Student
+                  Close
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Add Student Modal */}
+        {showAddStudent && (
+          <div
+            className="modal-overlay"
+            onClick={() => setShowAddStudent(false)}
+          >
+            <div
+              className="add-student-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close"
+                onClick={() => setShowAddStudent(false)}
+              >
+                ×
+              </button>
+
+              <h2>Add New Student</h2>
+              <p>Add student information to the system.</p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  alert("Student added successfully.");
+                  setShowAddStudent(false);
+                }}
+              >
+                <div className="form-grid">
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    required
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    required
+                  />
+
+                  <input
+                    type="tel"
+                    placeholder="Student Phone Number"
+                    required
+                  />
+
+                  <input
+                    type="tel"
+                    placeholder="Parent's Number"
+                    required
+                  />
+
+                  <input
+                    type="email"
+                    placeholder="Parent Email"
+                    required
+                  />
+
+                  <select required defaultValue="">
+                    <option value="" disabled>
+                      Squad
+                    </option>
+                    <option value="138">138</option>
+                    <option value="139">139</option>
+                  </select>
+
+
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="close-profile-btn"
+                    onClick={() => setShowAddStudent(false)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="edit-profile-btn"
+                  >
+                    Add Student
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  );
+      );
 }
 
-export default StudentPage;
+  export default StudentPage;
