@@ -3,6 +3,11 @@ import { supabase } from "../lib/supabase";
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+
+// =====================================================
+// AUTH HEADERS
+// =====================================================
+
 const getAuthHeaders = async () => {
   if (!supabase) {
     throw new Error("Supabase is not configured.");
@@ -27,6 +32,11 @@ const getAuthHeaders = async () => {
   };
 };
 
+
+// =====================================================
+// RESPONSE HANDLER
+// =====================================================
+
 const readResponse = async (response, fallbackMessage) => {
   const result = await response.json();
 
@@ -37,42 +47,85 @@ const readResponse = async (response, fallbackMessage) => {
   return result;
 };
 
-export const getMentorProfile = async () => {
-  const response = await fetch(`${API_URL}/api/mentor/profile`, {
-    headers: await getAuthHeaders(),
-  });
 
-  if (response.status === 404) {
-    return { exists: false, profile: null };
-  }
+// =====================================================
+// GET MENTOR ROLE
+// =====================================================
 
-  const result = await readResponse(
-    response,
-    "Failed to load mentor profile."
+export const getMentorRole = async () => {
+  console.log(
+    "🔥 ROLE API URL:",
+    `${API_URL}/api/mentor/role`
   );
 
-  return {
-    exists: true,
-    profile: result.profile,
-  };
+  const response = await fetch(
+    `${API_URL}/api/mentor/role`,
+    {
+      method: "GET",
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  console.log(
+    "🔥 ROLE API STATUS:",
+    response.status
+  );
+
+  const result = await response.json();
+
+  console.log(
+    "🔥 ROLE API RESPONSE:",
+    result
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Failed to load mentor role."
+    );
+  }
+
+  return result;
 };
 
-export const saveMentorProfile = async ({ collegeName, squad }) => {
-  const response = await fetch(`${API_URL}/api/mentor/profile`, {
-    method: "POST",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify({ collegeName, squad }),
-  });
 
-  return readResponse(response, "Failed to save mentor profile.");
+// =====================================================
+// SAVE / UPDATE MENTOR PROFILE
+// =====================================================
+
+export const saveMentorProfile = async ({
+  collegeName,
+  squad,
+  jobRole,
+}) => {
+  const response = await fetch(
+    `${API_URL}/api/mentor/profile`,
+    {
+      method: "PUT",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({
+        collegeName,
+        squad,
+        jobRole,
+      }),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to save mentor profile."
+  );
 };
+
+
+// =====================================================
+// GET MENTOR STUDENTS
+// =====================================================
 
 export const getMentorStudents = async (squad = "") => {
   const query = squad
     ? `?squad=${encodeURIComponent(squad)}`
     : "";
 
-  // Get the current login token
   let headers = await getAuthHeaders();
 
   let response = await fetch(
@@ -83,21 +136,33 @@ export const getMentorStudents = async (squad = "") => {
     }
   );
 
-  // If the token was rejected, refresh the Supabase session once
+  // Refresh token if API returns 401
   if (response.status === 401) {
-    console.warn("Student API returned 401. Refreshing Supabase session...");
+    console.warn(
+      "Student API returned 401. Refreshing Supabase session..."
+    );
 
-    const { data, error } = await supabase.auth.refreshSession();
+    const { data, error } =
+      await supabase.auth.refreshSession();
 
     if (error) {
-      console.error("Supabase session refresh failed:", error);
-      throw new Error("Your login session has expired. Please log in again.");
+      console.error(
+        "Supabase session refresh failed:",
+        error
+      );
+
+      throw new Error(
+        "Your login session has expired. Please log in again."
+      );
     }
 
-    const newToken = data?.session?.access_token;
+    const newToken =
+      data?.session?.access_token;
 
     if (!newToken) {
-      throw new Error("Unable to refresh login session. Please log in again.");
+      throw new Error(
+        "Unable to refresh login session. Please log in again."
+      );
     }
 
     headers = {
@@ -105,7 +170,6 @@ export const getMentorStudents = async (squad = "") => {
       Authorization: `Bearer ${newToken}`,
     };
 
-    // Try the student request again with the new token
     response = await fetch(
       `${API_URL}/api/mentor/dashboard/students${query}`,
       {
@@ -115,13 +179,27 @@ export const getMentorStudents = async (squad = "") => {
     );
   }
 
-  return readResponse(response, "Failed to load students.");
+  return readResponse(
+    response,
+    "Failed to load students."
+  );
 };
 
-export const getMentorEmailAlerts = async () => {
-  const response = await fetch(`${API_URL}/api/attendance/email-alerts`, {
-    headers: await getAuthHeaders(),
-  });
 
-  return readResponse(response, "Failed to load email alert details.");
+// =====================================================
+// GET EMAIL ALERTS
+// =====================================================
+
+export const getMentorEmailAlerts = async () => {
+  const response = await fetch(
+    `${API_URL}/api/attendance/email-alerts`,
+    {
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to load email alert details."
+  );
 };

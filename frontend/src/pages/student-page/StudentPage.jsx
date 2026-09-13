@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { getMentorStudents } from "../../api/mentor";
-import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -94,13 +93,9 @@ function StudentPage() {
       const result = await getMentorStudents();
 
       const fetchedStudents = (result.students || []).map((student) => ({
-        ...student,
-        attendance: Number(
-          student.attendance ??
-          calculateOverallAttendance(student)
-        ),
-      }));
-
+    ...student,
+    attendance: Number(student.attendance) || 0,
+}));
       console.table(
         fetchedStudents.map((student) => ({
           name: student.name,
@@ -224,11 +219,11 @@ function StudentPage() {
     setAttendanceStatus("");
   };
 
-  const presentCount = students.filter((student) => student.status === "Present").length;
-  const absentCount = students.filter((student) => student.status === "Absent").length;
-  const averageAttendance = students.length
-    ? (students.reduce((sum, student) => sum + Number(student.attendance || 0), 0) / students.length).toFixed(2)
-    : "0.00";
+  // const presentCount = students.filter((student) => student.status === "Present").length;
+  // const absentCount = students.filter((student) => student.status === "Absent").length;
+  // const averageAttendance = students.length
+  //   ? (students.reduce((sum, student) => sum + Number(student.attendance || 0), 0) / students.length).toFixed(2)
+  //   : "0.00";
 
   return (
     <div className="student-page">

@@ -105,4 +105,35 @@ router.post("/profile", requireAuth, async (req, res) => {
     }
 });
 
+router.get("/role", requireAuth, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("mentor_profiles")
+            .select("job_role")
+            .eq("user_id", req.user.id)
+            .maybeSingle();
+
+        if (error) {
+            console.error("Get mentor role error:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Failed to fetch mentor role.",
+            });
+        }
+
+        return res.json({
+            success: true,
+            jobRole: data?.job_role || "mentor",
+        });
+    } catch (error) {
+        console.error("Mentor role GET error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
+    }
+});
+
 module.exports = router;

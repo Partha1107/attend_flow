@@ -32,62 +32,6 @@ const cleanString = (value) => {
 };
 
 // ============================================================
-// CALCULATE ATTENDANCE BY STUDENT
-// ============================================================
-
-const calculateAttendanceByStudent = (records) => {
-    const totals = new Map();
-
-    for (const record of records || []) {
-        if (!record.student_id) {
-            continue;
-        }
-
-        const current =
-            totals.get(record.student_id) || {
-                conducted: 0,
-                attended: 0,
-            };
-
-        current.conducted += toNumber(
-            record.sessions_conducted
-        );
-
-        current.attended += toNumber(
-            record.sessions_attended
-        );
-
-        totals.set(
-            record.student_id,
-            current
-        );
-    }
-
-    return totals;
-};
-
-// ============================================================
-// ATTENDANCE PERCENTAGE
-// ============================================================
-
-const getAttendancePercentage = (total) => {
-    if (
-        !total ||
-        total.conducted <= 0
-    ) {
-        return 0;
-    }
-
-    return Number(
-        (
-            (total.attended /
-                total.conducted) *
-            100
-        ).toFixed(2)
-    );
-};
-
-// ============================================================
 // GET SQUADS
 // ============================================================
 
@@ -203,7 +147,7 @@ const getStudents = async (req, res) => {
             studentsData || [];
 
         // --------------------------------------------------------
-        // GET ONLY ATTENDANCE FOR THESE STUDENTS
+        // GET OVERALL ATTENDANCE FOR THESE STUDENTS
         // --------------------------------------------------------
 
         const studentIds =
@@ -212,16 +156,16 @@ const getStudents = async (req, res) => {
                     student.id
             );
 
-        let attendanceData = [];
+        let overallAttendanceData = [];
 
         if (studentIds.length > 0) {
             const {
                 data,
                 error,
             } = await supabase
-                .from("attendance")
+                .from("overall_attendance")
                 .select(
-                    "student_id, sessions_conducted, sessions_attended"
+                    "student_id, total_sessions_attended, total_sessions_conducted, attendance_percentage"
                 )
                 .in(
                     "student_id",
@@ -232,27 +176,36 @@ const getStudents = async (req, res) => {
                 throw error;
             }
 
-            attendanceData =
+            overallAttendanceData =
                 data || [];
         }
 
         // --------------------------------------------------------
-        // CALCULATE ATTENDANCE
+        // CREATE QUICK LOOKUP
         // --------------------------------------------------------
 
-        const totals =
-            calculateAttendanceByStudent(
-                attendanceData
+        const overallAttendanceMap =
+            new Map(
+                overallAttendanceData.map(
+                    (record) => [
+                        record.student_id,
+                        Number(
+                            record.attendance_percentage
+                        ) || 0,
+                    ]
+                )
             );
+
+        // --------------------------------------------------------
+        // BUILD RESULT
+        // --------------------------------------------------------
 
         const result = students.map(
             (student) => {
                 const attendance =
-                    getAttendancePercentage(
-                        totals.get(
-                            student.id
-                        )
-                    );
+                    overallAttendanceMap.get(
+                        student.id
+                    ) || 0;
 
                 return {
                     ...student,
@@ -500,45 +453,57 @@ const getOverview = async (
         }
 
         // --------------------------------------------------------
-        // GET ATTENDANCE FOR SQUAD
+        // GET OVERALL ATTENDANCE FOR SQUAD
         // --------------------------------------------------------
 
         const {
-            data: attendance,
-            error: attendanceError,
+            data: overallAttendance,
+            error: overallAttendanceError,
         } = await supabase
-            .from("attendance")
+            .from("overall_attendance")
             .select(
-                "student_id, sessions_conducted, sessions_attended"
+                "student_id, attendance_percentage"
             )
             .in(
                 "student_id",
                 studentIds
             );
 
-        if (attendanceError) {
-            throw attendanceError;
+        if (overallAttendanceError) {
+            throw overallAttendanceError;
         }
 
         // --------------------------------------------------------
-        // CALCULATE
+        // CREATE LOOKUP MAP
         // --------------------------------------------------------
 
-        const totals =
-            calculateAttendanceByStudent(
-                attendance
+        const overallAttendanceMap =
+            new Map(
+                (overallAttendance || []).map(
+                    (record) => [
+                        record.student_id,
+                        Number(
+                            record.attendance_percentage
+                        ) || 0,
+                    ]
+                )
             );
+
+        // --------------------------------------------------------
+        // GET EACH STUDENT'S OVERALL ATTENDANCE
+        // --------------------------------------------------------
 
         const studentAttendance =
             studentList.map(
-                (student) => {
-                    return getAttendancePercentage(
-                        totals.get(
-                            student.id
-                        )
-                    );
-                }
+                (student) =>
+                    overallAttendanceMap.get(
+                        student.id
+                    ) || 0
             );
+
+        // --------------------------------------------------------
+        // CALCULATE DASHBOARD STATISTICS
+        // --------------------------------------------------------
 
         const totalAttendance =
             studentAttendance.reduce(
