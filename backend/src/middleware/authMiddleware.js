@@ -2,12 +2,7 @@ const supabase = require("../config/supabase");
 
 const requireAuth = async (req, res, next) => {
     try {
-        console.log("\n========== AUTH DEBUG ==========");
-        console.log("METHOD:", req.method);
-        console.log("URL:", req.originalUrl);
-        console.log("AUTHORIZATION HEADER:", req.headers.authorization);
-        console.log("ALL HEADERS:", req.headers);
-        console.log("================================\n");
+        
 
         const authHeader = req.headers.authorization;
 
@@ -47,7 +42,7 @@ const requireAuth = async (req, res, next) => {
             });
         }
 
-        console.log("AUTH SUCCESS:", user.id);
+        
 
         req.user = user;
 

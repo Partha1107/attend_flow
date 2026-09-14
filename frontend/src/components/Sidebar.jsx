@@ -64,7 +64,6 @@ function Sidebar({ open = false, onClose = () => { } }) {
       try {
         const result = await getMentorRole();
 
-        console.log("SIDEBAR ROLE:", result?.jobRole);
 
         if (mounted) {
           setJobRole(result?.jobRole || "mentor");
