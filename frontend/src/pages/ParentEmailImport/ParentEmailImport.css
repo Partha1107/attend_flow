@@ -4,10 +4,19 @@
 
 .parent-email-page {
   width: 100%;
-  max-width: 100%;
-  padding: 28px 30px 40px;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 24px 18px 32px;
   box-sizing: border-box;
   color: #1f2937;
+}
+
+/* Make every direct child use available width */
+.parent-email-page > * {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 /* =========================================================
@@ -16,14 +25,16 @@
 
 .parent-email-header {
   width: 100%;
+  max-width: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 24px;
+  box-sizing: border-box;
 }
 
-.parent-email-header>div:first-child {
+.parent-email-header > div:first-child {
   min-width: 0;
 }
 
@@ -66,38 +77,60 @@
 .parent-email-primary-button,
 .parent-email-secondary-button {
   height: 40px;
-  border-radius: 8px;
   padding: 0 15px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+
+  border-radius: 8px;
+
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
+
   cursor: pointer;
+  white-space: nowrap;
+
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
     color 0.18s ease,
     box-shadow 0.18s ease,
     transform 0.18s ease;
-  white-space: nowrap;
 }
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
 
 .parent-email-primary-button {
   border: 1px solid #e8342a;
   background: #e8342a;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(232, 52, 42, 0.15);
+
+  box-shadow:
+    0 2px 6px rgba(232, 52, 42, 0.15);
 }
 
 .parent-email-primary-button:hover:not(:disabled) {
   background: #cf2d24;
   border-color: #cf2d24;
-  box-shadow: 0 4px 10px rgba(232, 52, 42, 0.2);
+
+  box-shadow:
+    0 4px 10px rgba(232, 52, 42, 0.2);
+
   transform: translateY(-1px);
 }
+
+.parent-email-primary-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
 
 .parent-email-secondary-button {
   border: 1px solid #d4d4d4;
@@ -111,6 +144,14 @@
   color: #171717;
 }
 
+.parent-email-secondary-button:active:not(:disabled) {
+  background: #f5f5f5;
+}
+
+/* =========================================================
+   DISABLED BUTTON
+   ========================================================= */
+
 .parent-email-primary-button:disabled,
 .parent-email-secondary-button:disabled {
   opacity: 0.55;
@@ -120,15 +161,44 @@
 }
 
 /* =========================================================
+   KEYBOARD ACCESSIBLE FOCUS
+   ========================================================= */
+
+.parent-email-primary-button:focus-visible,
+.parent-email-secondary-button:focus-visible,
+.table-input:focus-visible {
+  outline: 3px solid rgba(232, 52, 42, 0.28);
+  outline-offset: 2px;
+}
+
+/* Stronger focus for primary button */
+
+.parent-email-primary-button:focus-visible {
+  outline-color: rgba(232, 52, 42, 0.45);
+  outline-offset: 3px;
+}
+
+/* Remove focus outline when not keyboard-focused */
+
+.parent-email-primary-button:focus:not(:focus-visible),
+.parent-email-secondary-button:focus:not(:focus-visible),
+.table-input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* =========================================================
    MESSAGE
    ========================================================= */
 
 .parent-email-message {
   width: 100%;
   box-sizing: border-box;
+
   margin-bottom: 18px;
   padding: 12px 14px;
+
   border-radius: 8px;
+
   font-size: 13px;
   line-height: 1.5;
 }
@@ -151,46 +221,63 @@
 
 .parent-email-card {
   width: 100%;
+  max-width: none;
   box-sizing: border-box;
+
   background: #ffffff;
+
   border: 1px solid #e5e5e5;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.035);
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.035);
+}
+
+.parent-email-preview-card {
+  overflow: hidden;
 }
 
 /* =========================================================
    TABLE CARD HEADER
    ========================================================= */
 
-.parent-email-preview-card {
-  overflow: hidden;
-}
-
 .parent-email-preview-header {
+  width: 100%;
   min-height: 74px;
+
   padding: 17px 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 20px;
+
   border-bottom: 1px solid #e5e5e5;
+
   box-sizing: border-box;
 }
 
-.parent-email-preview-header>div:first-child {
+.parent-email-preview-header > div:first-child {
   min-width: 0;
 }
 
 .parent-email-preview-header h2 {
   margin: 0;
+
   font-size: 17px;
+  line-height: 1.3;
   font-weight: 650;
+
   color: #171717;
 }
 
 .parent-email-preview-header p {
   margin: 4px 0 0;
+
   font-size: 12px;
+  line-height: 1.4;
+
   color: #737373;
 }
 
@@ -200,9 +287,15 @@
 
 .parent-email-table-wrapper {
   width: 100%;
+
   overflow-x: auto;
   overflow-y: auto;
-  max-height: calc(100vh - 260px);
+
+  /*
+   * Keeps the header visible while scrolling.
+   */
+  max-height: calc(100vh - 250px);
+
   scrollbar-width: thin;
   scrollbar-color: #d4d4d4 transparent;
 }
@@ -232,8 +325,10 @@
 .parent-email-table {
   width: 100%;
   min-width: 1050px;
+
   border-collapse: separate;
   border-spacing: 0;
+
   table-layout: fixed;
 }
 
@@ -245,16 +340,25 @@
   position: sticky;
   top: 0;
   z-index: 5;
+
   height: 48px;
+
   padding: 0 14px;
+
   background: #fafafa;
+
   border-bottom: 1px solid #dedede;
+
   color: #525252;
+
   font-size: 11px;
   font-weight: 700;
+
   text-align: left;
   text-transform: uppercase;
+
   letter-spacing: 0.35px;
+
   white-space: nowrap;
 }
 
@@ -293,10 +397,15 @@
 
 .parent-email-table tbody td {
   height: 66px;
+
   padding: 8px 14px;
-  border-bottom: 1px solid #eeeeee;
+
   background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+
   box-sizing: border-box;
+
   vertical-align: middle;
 }
 
@@ -314,9 +423,11 @@
 
 .student-name-cell {
   color: #262626;
+
   font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -328,8 +439,10 @@
 
 .student-email-cell {
   color: #737373;
+
   font-size: 12.5px;
   line-height: 1.35;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -342,15 +455,22 @@
 .table-input {
   width: 100%;
   height: 38px;
+
   box-sizing: border-box;
+
   padding: 0 10px;
+
   border: 1px solid #d4d4d4;
   border-radius: 7px;
+
   outline: none;
+
   background: #ffffff;
   color: #262626;
+
   font-family: inherit;
   font-size: 12.5px;
+
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -367,9 +487,26 @@
 
 .table-input:focus {
   border-color: #e8342a;
-  box-shadow: 0 0 0 3px rgba(232, 52, 42, 0.09);
+
+  box-shadow:
+    0 0 0 3px rgba(232, 52, 42, 0.09);
+
   background: #ffffff;
 }
+
+.table-input:focus-visible {
+  outline: 3px solid rgba(232, 52, 42, 0.28);
+  outline-offset: 1px;
+
+  border-color: #e8342a;
+
+  box-shadow:
+    0 0 0 3px rgba(232, 52, 42, 0.08);
+}
+
+/* =========================================================
+   INVALID INPUT
+   ========================================================= */
 
 .table-input-error {
   border-color: #ef4444;
@@ -378,7 +515,26 @@
 
 .table-input-error:focus {
   border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+.table-input-error:focus-visible {
+  outline-color: rgba(220, 38, 38, 0.35);
+
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+/* =========================================================
+   ROW FOCUS FEEDBACK
+   ========================================================= */
+
+.parent-email-table tbody tr:has(.table-input:focus-visible) td {
+  background: #fffafa;
 }
 
 /* =========================================================
@@ -387,11 +543,15 @@
 
 .parent-email-loading {
   min-height: 180px;
+
+  padding: 30px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px;
+
   color: #737373;
+
   font-size: 13px;
 }
 
@@ -401,22 +561,57 @@
 
 .parent-email-empty {
   min-height: 180px;
+
   padding: 30px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   text-align: center;
+
   color: #737373;
+
   font-size: 13px;
 }
 
 /* =========================================================
-   RESPONSIVE
+   FULL WIDTH OVERRIDES
+   ========================================================= */
+
+/*
+ * These help if a generic page/card class is restricting
+ * the width of this specific page.
+ */
+
+.parent-email-page .parent-email-card,
+.parent-email-page .parent-email-preview-card,
+.parent-email-page .parent-email-table-wrapper {
+  max-width: none;
+}
+
+/* =========================================================
+   LARGE SCREENS
+   ========================================================= */
+
+@media (min-width: 1400px) {
+  .parent-email-page {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .parent-email-table {
+    min-width: 0;
+  }
+}
+
+/* =========================================================
+   MEDIUM SCREENS
    ========================================================= */
 
 @media (max-width: 1100px) {
   .parent-email-page {
-    padding: 24px 22px 35px;
+    padding: 24px 18px 35px;
   }
 
   .parent-email-header {
@@ -428,6 +623,10 @@
     justify-content: flex-start;
   }
 }
+
+/* =========================================================
+   SMALL SCREENS
+   ========================================================= */
 
 @media (max-width: 700px) {
   .parent-email-page {
@@ -444,11 +643,13 @@
 
   .parent-email-header-actions {
     width: 100%;
+
     flex-direction: column;
     align-items: stretch;
   }
 
-  .parent-email-header-actions .parent-email-secondary-button {
+  .parent-email-header-actions
+    .parent-email-secondary-button {
     width: 100%;
   }
 
@@ -457,11 +658,28 @@
     flex-direction: column;
   }
 
-  .parent-email-preview-header .parent-email-primary-button {
+  .parent-email-preview-header
+    .parent-email-primary-button {
     width: 100%;
   }
 
   .parent-email-table-wrapper {
     max-height: calc(100vh - 330px);
+  }
+
+  .parent-email-table {
+    min-width: 1050px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .parent-email-primary-button,
+  .parent-email-secondary-button,
+  .table-input {
+    transition: none;
   }
 }
