@@ -1,315 +1,704 @@
-import { useRef, useState } from "react";
-import { FileSpreadsheet, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Download,
+  FileSpreadsheet,
+  Save,
+  Upload,
+} from "lucide-react";
 import * as XLSX from "xlsx";
-import { supabase } from "../../lib/supabase";
 import { getMentorStudents } from "../../api/mentor";
 import "./ParentEmailImport.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const STATUS_ORDER = [
-  "Ready",
-  "Updated",
-  "Student Not Found",
-  "Duplicate Name",
-  "Invalid Email",
-  "Empty Row",
-];
+const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
 
-const normalizeColumn = (value) => String(value || "")
-  .trim()
-  .toLowerCase()
-  .replace(/[\s_-]+/g, "");
+const normalizeColumn = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
 
-const normalizeName = (value) => String(value || "")
-  .trim()
-  .replace(/\s+/g, " ")
-  .toLowerCase();
+const normalizeEmail = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
-const isValidEmail = (value) => EMAIL_PATTERN.test(String(value || "").trim());
+const getColumn = (headers, candidates) =>
+  headers.find((header) =>
+    candidates.includes(normalizeColumn(header))
+  );
 
-const getColumn = (headers, candidates) => headers.find((header) =>
-  candidates.includes(normalizeColumn(header))
-);
+const isValidEmail = (value) =>
+  !value || EMAIL_PATTERN.test(String(value).trim());
 
-const buildSummary = (rows) => STATUS_ORDER.reduce((summary, status) => {
-  summary[status] = rows.filter((row) => row.status === status).length;
-  return summary;
-}, {});
-
-const getAuthHeaders = async () => {
-  const { data: { session }, error } = await supabase.auth.getSession();
-
-  if (error || !session?.access_token) {
-    throw new Error(error?.message || "You are not authenticated.");
-  }
-
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${session.access_token}`,
-  };
-};
+const isValidPhone = (value) =>
+  !value || PHONE_PATTERN.test(String(value).trim());
 
 function ParentEmailImport() {
   const fileInputRef = useRef(null);
-  const [fileName, setFileName] = useState("");
-  const [rows, setRows] = useState([]);
+
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [hasValidated, setHasValidated] = useState(false);
 
-  const validateFile = async (file) => {
+  /*
+   * -------------------------------------------------------
+   * LOAD ASSIGNED SQUAD STUDENTS
+   * -------------------------------------------------------
+   */
+
+  useEffect(() => {
+    loadStudents();
+  }, []);
+
+  const loadStudents = async () => {
+    setLoading(true);
     setError("");
     setSuccess("");
-    setHasValidated(false);
-
-    if (!file) {
-      setError("Please select an Excel file.");
-      return;
-    }
-
-    if (!/\.(xlsx|xls)$/i.test(file.name)) {
-      setError("Unsupported file format. Please upload an .xlsx or .xls file.");
-      return;
-    }
-
-    setLoading(true);
 
     try {
-      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const result = await getMentorStudents();
 
-      if (!firstSheet) {
-        throw new Error("The Excel file is empty.");
-      }
+      const loadedStudents = (result.students || []).map((student) => ({
+        id: student.id,
 
-      const spreadsheetRows = XLSX.utils.sheet_to_json(firstSheet, {
-        defval: "",
-        raw: false,
-      });
+        name: student.name || "",
+        email: student.email || "",
 
-      if (spreadsheetRows.length === 0) {
-        throw new Error("The Excel file does not contain any rows.");
-      }
+        phone:
+          student.phone ||
+          student.student_phone ||
+          "",
 
-      const headers = Object.keys(spreadsheetRows[0]);
-      const studentNameColumn = getColumn(headers, ["studentname", "name"]);
-      const parentEmailColumn = getColumn(headers, [
-        "parentemail",
-        "parentemailaddress",
-      ]);
+        parentEmail:
+          student.parent_email ||
+          student.parentEmail ||
+          "",
 
-      if (!studentNameColumn) {
-        throw new Error("Missing Student Name column.");
-      }
+        parentPhone:
+          student.parent_phone ||
+          student.parentPhone ||
+          "",
+      }));
 
-      if (!parentEmailColumn) {
-        throw new Error("Missing Parent Email column.");
-      }
+      setStudents(loadedStudents);
+    } catch (loadError) {
+      console.error("Failed to load squad students:", loadError);
 
-      const studentResult = await getMentorStudents();
-      const studentsByName = new Map();
-
-      for (const student of studentResult.students || []) {
-        const normalizedName = normalizeName(student.name);
-        const matches = studentsByName.get(normalizedName) || [];
-        matches.push(student);
-        studentsByName.set(normalizedName, matches);
-      }
-
-      const parsedRows = spreadsheetRows.map((spreadsheetRow, index) => {
-        const name = String(spreadsheetRow[studentNameColumn] || "").trim();
-        const parentEmail = String(spreadsheetRow[parentEmailColumn] || "").trim();
-        const isEmpty = !name && !parentEmail;
-        const matches = studentsByName.get(normalizeName(name)) || [];
-
-        let status = "Ready";
-        let matchingStudent = matches[0]?.name || "-";
-
-        if (isEmpty) {
-          status = "Empty Row";
-        } else if (!isValidEmail(parentEmail)) {
-          status = "Invalid Email";
-        } else if (matches.length === 0) {
-          status = "Student Not Found";
-        } else if (matches.length > 1) {
-          status = "Duplicate Name";
-          matchingStudent = `${matches.length} matches`;
-        }
-
-        return {
-          id: `${file.name}-${index}`,
-          name,
-          parentEmail,
-          matchingStudent,
-          status,
-        };
-      });
-
-      setRows(parsedRows);
-      setFileName(file.name);
-      setHasValidated(true);
-    } catch (validationError) {
-      setRows([]);
-      setFileName(file.name);
-      setError(validationError.message || "Failed to validate the Excel file.");
+      setError(
+        loadError.message ||
+          "Failed to load students for your assigned squad."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileChange = (event) => {
-    const [file] = event.target.files;
-    setFileName(file?.name || "");
-    void validateFile(file);
+  /*
+   * -------------------------------------------------------
+   * UPDATE TABLE CELL
+   * -------------------------------------------------------
+   */
+
+  const updateStudent = (studentId, field, value) => {
+    setStudents((currentStudents) =>
+      currentStudents.map((student) =>
+        student.id === studentId
+          ? {
+              ...student,
+              [field]: value,
+            }
+          : student
+      )
+    );
+
+    setSuccess("");
+    setError("");
   };
 
-  const importParentEmails = async () => {
-    const readyRows = rows.filter((row) => row.status === "Ready");
+  /*
+   * -------------------------------------------------------
+   * VALIDATION
+   * -------------------------------------------------------
+   */
 
-    if (!readyRows.length) {
-      setError("There are no valid matched students ready to import.");
+  const getRowError = (student) => {
+    if (
+      student.parentEmail &&
+      !isValidEmail(student.parentEmail)
+    ) {
+      return "Invalid parent email";
+    }
+
+    if (
+      student.phone &&
+      !isValidPhone(student.phone)
+    ) {
+      return "Invalid phone";
+    }
+
+    if (
+      student.parentPhone &&
+      !isValidPhone(student.parentPhone)
+    ) {
+      return "Invalid parent phone";
+    }
+
+    return "";
+  };
+
+  /*
+   * -------------------------------------------------------
+   * IMPORT EXCEL
+   * -------------------------------------------------------
+   */
+
+  const handleExcelImport = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setError("");
+    setSuccess("");
+    setImporting(true);
+
+    try {
+      if (!/\.(xlsx|xls)$/i.test(file.name)) {
+        throw new Error(
+          "Please select an .xlsx or .xls file."
+        );
+      }
+
+      const workbook = XLSX.read(
+        await file.arrayBuffer(),
+        {
+          type: "array",
+        }
+      );
+
+      const firstSheet =
+        workbook.Sheets[workbook.SheetNames[0]];
+
+      if (!firstSheet) {
+        throw new Error("The Excel file is empty.");
+      }
+
+      const excelRows = XLSX.utils.sheet_to_json(
+        firstSheet,
+        {
+          defval: "",
+          raw: false,
+        }
+      );
+
+      if (!excelRows.length) {
+        throw new Error(
+          "The Excel file does not contain any data."
+        );
+      }
+
+      const headers = Object.keys(excelRows[0]);
+
+      const nameColumn = getColumn(headers, [
+        "studentname",
+        "name",
+      ]);
+
+      const emailColumn = getColumn(headers, [
+        "studentemail",
+        "email",
+        "studentemailaddress",
+      ]);
+
+      const phoneColumn = getColumn(headers, [
+        "phone",
+        "studentphone",
+        "studentphonenumber",
+      ]);
+
+      const parentEmailColumn = getColumn(headers, [
+        "parentemail",
+        "parentemailaddress",
+      ]);
+
+      const parentPhoneColumn = getColumn(headers, [
+        "parentphone",
+        "parentphonenumber",
+      ]);
+
+      if (!emailColumn) {
+        throw new Error(
+          "Missing Student Email column in the Excel file."
+        );
+      }
+
+      /*
+       * Match Excel rows against the students already
+       * loaded for this mentor's assigned squad.
+       *
+       * Student Email is the primary identifier.
+       */
+
+      const studentsByEmail = new Map();
+
+      students.forEach((student) => {
+        studentsByEmail.set(
+          normalizeEmail(student.email),
+          student
+        );
+      });
+
+      let matchedCount = 0;
+      let skippedCount = 0;
+
+      setStudents((currentStudents) =>
+        currentStudents.map((student) => {
+          const excelRow = excelRows.find(
+            (row) =>
+              normalizeEmail(row[emailColumn]) ===
+              normalizeEmail(student.email)
+          );
+
+          if (!excelRow) {
+            return student;
+          }
+
+          matchedCount += 1;
+
+          return {
+            ...student,
+
+            /*
+             * Keep the actual student identity from
+             * the database.
+             */
+            name: student.name,
+            email: student.email,
+
+            phone: phoneColumn
+              ? String(
+                  excelRow[phoneColumn] || ""
+                ).trim()
+              : student.phone,
+
+            parentEmail: parentEmailColumn
+              ? String(
+                  excelRow[parentEmailColumn] || ""
+                ).trim()
+              : student.parentEmail,
+
+            parentPhone: parentPhoneColumn
+              ? String(
+                  excelRow[parentPhoneColumn] || ""
+                ).trim()
+              : student.parentPhone,
+          };
+        })
+      );
+
+      /*
+       * Count Excel records that don't belong to the
+       * mentor's assigned squad.
+       */
+
+      for (const row of excelRows) {
+        const email = normalizeEmail(
+          row[emailColumn]
+        );
+
+        if (!studentsByEmail.has(email)) {
+          skippedCount += 1;
+        }
+      }
+
+      setSuccess(
+        `Excel imported into the table. ${matchedCount} students matched${
+          skippedCount
+            ? `, ${skippedCount} rows skipped because they are not part of your assigned squad`
+            : ""
+        }. Review the changes before saving.`
+      );
+    } catch (importError) {
+      console.error(
+        "Excel import error:",
+        importError
+      );
+
+      setError(
+        importError.message ||
+          "Failed to import the Excel file."
+      );
+    } finally {
+      setImporting(false);
+
+      /*
+       * Allow selecting the same file again.
+       */
+      event.target.value = "";
+    }
+  };
+
+  /*
+   * -------------------------------------------------------
+   * DOWNLOAD EXCEL TEMPLATE
+   * -------------------------------------------------------
+   */
+
+  const downloadTemplate = () => {
+    if (!students.length) {
+      setError(
+        "There are no students available to create the template."
+      );
       return;
     }
 
-    setImporting(true);
+    const templateRows = students.map((student) => ({
+      "Student Name": student.name,
+      "Student Email": student.email,
+      Phone: student.phone || "",
+      "Parent Email": student.parentEmail || "",
+      "Parent Phone": student.parentPhone || "",
+    }));
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(templateRows);
+
+    worksheet["!cols"] = [
+      { wch: 25 },
+      { wch: 35 },
+      { wch: 18 },
+      { wch: 35 },
+      { wch: 18 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Student Contacts"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      "student_contact_template.xlsx"
+    );
+
+    setSuccess(
+      "Excel template downloaded successfully."
+    );
+  };
+
+  /*
+   * -------------------------------------------------------
+   * SAVE CHANGES
+   * -------------------------------------------------------
+   *
+   * Backend connection will be added in the next step.
+   */
+
+  const saveChanges = async () => {
     setError("");
     setSuccess("");
 
-    try {
-      const response = await fetch(`${API_URL}/api/parent-email/import`, {
-        method: "POST",
-        headers: await getAuthHeaders(),
-        body: JSON.stringify({
-          students: rows.map((row) => ({
-            name: row.name,
-            parentEmail: row.parentEmail,
-          })),
-        }),
-      });
-      const result = await response.json();
+    const invalidStudents = students.filter(
+      (student) => getRowError(student)
+    );
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "Parent email import failed.");
-      }
-
-      const importedResult = result.result;
-      setRows((currentRows) => currentRows.map((row) => (
-        row.status === "Ready" ? { ...row, status: "Updated" } : row
-      )));
-      setSuccess(
-        `Import completed: ${importedResult.updated} updated, `
-        + `${importedResult.notFound} not found, `
-        + `${importedResult.duplicateNames} duplicate names, `
-        + `${importedResult.invalidEmails} invalid emails, `
-        + `${importedResult.skipped} skipped.`
+    if (invalidStudents.length) {
+      setError(
+        "Please correct the invalid phone numbers or email addresses before saving."
       );
-      window.dispatchEvent(new CustomEvent("parentEmailImportCompleted"));
-    } catch (importError) {
-      setError(importError.message || "Failed to import parent emails.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      /*
+       * TEMPORARY
+       *
+       * In the next step this will become:
+       *
+       * POST /api/parent-email/save
+       *
+       * with the complete edited table.
+       */
+
+      console.log(
+        "Students ready to save:",
+        students
+      );
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 500)
+      );
+
+      setSuccess(
+        "Table is ready. Backend save will be connected next."
+      );
+    } catch (saveError) {
+      console.error(
+        "Save error:",
+        saveError
+      );
+
+      setError(
+        saveError.message ||
+          "Failed to save changes."
+      );
     } finally {
-      setImporting(false);
+      setSaving(false);
     }
   };
 
-  const summary = buildSummary(rows);
-  const readyCount = summary.Ready;
+  /*
+   * -------------------------------------------------------
+   * UI
+   * -------------------------------------------------------
+   */
 
   return (
     <section className="parent-email-page">
+
+      {/* HEADER */}
+
       <header className="parent-email-header">
         <div>
-          <h1>Parent Email Import</h1>
-          <p>Upload an Excel file to automatically update parent email addresses for existing students.</p>
+          <h1>Student Contact Management</h1>
+
+          <p>
+            Manage contact information for students
+            in your assigned squad.
+          </p>
+        </div>
+
+        <div className="parent-email-header-actions">
+
+          <input
+            ref={fileInputRef}
+            className="parent-email-file-input"
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleExcelImport}
+          />
+
+          <button
+            type="button"
+            className="parent-email-secondary-button"
+            onClick={() =>
+              fileInputRef.current?.click()
+            }
+            disabled={importing}
+          >
+            <Upload size={17} />
+
+            {importing
+              ? "Importing..."
+              : "Import Excel"}
+          </button>
+
+          <button
+            type="button"
+            className="parent-email-secondary-button"
+            onClick={downloadTemplate}
+            disabled={loading || !students.length}
+          >
+            <Download size={17} />
+
+            Download Template
+          </button>
+
         </div>
       </header>
 
-      <div className="parent-email-card parent-email-upload-card">
-        <div className="parent-email-upload-icon"><FileSpreadsheet size={28} /></div>
-        <h2>Upload parent email spreadsheet</h2>
-        <p>Supported formats: .xlsx and .xls</p>
-        <input
-          ref={fileInputRef}
-          className="parent-email-file-input"
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={handleFileChange}
-        />
-        <button
-          className="parent-email-secondary-button"
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload size={17} />
-          Choose Excel File
-        </button>
-        {fileName && <div className="parent-email-file-name">{fileName}</div>}
-        <button
-          className="parent-email-primary-button"
-          type="button"
-          onClick={() => void validateFile(fileInputRef.current?.files?.[0])}
-          disabled={loading || !fileName}
-        >
-          {loading ? "Validating..." : "Validate File"}
-        </button>
+      {/* MESSAGES */}
+
+      {error && (
+        <div className="parent-email-message parent-email-error">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="parent-email-message parent-email-success">
+          {success}
+        </div>
+      )}
+
+      {/* TABLE */}
+
+      <div className="parent-email-card parent-email-preview-card">
+
+        <div className="parent-email-preview-header">
+
+          <div>
+            <h2>Student Contacts</h2>
+
+            <p>
+              {loading
+                ? "Loading students..."
+                : `${students.length} students in your assigned squad`}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="parent-email-primary-button"
+            onClick={saveChanges}
+            disabled={
+              loading ||
+              saving ||
+              !students.length
+            }
+          >
+            <Save size={17} />
+
+            {saving
+              ? "Saving..."
+              : "Save Changes"}
+          </button>
+
+        </div>
+
+        {loading ? (
+          <div className="parent-email-loading">
+            Loading your squad students...
+          </div>
+        ) : students.length === 0 ? (
+          <div className="parent-email-empty">
+            No students found in your assigned squad.
+          </div>
+        ) : (
+          <div className="parent-email-table-wrapper">
+
+            <table className="parent-email-table">
+
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Student Email</th>
+                  <th>Phone</th>
+                  <th>Parent Email</th>
+                  <th>Parent Phone</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {students.map((student) => {
+                  const rowError =
+                    getRowError(student);
+
+                  return (
+                    <tr key={student.id}>
+
+                      {/* STUDENT NAME */}
+
+                      <td>
+                        <div className="student-name-cell">
+                          {student.name || "-"}
+                        </div>
+                      </td>
+
+                      {/* STUDENT EMAIL */}
+
+                      <td>
+                        <div className="student-email-cell">
+                          {student.email || "-"}
+                        </div>
+                      </td>
+
+                      {/* PHONE */}
+
+                      <td>
+                        <input
+                          className={
+                            rowError ===
+                            "Invalid phone"
+                              ? "table-input table-input-error"
+                              : "table-input"
+                          }
+                          type="tel"
+                          value={student.phone}
+                          placeholder="Student phone"
+                          onChange={(event) =>
+                            updateStudent(
+                              student.id,
+                              "phone",
+                              event.target.value
+                            )
+                          }
+                        />
+                      </td>
+
+                      {/* PARENT EMAIL */}
+
+                      <td>
+                        <input
+                          className={
+                            rowError ===
+                            "Invalid parent email"
+                              ? "table-input table-input-error"
+                              : "table-input"
+                          }
+                          type="email"
+                          value={
+                            student.parentEmail
+                          }
+                          placeholder="Parent email"
+                          onChange={(event) =>
+                            updateStudent(
+                              student.id,
+                              "parentEmail",
+                              event.target.value
+                            )
+                          }
+                        />
+                      </td>
+
+                      {/* PARENT PHONE */}
+
+                      <td>
+                        <input
+                          className={
+                            rowError ===
+                            "Invalid parent phone"
+                              ? "table-input table-input-error"
+                              : "table-input"
+                          }
+                          type="tel"
+                          value={
+                            student.parentPhone
+                          }
+                          placeholder="Parent phone"
+                          onChange={(event) =>
+                            updateStudent(
+                              student.id,
+                              "parentPhone",
+                              event.target.value
+                            )
+                          }
+                        />
+                      </td>
+
+                    </tr>
+                  );
+                })}
+
+              </tbody>
+
+            </table>
+
+          </div>
+        )}
+
       </div>
 
-      {error && <div className="parent-email-message parent-email-error">{error}</div>}
-      {success && <div className="parent-email-message parent-email-success">{success}</div>}
-
-      {hasValidated && (
-        <>
-          <div className="parent-email-card parent-email-summary-card">
-            <h2>Import Summary</h2>
-            <div className="parent-email-summary-grid">
-              <div><strong>{rows.length}</strong><span>Total Rows</span></div>
-              <div><strong>{readyCount}</strong><span>Ready to Import</span></div>
-              <div><strong>{summary["Student Not Found"]}</strong><span>Student Not Found</span></div>
-              <div><strong>{summary["Duplicate Name"]}</strong><span>Duplicate Name</span></div>
-              <div><strong>{summary["Invalid Email"]}</strong><span>Invalid Email</span></div>
-              <div><strong>{summary["Empty Row"]}</strong><span>Empty Row</span></div>
-            </div>
-          </div>
-
-          <div className="parent-email-card parent-email-preview-card">
-            <div className="parent-email-preview-header">
-              <h2>Preview</h2>
-              <button
-                className="parent-email-primary-button"
-                type="button"
-                onClick={() => void importParentEmails()}
-                disabled={importing || readyCount === 0}
-              >
-                {importing ? "Importing..." : "Import Parent Emails"}
-              </button>
-            </div>
-            <div className="parent-email-table-wrapper">
-              <table className="parent-email-table">
-                <thead>
-                  <tr>
-                    <th>Student Name</th>
-                    <th>Parent Email</th>
-                    <th>Matching Student</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.name || "-"}</td>
-                      <td>{row.parentEmail || "-"}</td>
-                      <td>{row.matchingStudent}</td>
-                      <td><span className={`parent-email-status status-${row.status.toLowerCase().replace(/\s+/g, "-")}`}>{row.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
     </section>
   );
 }
