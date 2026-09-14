@@ -1762,140 +1762,179 @@ const getStudents = async (
 // GET EMAIL ALERTS
 // ============================================================
 
-const getEmailAlerts =
-    async (
-        req,
-        res
-    ) => {
-        try {
-            const {
-                data: mentorProfile,
-                error: profileError,
-            } = await supabase
-                .from(
-                    "mentor_profiles"
-                )
-                .select("squad")
-                .eq(
-                    "user_id",
-                    req.user.id
-                )
-                .maybeSingle();
+const getEmailAlerts = async (req, res) => {
+    try {
+        const {
+            data: mentorProfile,
+            error: profileError,
+        } = await supabase
+            .from("mentor_profiles")
+            .select("squad, job_role")
+            .eq("user_id", req.user.id)
+            .maybeSingle();
 
-            if (profileError) {
-                throw profileError;
-            }
+        if (profileError) {
+            throw profileError;
+        }
 
-            if (!mentorProfile) {
+        if (!mentorProfile) {
+            return res.status(403).json({
+                success: false,
+                profileExists: false,
+                message:
+                    "Please complete your mentor profile first.",
+            });
+        }
+
+        const jobRole = mentorProfile.job_role || "mentor";
+        const assignedSquad = mentorProfile.squad || "";
+
+        console.log(
+            `[AESA] Email Alerts | Role: ${jobRole} | Squad: ${assignedSquad}`
+        );
+
+        // ========================================================
+        // BUILD STUDENT QUERY
+        // ========================================================
+
+        let studentsQuery = supabase
+            .from("students")
+            .select(
+                "id, name, email, squad, parent_email"
+            )
+            .order("name", {
+                ascending: true,
+            });
+
+        // --------------------------------------------------------
+        // MENTOR
+        // Only assigned squad
+        // --------------------------------------------------------
+
+        if (jobRole === "mentor") {
+            if (!assignedSquad || assignedSquad === "all") {
                 return res.status(403).json({
                     success: false,
-
-                    profileExists:
-                        false,
-
                     message:
-                        "Please complete your mentor profile first.",
+                        "No squad is assigned to this mentor.",
                 });
             }
 
-            const [
-                {
-                    data: students,
-                    error: studentsError,
-                },
-                {
-                    data: overallAttendance,
-                    error: overallAttendanceError,
-                },
-            ] = await Promise.all([
-                supabase
-                    .from("students")
-                    .select(
-                        "id, name, email, squad, parent_email"
-                    )
-                    .eq(
-                        "squad",
-                        mentorProfile.squad
-                    )
-                    .order("name", {
-                        ascending: true,
-                    }),
-
-                supabase
-                    .from("overall_attendance")
-                    .select(
-                        "student_id, attendance_percentage"
-                    ),
-            ]);
-
-            if (studentsError) {
-                throw studentsError;
-            }
-
-            if (overallAttendanceError) {
-                throw overallAttendanceError;
-            }
-
-            // Create quick lookup:
-            // student_id → attendance percentage
-            const overallAttendanceMap = new Map(
-                (overallAttendance || []).map(
-                    (record) => [
-                        record.student_id,
-                        Number(
-                            record.attendance_percentage
-                        ) || 0,
-                    ]
-                )
+            studentsQuery = studentsQuery.eq(
+                "squad",
+                assignedSquad
             );
-
-            const alerts =
-                (students || []).map(
-                    (student) => ({
-                        id: student.id,
-
-                        name: student.name,
-
-                        email: student.email,
-
-                        parentEmail:
-                            student.parent_email || "",
-
-                        squad: student.squad,
-
-                        attendance:
-                            overallAttendanceMap.get(
-                                student.id
-                            ) || 0,
-                    })
-                );
-
-            res.json({
-                success: true,
-
-                squad:
-                    mentorProfile.squad,
-
-                students:
-                    alerts,
-            });
-        } catch (error) {
-            console.error(
-                "Get email alerts error:",
-                error
-            );
-
-            res.status(500).json({
-                success: false,
-
-                message:
-                    "Failed to fetch email alert data",
-
-                error:
-                    error.message,
-            });
         }
-    };
+
+        // --------------------------------------------------------
+        // CAMPUS MANAGER
+        // No squad filter
+        // --------------------------------------------------------
+
+        if (jobRole === "campus_manager") {
+            // Intentionally fetch all students.
+        }
+
+        // ========================================================
+        // FETCH STUDENTS + ATTENDANCE
+        // ========================================================
+
+        const [
+            {
+                data: students,
+                error: studentsError,
+            },
+            {
+                data: overallAttendance,
+                error: overallAttendanceError,
+            },
+        ] = await Promise.all([
+            studentsQuery,
+
+            supabase
+                .from("overall_attendance")
+                .select(
+                    "student_id, attendance_percentage"
+                ),
+        ]);
+
+        if (studentsError) {
+            throw studentsError;
+        }
+
+        if (overallAttendanceError) {
+            throw overallAttendanceError;
+        }
+
+        // ========================================================
+        // ATTENDANCE LOOKUP
+        // ========================================================
+
+        const overallAttendanceMap = new Map(
+            (overallAttendance || []).map(
+                (record) => [
+                    record.student_id,
+                    Number(
+                        record.attendance_percentage
+                    ) || 0,
+                ]
+            )
+        );
+
+        // ========================================================
+        // BUILD ALERT DATA
+        // ========================================================
+
+        const alerts = (students || []).map(
+            (student) => ({
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                parentEmail:
+                    student.parent_email || "",
+                squad: student.squad,
+                attendance:
+                    overallAttendanceMap.get(
+                        student.id
+                    ) || 0,
+            })
+        );
+
+        // ========================================================
+        // RESPONSE
+        // ========================================================
+
+        return res.status(200).json({
+            success: true,
+
+            // For mentor -> assigned squad
+            // For campus manager -> all
+            squad:
+                jobRole === "campus_manager"
+                    ? "all"
+                    : assignedSquad,
+
+            jobRole,
+
+            students: alerts,
+
+            totalStudents: alerts.length,
+        });
+
+    } catch (error) {
+        console.error(
+            "Get email alerts error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Failed to fetch email alert data",
+            error: error.message,
+        });
+    }
+};
 
 // ============================================================
 // UPDATE STUDENT DETAILS
