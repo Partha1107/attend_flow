@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { getMentorEmailAlerts } from "../../api/mentor";
+import {
+  getMentorEmailAlerts,
+  getAvailableSquads,
+} from "../../api/mentor";
 import "./EmailAutomation.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -31,10 +34,10 @@ function EmailAutomation() {
   const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [jobRole, setJobRole] = useState("");
   const [mentorSquad, setMentorSquad] = useState("");
-  const [selectedSquad, setSelectedSquad] = useState(
-    () => localStorage.getItem("selectedSquad") || ""
-  );
+  const [selectedSquad, setSelectedSquad] = useState("");
+  const [squads, setSquads] = useState([]);
   const [attendanceFilter, setAttendanceFilter] = useState("all");
   const [mentorName, setMentorName] = useState("Mentor");
   const [mentorEmail, setMentorEmail] = useState("");
@@ -67,12 +70,41 @@ AESA`);
       try {
         setLoadingStudents(true);
         setLoadError("");
-        const result = await getMentorEmailAlerts();
-        setMentorSquad(result.squad || "");
-        setStudents((result.students || []).map(generateEmail));
+
+        const result =
+          await getMentorEmailAlerts();
+
+        setJobRole(
+          result.jobRole || "mentor"
+        );
+
+        setMentorSquad(
+          result.squad || ""
+        );
+
+        setStudents(
+          (result.students || []).map(
+            generateEmail
+          )
+        );
+
+        if (result.jobRole === "mentor") {
+          setSelectedSquad(
+            result.squad || ""
+          );
+        } else {
+          setSelectedSquad("");
+        }
       } catch (error) {
-        console.error("Failed to fetch email alert data:", error);
-        setLoadError(error.message || "Failed to load students.");
+        console.error(
+          "Failed to fetch email alert data:",
+          error
+        );
+
+        setLoadError(
+          error.message ||
+          "Failed to load students."
+        );
       } finally {
         setLoadingStudents(false);
       }
@@ -81,21 +113,21 @@ AESA`);
     void fetchAttendanceData();
   }, []);
 
-  useEffect(() => {
-    const updateSelectedSquad = (event) => {
-      setSelectedSquad(event.detail || "");
-    };
-    const handleStorageChange = (event) => {
-      if (event.key === "selectedSquad") setSelectedSquad(event.newValue || "");
-    };
+  // useEffect(() => {
+  //   const updateSelectedSquad = (event) => {
+  //     setSelectedSquad(event.detail || "");
+  //   };
+  //   const handleStorageChange = (event) => {
+  //     if (event.key === "selectedSquad") setSelectedSquad(event.newValue || "");
+  //   };
 
-    window.addEventListener("selectedSquadChange", updateSelectedSquad);
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("selectedSquadChange", updateSelectedSquad);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
+  //   window.addEventListener("selectedSquadChange", updateSelectedSquad);
+  //   window.addEventListener("storage", handleStorageChange);
+  //   return () => {
+  //     window.removeEventListener("selectedSquadChange", updateSelectedSquad);
+  //     window.removeEventListener("storage", handleStorageChange);
+  //   };
+  // }, []);
 
   useEffect(() => {
     const getMentor = async () => {
@@ -118,9 +150,51 @@ AESA`);
 
     void getMentor();
   }, []);
+  useEffect(() => {
+    if (jobRole !== "campus_manager") {
+      return;
+    }
 
-  const squadStudents = students.filter((student) =>
-    !selectedSquad || String(student.squad) === String(selectedSquad)
+    const loadSquads = async () => {
+      try {
+        const result =
+          await getAvailableSquads();
+
+        setSquads(
+          result.squads || []
+        );
+      } catch (error) {
+        console.error(
+          "Failed to load squads:",
+          error
+        );
+      }
+    };
+
+    void loadSquads();
+  }, [jobRole]);
+
+  const squadStudents = students.filter(
+    (student) => {
+      // Mentor:
+      // Backend already restricted the data
+      // to the mentor's assigned squad.
+      if (jobRole === "mentor") {
+        return true;
+      }
+
+      // Campus Manager:
+      // Allow local squad filtering.
+      if (jobRole === "campus_manager") {
+        return (
+          !selectedSquad ||
+          String(student.squad).trim() ===
+          String(selectedSquad).trim()
+        );
+      }
+
+      return true;
+    }
   );
 
   const filteredStudents = squadStudents.filter((student) => {
@@ -265,7 +339,13 @@ AESA`);
         <div>
           <div className="page-label">COMMUNICATIONS</div>
           <h1>Email Automation</h1>
-          <p>Attendance alerts for Squad {selectedSquad || mentorSquad || "your squad"}.</p>
+          <p>
+            {jobRole === "campus_manager"
+              ? selectedSquad
+                ? `Attendance alerts for Squad ${selectedSquad}.`
+                : "Attendance alerts for all squads."
+              : `Attendance alerts for Squad ${mentorSquad || "your squad"}.`}
+          </p>
         </div>
         <div className="date-section">
           <label htmlFor="attendance-date">Attendance Date</label>
@@ -283,6 +363,7 @@ AESA`);
         <div className="communication-header">
           <div><h2>Attendance Alerts</h2><p>Review personalized messages and send eligible alerts.</p></div>
           <div className="attendance-filter">
+
             <label htmlFor="attendance-filter">Attendance Range</label>
             <select id="attendance-filter" value={attendanceFilter} onChange={(event) => setAttendanceFilter(event.target.value)}>
               <option value="all">All Students</option>
