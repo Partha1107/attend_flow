@@ -53,10 +53,7 @@ const readResponse = async (response, fallbackMessage) => {
 // =====================================================
 
 export const getMentorRole = async () => {
-  console.log(
-    "🔥 ROLE API URL:",
-    `${API_URL}/api/mentor/role`
-  );
+  
 
   const response = await fetch(
     `${API_URL}/api/mentor/role`,
@@ -66,17 +63,11 @@ export const getMentorRole = async () => {
     }
   );
 
-  console.log(
-    "🔥 ROLE API STATUS:",
-    response.status
-  );
+  
 
   const result = await response.json();
 
-  console.log(
-    "🔥 ROLE API RESPONSE:",
-    result
-  );
+  
 
   if (!response.ok) {
     throw new Error(
