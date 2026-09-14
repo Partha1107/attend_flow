@@ -2,102 +2,216 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { supabase } from "../../lib/supabase";
-import { saveMentorProfile } from "../../api/mentor";
+import {
+  saveMentorProfile,
+  getAvailableSquads,
+} from "../../api/mentor";
+
 import "./MentorProfileSetup.css";
 
 const MentorProfileSetup = () => {
   const navigate = useNavigate();
 
+  // ============================================================
+  // USER DETAILS
+  // ============================================================
+
   const [mentorName, setMentorName] = useState("");
   const [mentorEmail, setMentorEmail] = useState("");
+
+  // ============================================================
+  // PROFILE DETAILS
+  // ============================================================
+
   const [collegeName, setCollegeName] = useState("");
+
+  // Empty initially because the user must choose the job role first
+  const [jobRole, setJobRole] = useState("");
+
   const [squad, setSquad] = useState("");
-  const [jobRole, setJobRole] = useState("mentor");
+
+  // Available squads from database
+  const [availableSquads, setAvailableSquads] = useState([]);
+
+  // ============================================================
+  // UI STATES
+  // ============================================================
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // ============================================================
+  // LOAD USER + AVAILABLE SQUADS
+  // ============================================================
 
   useEffect(() => {
     let mounted = true;
 
     const loadUser = async () => {
       if (!supabase) {
-        setError("Supabase is not configured.");
+        if (mounted) {
+          setError("Supabase is not configured.");
+          setLoading(false);
+        }
+
+        return;
+      }
+
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (!mounted) {
+          return;
+        }
+
+        if (userError || !user) {
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        // Get mentor name
+        setMentorName(
+          user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split("@")[0] ||
+            "Mentor"
+        );
+
+        // Get mentor email
+        setMentorEmail(user.email || "");
+
         setLoading(false);
-        return;
+      } catch (userError) {
+        console.error("User loading error:", userError);
+
+        if (mounted) {
+          setError("Failed to load your profile.");
+          setLoading(false);
+        }
       }
+    };
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    const loadSquads = async () => {
+      try {
+        const result = await getAvailableSquads();
 
-      if (!mounted) {
-        return;
+        if (!mounted) {
+          return;
+        }
+
+        setAvailableSquads(result?.squads || []);
+      } catch (squadError) {
+        console.error("Squad loading error:", squadError);
+
+        if (mounted) {
+          setError("Failed to load available squads.");
+        }
       }
-
-      if (userError || !user) {
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      setMentorName(
-        user.user_metadata?.full_name ||
-          user.user_metadata?.name ||
-          user.email?.split("@")[0] ||
-          "Mentor"
-      );
-
-      setMentorEmail(user.email || "");
-      setLoading(false);
     };
 
     void loadUser();
+    void loadSquads();
 
     return () => {
       mounted = false;
     };
   }, [navigate]);
 
+  // ============================================================
+  // JOB ROLE CHANGE
+  // ============================================================
+
+  const handleJobRoleChange = (event) => {
+    const selectedRole = event.target.value;
+
+    setJobRole(selectedRole);
+    setError("");
+
+    // Campus Manager does not belong to one squad
+    if (selectedRole === "campus_manager") {
+      setSquad("all");
+      return;
+    }
+
+    // Mentor needs an actual squad
+    setSquad("");
+  };
+
+  // ============================================================
+  // SUBMIT
+  // ============================================================
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     setError("");
+
+    // ----------------------------------------------------------
+    // COLLEGE VALIDATION
+    // ----------------------------------------------------------
 
     if (!collegeName.trim()) {
       setError("Please enter your college name.");
       return;
     }
 
-    if (!squad.trim()) {
-      setError("Please select your squad.");
-      return;
-    }
+    // ----------------------------------------------------------
+    // JOB ROLE VALIDATION
+    // ----------------------------------------------------------
 
     if (!jobRole) {
       setError("Please select your job role.");
       return;
     }
 
+    // ----------------------------------------------------------
+    // SQUAD VALIDATION
+    // Only Mentor requires a squad
+    // ----------------------------------------------------------
+
+    if (jobRole === "mentor" && !squad.trim()) {
+      setError("Please select your squad.");
+      return;
+    }
+
     try {
       setSaving(true);
 
+      // Campus Manager always gets squad = "all"
+      const profileSquad =
+        jobRole === "campus_manager"
+          ? "all"
+          : squad.trim();
+
       await saveMentorProfile({
         collegeName: collegeName.trim(),
-        squad: squad.trim(),
+        squad: profileSquad,
         jobRole,
       });
 
-      navigate("/dashboard", { replace: true });
+      // Profile saved successfully
+      navigate("/dashboard", {
+        replace: true,
+      });
     } catch (saveError) {
       console.error("Profile save error:", saveError);
+
       setError(
-        saveError.message || "Failed to save your profile."
+        saveError.message ||
+          "Failed to save your profile."
       );
     } finally {
       setSaving(false);
     }
   };
+
+  // ============================================================
+  // LOADING SCREEN
+  // ============================================================
 
   if (loading) {
     return (
@@ -109,9 +223,18 @@ const MentorProfileSetup = () => {
     );
   }
 
+  // ============================================================
+  // MAIN UI
+  // ============================================================
+
   return (
     <div className="mentor-setup-page">
       <div className="mentor-setup-card">
+
+        {/* ======================================================
+            HEADER
+        ====================================================== */}
+
         <div className="mentor-setup-header">
           <div className="mentor-avatar">
             {mentorName.charAt(0).toUpperCase()}
@@ -119,16 +242,31 @@ const MentorProfileSetup = () => {
 
           <div>
             <h1>Complete your profile</h1>
-            <p>Welcome, {mentorName}</p>
+
+            <p>
+              Welcome, {mentorName}
+            </p>
           </div>
         </div>
+
+        {/* ======================================================
+            EMAIL
+        ====================================================== */}
 
         <div className="mentor-email">
           {mentorEmail}
         </div>
 
+        {/* ======================================================
+            FORM
+        ====================================================== */}
+
         <form onSubmit={handleSubmit}>
-          {/* COLLEGE NAME */}
+
+          {/* ====================================================
+              COLLEGE NAME
+          ==================================================== */}
+
           <div className="form-group">
             <label htmlFor="collegeName">
               College Name
@@ -147,36 +285,10 @@ const MentorProfileSetup = () => {
             />
           </div>
 
-          {/* SQUAD */}
-          <div className="form-group">
-            <label htmlFor="squad">
-              Squad
-            </label>
+          {/* ====================================================
+              JOB ROLE
+          ==================================================== */}
 
-            <select
-              id="squad"
-              value={squad}
-              onChange={(event) =>
-                setSquad(event.target.value)
-              }
-              disabled={saving}
-            >
-              <option value="">
-                Select your squad
-              </option>
-
-              {Array.from(
-                { length: 5 },
-                (_, index) => String(138 + index)
-              ).map((value) => (
-                <option key={value} value={value}>
-                  Squad {value}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* JOB ROLE */}
           <div className="form-group">
             <label htmlFor="jobRole">
               Job Role
@@ -185,11 +297,13 @@ const MentorProfileSetup = () => {
             <select
               id="jobRole"
               value={jobRole}
-              onChange={(event) =>
-                setJobRole(event.target.value)
-              }
+              onChange={handleJobRoleChange}
               disabled={saving}
             >
+              <option value="">
+                Select your job role
+              </option>
+
               <option value="mentor">
                 Mentor
               </option>
@@ -200,20 +314,69 @@ const MentorProfileSetup = () => {
             </select>
           </div>
 
-          {/* ERROR */}
+          {/* ====================================================
+              SQUAD
+
+              Only visible when Job Role = Mentor
+          ==================================================== */}
+
+          {jobRole === "mentor" && (
+            <div className="form-group">
+              <label htmlFor="squad">
+                Squad
+              </label>
+
+              <select
+                id="squad"
+                value={squad}
+                onChange={(event) => {
+                  setSquad(event.target.value);
+                  setError("");
+                }}
+                disabled={saving}
+              >
+                <option value="">
+                  Select your squad
+                </option>
+
+                {availableSquads.map((value) => (
+                  <option
+                    key={value}
+                    value={value}
+                  >
+                    Squad {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* ====================================================
+              ERROR
+          ==================================================== */}
+
           {error && (
-            <div className="mentor-setup-error">
+            <div
+              className="mentor-setup-error"
+              role="alert"
+            >
               {error}
             </div>
           )}
 
-          {/* SUBMIT */}
+          {/* ====================================================
+              SUBMIT
+          ==================================================== */}
+
           <button
             type="submit"
             disabled={saving}
           >
-            {saving ? "Saving..." : "Continue"}
+            {saving
+              ? "Saving..."
+              : "Continue"}
           </button>
+
         </form>
       </div>
     </div>

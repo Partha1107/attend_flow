@@ -5,24 +5,23 @@ const router = express.Router();
 const mentorDashboardController = require(
     "../controllers/mentorDashboardController"
 );
+
 const { requireAuth } = require(
     "../middleware/authMiddleware"
 );
 
 // ============================================================
-// GET ALL SQUADS
+// GET ALL AVAILABLE SQUADS
 // ============================================================
 
 router.get(
     "/squads",
+    requireAuth,
     mentorDashboardController.getSquads
 );
 
 // ============================================================
 // GET STUDENTS
-//
-// /api/mentor/dashboard/students
-// /api/mentor/dashboard/students?squad=138
 // ============================================================
 
 router.get(
@@ -33,26 +32,32 @@ router.get(
 
 // ============================================================
 // GET ATTENDANCE
-//
-// /api/mentor/dashboard/attendance
-// /api/mentor/dashboard/attendance?squad=138
 // ============================================================
 
 router.get(
     "/attendance",
+    requireAuth,
     mentorDashboardController.getAttendanceRecords
 );
 
 // ============================================================
 // GET OVERVIEW
-//
-// /api/mentor/dashboard/overview
-// /api/mentor/dashboard/overview?squad=138
 // ============================================================
 
 router.get(
     "/overview",
+    requireAuth,
     mentorDashboardController.getOverview
+);
+
+// ============================================================
+// UPDATE STUDENT CONTACT
+// ============================================================
+
+router.patch(
+    "/students/:id/contact",
+    requireAuth,
+    mentorDashboardController.updateStudentContact
 );
 
 module.exports = router;

@@ -575,6 +575,32 @@
   font-size: 13px;
 }
 
+.contact-error-box {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #ffb8b8;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #d91c1c;
+  margin-bottom: 18px;
+}
+
+.contact-error-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.contact-error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.contact-error-item {
+  line-height: 1.5;
+  font-size: 14px;
+}
 /* =========================================================
    FULL WIDTH OVERRIDES
    ========================================================= */

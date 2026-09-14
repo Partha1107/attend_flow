@@ -194,3 +194,49 @@ export const getMentorEmailAlerts = async () => {
     "Failed to load email alert details."
   );
 };
+
+// =====================================================
+// UPDATE STUDENT CONTACT DETAILS
+// =====================================================
+
+export const updateStudentContact = async (
+  studentId,
+  {
+    phone,
+    parent_email,
+    parent_phone,
+  }
+) => {
+  const response = await fetch(
+    `${API_URL}/api/mentor/dashboard/students/${studentId}/contact`,
+    {
+      method: "PATCH",
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({
+        phone,
+        parent_email,
+        parent_phone,
+      }),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to update student contact details."
+  );
+};
+
+export const getAvailableSquads = async () => {
+  const response = await fetch(
+    `${API_URL}/api/mentor/dashboard/squads`,
+    {
+      method: "GET",
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to load available squads."
+  );
+};

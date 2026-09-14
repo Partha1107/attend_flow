@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { getMentorStudents } from "../../api/mentor";
+import {
+  getMentorStudents,
+  getAvailableSquads,
+} from "../../api/mentor";
 import "./StudentPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -12,9 +15,8 @@ function StudentPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [squad, setSquad] = useState(
-    () => localStorage.getItem("selectedSquad") || ""
-  );
+  const [jobRole, setJobRole] = useState("");
+  const [squad, setSquad] = useState("");
   const [squads, setSquads] = useState([]);
   const [attendanceStatus, setAttendanceStatus] = useState("");
   const [error, setError] = useState("");
@@ -92,32 +94,67 @@ function StudentPage() {
 
       const result = await getMentorStudents();
 
-      const fetchedStudents = (result.students || []).map((student) => ({
-    ...student,
-    attendance: Number(student.attendance) || 0,
-}));
+      // Backend decides what students this user is allowed to see
+      const fetchedStudents = (result.students || []).map(
+        (student) => ({
+          ...student,
+          attendance:
+            Number(student.attendance) || 0,
+        })
+      );
+
       console.table(
         fetchedStudents.map((student) => ({
           name: student.name,
+          squad: student.squad,
           attendance: student.attendance,
-          subjects: student.subjects?.length || 0,
+          subjects:
+            student.subjects?.length || 0,
         }))
       );
 
+      // Get role from backend
+      setJobRole(result.jobRole || "mentor");
+
+      // Backend returns:
+      // Mentor          -> assigned squad
+      // Campus Manager  -> "all"
+      const returnedSquad = result.squad || "";
+
+      if (result.jobRole === "mentor") {
+        setSquad(returnedSquad);
+      } else {
+        // Campus Manager starts with all squads visible
+        setSquad("");
+      }
+
       setStudents(fetchedStudents);
 
-      const studentId = searchParams.get("student");
+      // Open student from URL if provided
+      const studentId =
+        searchParams.get("student");
 
-      const matchingStudent = fetchedStudents.find(
-        (student) => String(student.id) === studentId
-      );
+      const matchingStudent =
+        fetchedStudents.find(
+          (student) =>
+            String(student.id) === studentId
+        );
 
       if (matchingStudent) {
-        setSelectedStudent(matchingStudent);
+        setSelectedStudent(
+          matchingStudent
+        );
       }
     } catch (error) {
-      console.error("Failed to fetch students:", error);
-      setError(error.message || "Failed to fetch students.");
+      console.error(
+        "Failed to fetch students:",
+        error
+      );
+
+      setError(
+        error.message ||
+        "Failed to fetch students."
+      );
     } finally {
       setLoading(false);
     }
@@ -157,50 +194,37 @@ function StudentPage() {
   useEffect(() => {
     const loadSquads = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/api/mentor/dashboard/squads`
+        const result =
+          await getAvailableSquads();
+
+        setSquads(
+          result.squads || []
         );
-        const result = await response.json();
-
-        if (response.status === 404) {
-          throw new Error(
-            "Squad API endpoint not found. Check the backend route."
-          );
-        }
-
-        if (!response.ok || !result.success) {
-          throw new Error(
-            result.message || `Server error: ${response.status}`
-          );
-        }
-
-        setSquads(result.squads || []);
       } catch (loadError) {
-        console.error("Load squads error:", loadError);
+        console.error(
+          "Load squads error:",
+          loadError
+        );
       }
     };
 
-    const handleSquadChange = (event) => {
-      const nextSquad = event.detail || "";
-      setSquad(nextSquad);
-    };
-
     void loadSquads();
-    window.addEventListener("selectedSquadChange", handleSquadChange);
-
-    return () => {
-      window.removeEventListener("selectedSquadChange", handleSquadChange);
-    };
   }, []);
 
   const filteredStudents = students.filter((student) => {
-    const searchValue = search.toLowerCase();
+    const searchValue = search.trim().toLowerCase();
+
     const matchesSearch =
+      !searchValue ||
       student.name?.toLowerCase().includes(searchValue) ||
       String(student.id).toLowerCase().includes(searchValue);
 
+    // Campus Manager can filter by squad.
+    // Convert both values to String so 138 and "138" match.
     const matchesSquad =
-      !squad || student.squad === squad;
+      jobRole !== "campus_manager" ||
+      !squad ||
+      String(student.squad).trim() === String(squad).trim();
 
     const matchesStatus =
       !attendanceStatus ||
@@ -215,10 +239,14 @@ function StudentPage() {
 
   const clearFilters = () => {
     setSearch("");
-    setSquad("");
     setAttendanceStatus("");
-  };
 
+    // Campus Manager can clear the squad filter.
+    // Mentor must remain locked to their assigned squad.
+    if (jobRole === "campus_manager") {
+      setSquad("");
+    }
+  };
   // const presentCount = students.filter((student) => student.status === "Present").length;
   // const absentCount = students.filter((student) => student.status === "Absent").length;
   // const averageAttendance = students.length
@@ -355,17 +383,27 @@ function StudentPage() {
           />
         </div>
 
-        <select
-          value={squad}
-          onChange={(e) => setSquad(e.target.value)}
-        >
-          <option value="">All Squads</option>
-          {squads.map((availableSquad) => (
-            <option key={availableSquad} value={availableSquad}>
-              {availableSquad}
+        {jobRole === "campus_manager" && (
+          <select
+            value={squad}
+            onChange={(e) => {
+              setSquad(e.target.value);
+            }}
+          >
+            <option value="">
+              All Squads
             </option>
-          ))}
-        </select>
+
+            {squads.map((availableSquad) => (
+              <option
+                key={String(availableSquad)}
+                value={String(availableSquad)}
+              >
+                Squad {availableSquad}
+              </option>
+            ))}
+          </select>
+        )}
 
         <select
           value={attendanceStatus}
@@ -658,7 +696,7 @@ function StudentPage() {
         )}
       </div>
     </div>
-      );
+  );
 }
 
-  export default StudentPage;
+export default StudentPage;
