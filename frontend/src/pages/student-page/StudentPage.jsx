@@ -60,7 +60,6 @@ function StudentPage() {
   // PARENT DETAILS
   // ============================================================
 
-  const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [parentPhone, setParentPhone] = useState("");
 
@@ -71,7 +70,6 @@ function StudentPage() {
   const openDetailsModal = (student) => {
     setDetailsStudent(student);
 
-    setParentName(student.parent_name || "");
     setParentEmail(student.parent_email || "");
     setParentPhone(student.parent_phone || "");
 
@@ -637,18 +635,6 @@ function StudentPage() {
                     placeholder="Student Email"
                   />
 
-                  {/* Parent Name */}
-                  <input
-                    type="text"
-                    value={parentName}
-                    onChange={(e) =>
-                      setParentName(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Parent Name"
-                  />
-
                   {/* Parent Email */}
                   <input
                     type="email"
@@ -1053,25 +1039,11 @@ function StudentPage() {
 
                 <div className="profile-grid">
 
-                  {/* Full Name */}
+                  {/* Student Email */}
                   <div>
 
                     <span>
-                      Full Name
-                    </span>
-
-                    <strong>
-                      {selectedStudent.name ||
-                        "Not provided"}
-                    </strong>
-
-                  </div>
-
-                  {/* Email */}
-                  <div>
-
-                    <span>
-                      Email
+                      Student Email
                     </span>
 
                     <strong>
@@ -1081,44 +1053,43 @@ function StudentPage() {
 
                   </div>
 
-                  {/* Parent Number */}
+                  {/* Student Phone Number */}
                   <div>
 
                     <span>
-                      Parent's Number
+                      Student Phone Number
+                    </span>
+
+                    <strong>
+                      {selectedStudent.phone ||
+                        "Not provided"}
+                    </strong>
+
+                  </div>
+
+                  {/* Parent Phone Number */}
+                  <div>
+
+                    <span>
+                      Parent Phone Number
                     </span>
 
                     <strong>
                       {selectedStudent.parent_phone ||
-                        selectedStudent.phone ||
                         "Not provided"}
                     </strong>
 
                   </div>
 
-                  {/* Date of Birth */}
+                  {/* Parent Email */}
                   <div>
 
                     <span>
-                      Date of Birth
+                      Parent Email
                     </span>
 
                     <strong>
-                      {selectedStudent.dob ||
-                        "Not provided"}
-                    </strong>
-
-                  </div>
-
-                  {/* Gender */}
-                  <div>
-
-                    <span>
-                      Gender
-                    </span>
-
-                    <strong>
-                      {selectedStudent.gender ||
+                      {selectedStudent.parent_email ||
                         "Not provided"}
                     </strong>
 
