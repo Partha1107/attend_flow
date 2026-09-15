@@ -50,6 +50,7 @@ function StudentPage() {
   // ============================================================
 
   const [search, setSearch] = useState("");
+  const [attendanceFilter, setAttendanceFilter] = useState("all");
 
   // ============================================================
   // ERROR
@@ -448,14 +449,20 @@ function StudentPage() {
        */
 
       const matchesSquad =
-        jobRole !== "campus_manager" ||
         !squad ||
         String(student.squad).trim() ===
           String(squad).trim();
 
+      const attendance = Number(student.attendance) || 0;
+      const matchesAttendance =
+        attendanceFilter === "all" ||
+        (attendanceFilter === "below75" && attendance < 75) ||
+        (attendanceFilter === "above75" && attendance >= 75);
+
       return (
         matchesSearch &&
-        matchesSquad
+        matchesSquad &&
+        matchesAttendance
       );
     });
 
@@ -482,17 +489,8 @@ function StudentPage() {
 
   const clearFilters = () => {
     setSearch("");
-
-    /*
-     * Only Campus Manager can clear/change
-     * the squad filter.
-     *
-     * Mentor remains locked to assigned squad.
-     */
-
-    if (jobRole === "campus_manager") {
-      setSquad("");
-    }
+    setAttendanceFilter("all");
+    setSquad("");
   };
 
   // ============================================================
@@ -543,7 +541,14 @@ function StudentPage() {
                 Campus Manager
               </strong>
               {" · "}
-              Viewing all squads
+              {squad
+                ? `Viewing Squad ${squad}`
+                : "Viewing all squads"}
+              {attendanceFilter === "below75"
+                ? " · Below 75%"
+                : attendanceFilter === "above75"
+                  ? " · 75% and above"
+                  : ""}
             </p>
           )}
 
@@ -775,6 +780,51 @@ function StudentPage() {
         {/* ==================================================
             CAMPUS MANAGER SQUAD FILTER
         ================================================== */}
+
+        <div className="student-filter-buttons">
+          <button
+            type="button"
+            className={`student-filter-btn ${!squad && attendanceFilter === "all" ? "active" : ""}`}
+            onClick={() => {
+              setSquad("");
+              setAttendanceFilter("all");
+            }}
+          >
+            All Students
+          </button>
+
+          <button
+            type="button"
+            className={`student-filter-btn ${squad === "138" ? "active" : ""}`}
+            onClick={() => setSquad("138")}
+          >
+            Squad 138
+          </button>
+
+          <button
+            type="button"
+            className={`student-filter-btn ${squad === "139" ? "active" : ""}`}
+            onClick={() => setSquad("139")}
+          >
+            Squad 139
+          </button>
+
+          <button
+            type="button"
+            className={`student-filter-btn ${attendanceFilter === "below75" ? "active" : ""}`}
+            onClick={() => setAttendanceFilter("below75")}
+          >
+            Below 75%
+          </button>
+
+          <button
+            type="button"
+            className={`student-filter-btn ${attendanceFilter === "above75" ? "active" : ""}`}
+            onClick={() => setAttendanceFilter("above75")}
+          >
+            Above 75%
+          </button>
+        </div>
 
         {jobRole ===
           "campus_manager" && (

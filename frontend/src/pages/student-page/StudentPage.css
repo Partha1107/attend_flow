@@ -198,6 +198,35 @@
   outline: none;
 }
 
+.student-filter-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.student-filter-btn {
+  height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: var(--student-text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 14px;
+  border-radius: 10px;
+}
+
+.student-filter-btn:hover {
+  background: #fff4f4;
+}
+
+.student-filter-btn.active {
+  border-color: var(--student-primary);
+  background: var(--student-primary-soft);
+  color: var(--student-primary);
+}
+
 .clear-filter-btn {
   height: 40px;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -792,6 +821,8 @@
     min-width: 0;
   }
 
+  .student-filter-buttons,
+  .student-filter-btn,
   .clear-filter-btn {
     width: 100%;
   }
