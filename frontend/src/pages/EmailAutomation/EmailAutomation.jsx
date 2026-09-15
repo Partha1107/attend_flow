@@ -223,7 +223,7 @@ AESA`);
 
   const sendEmail = async (student) => {
     if (Number(student.attendance) >= 75) {
-      throw new Error("Attendance is 75% or above. Email should not be sent.");
+      throw new Error("Not eligible: attendance must be below 75%.");
     }
     if (!student.parentEmail) {
       throw new Error(`Parent email is missing for ${student.name}.`);
@@ -233,6 +233,7 @@ AESA`);
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        studentIds: [student.id],
         mentorName,
         mentorEmail,
         studentId: student.id,
@@ -388,7 +389,7 @@ AESA`);
             <div className="attendance-info"><span>Attendance</span><strong>{student.attendance}%</strong></div>
             <div className={`email-status ${student.status.toLowerCase()}`}>{student.status}</div>
             <div className="email-subject"><span>Subject</span><p>{student.subject}</p><span>Message</span><p>{student.message}</p></div>
-            <div className="email-actions"><button type="button" className="preview-button" onClick={() => handlePreview(student)}>Preview</button><button type="button" className="edit-button" onClick={() => handleEdit(student)} disabled={sendingIds.includes(student.id)}>Edit Email</button><button type="button" className="send-button" onClick={() => handleSend(student)} disabled={sendingIds.includes(student.id) || Number(student.attendance) >= 75} title={Number(student.attendance) >= 75 ? "Attendance is 75% or above" : "Send email"}>{sendingIds.includes(student.id) ? "Sending..." : "Send"}</button>{Number(student.attendance) >= 75 && <span className="email-eligibility">Attendance is 75% or above. Email should not be sent.</span>}</div>
+            <div className="email-actions"><button type="button" className="preview-button" onClick={() => handlePreview(student)}>Preview</button><button type="button" className="edit-button" onClick={() => handleEdit(student)} disabled={sendingIds.includes(student.id)}>Edit Email</button><button type="button" className="send-button" onClick={() => handleSend(student)} disabled={sendingIds.includes(student.id)} title={Number(student.attendance) >= 75 ? "Not eligible: attendance must be below 75%" : "Send email"}>{sendingIds.includes(student.id) ? "Sending..." : Number(student.attendance) < 75 ? "Send" : "Not Eligible"}</button><span className="email-eligibility">{Number(student.attendance) < 75 ? "Eligible to send" : "Not eligible: attendance is 75% or above"}</span></div>
           </div>
         ))}
       </div>
@@ -404,7 +405,7 @@ AESA`);
         <div className="modal-header"><div><div className="page-label">{modalMode === "edit" ? "EDIT EMAIL" : "EMAIL PREVIEW"}</div><h2>Attendance Alert</h2></div><button type="button" className="close-button" onClick={() => { setSelectedEmail(null); setModalMode(null); }}>×</button></div>
         <div className="email-details"><div><span>To</span><p>{selectedEmail.parentEmail || "Parent email missing"}</p></div><div><span>Student</span><p>{selectedEmail.name}</p></div><div><span>Subject</span>{modalMode === "edit" ? <input className="edit-input" value={editSubject} onChange={(event) => setEditSubject(event.target.value)} /> : <p>{selectedEmail.subject}</p>}</div></div>
         <div className="email-message">{modalMode === "edit" ? <textarea className="edit-textarea" value={editMessage} onChange={(event) => setEditMessage(event.target.value)} /> : <p>{selectedEmail.message}</p>}</div>
-        <div className="modal-actions"><button type="button" className="cancel-button" onClick={() => { setSelectedEmail(null); setModalMode(null); }}>Close</button>{modalMode === "edit" ? <button type="button" className="modal-send-button" onClick={handleSaveEdit}>Save Changes</button> : <button type="button" className="modal-send-button" onClick={() => handleSend(selectedEmail)} disabled={isSending || Number(selectedEmail.attendance) >= 75}>{Number(selectedEmail.attendance) >= 75 ? "Not Eligible" : "Send Email"}</button>}</div>
+        <div className="modal-actions"><button type="button" className="cancel-button" onClick={() => { setSelectedEmail(null); setModalMode(null); }}>Close</button>{modalMode === "edit" ? <button type="button" className="modal-send-button" onClick={handleSaveEdit}>Save Changes</button> : <button type="button" className="modal-send-button" onClick={() => handleSend(selectedEmail)} disabled={isSending}>{Number(selectedEmail.attendance) >= 75 ? "Not Eligible" : "Send Email"}</button>}</div>
       </div></div>}
     </section>
   );
