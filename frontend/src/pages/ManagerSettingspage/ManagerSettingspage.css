@@ -1,0 +1,287 @@
+.manager-settings-page {
+  width: 100%;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+/* ================================
+   HEADER
+================================ */
+
+.manager-settings-header {
+  margin-bottom: 28px;
+}
+
+.manager-settings-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #171717;
+}
+
+.manager-settings-header p {
+  margin: 7px 0 0;
+  color: #777;
+  font-size: 14px;
+}
+
+/* ================================
+   MAIN CARD
+================================ */
+
+.mentor-management-card {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* ================================
+   CARD HEADER
+================================ */
+
+.mentor-management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.mentor-management-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  color: #202020;
+}
+
+.mentor-management-header p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.mentor-count {
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #f5f5f3;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ================================
+   TABLE
+================================ */
+
+.mentor-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mentor-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 850px;
+}
+
+.mentor-table th {
+  padding: 14px 24px;
+  text-align: left;
+  background: #fafafa;
+  border-bottom: 1px solid #eeeeee;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #888;
+}
+
+.mentor-table td {
+  padding: 17px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  font-size: 13px;
+}
+
+.mentor-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mentor-table tbody tr:hover {
+  background: #fcfcfb;
+}
+
+/* ================================
+   MENTOR NAME
+================================ */
+
+.mentor-name {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 190px;
+}
+
+.mentor-avatar {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: #f2383f;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  flex-shrink: 0;
+}
+
+.mentor-name span {
+  font-weight: 600;
+  color: #242424;
+}
+
+/* ================================
+   EMAIL
+================================ */
+
+.mentor-email {
+  color: #707070;
+  white-space: nowrap;
+}
+
+/* ================================
+   SELECT
+================================ */
+
+.settings-select {
+  min-width: 130px;
+  padding: 8px 30px 8px 11px;
+
+  border: 1px solid #dededb;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #333;
+  font-size: 13px;
+
+  cursor: pointer;
+  outline: none;
+}
+
+.settings-select:hover {
+  border-color: #c7c7c4;
+}
+
+.settings-select:focus {
+  border-color: #f2383f;
+}
+
+/* ================================
+   ACCESS TOGGLE
+================================ */
+
+.access-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  border: none;
+  background: transparent;
+
+  padding: 0;
+
+  cursor: pointer;
+}
+
+.toggle-circle {
+  position: relative;
+
+  width: 34px;
+  height: 20px;
+
+  border-radius: 20px;
+
+  transition: 0.2s;
+}
+
+.toggle-circle::after {
+  content: "";
+
+  position: absolute;
+
+  width: 14px;
+  height: 14px;
+
+  top: 3px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  transition: 0.2s;
+}
+
+.access-toggle.active .toggle-circle {
+  background: #31a354;
+}
+
+.access-toggle.active .toggle-circle::after {
+  left: 17px;
+}
+
+.access-toggle.blocked .toggle-circle {
+  background: #c9c9c9;
+}
+
+.access-toggle.blocked .toggle-circle::after {
+  left: 3px;
+}
+
+.toggle-text {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.access-toggle.active .toggle-text {
+  color: #268542;
+}
+
+.access-toggle.blocked .toggle-text {
+  color: #888;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 900px) {
+  .manager-settings-page {
+    padding: 20px;
+  }
+
+  .mentor-management-header {
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 600px) {
+  .manager-settings-page {
+    padding: 15px;
+  }
+
+  .manager-settings-header h1 {
+    font-size: 23px;
+  }
+
+  .mentor-management-header {
+    flex-direction: column;
+  }
+}
