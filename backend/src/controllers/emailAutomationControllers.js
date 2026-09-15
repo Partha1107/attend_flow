@@ -239,9 +239,14 @@ const sendAttendanceEmail = async (req, res) => {
     const {
       mentorName,
       mentorEmail,
+      studentId,
+      studentName,
+      studentEmail,
       parentEmail,
+      attendancePercentage,
       subject,
       message,
+      sendType = "automatic",
     } = req.body;
 
     if (!mentorName || requestedStudentIds.length === 0) {
@@ -295,13 +300,16 @@ const sendAttendanceEmail = async (req, res) => {
       attendancePercentage: attendanceByStudentId.get(String(studentId)) || 0,
     }));
     const ineligibleStudents = selectedWithAttendance.filter(
-      (student) => student.attendancePercentage >= 75
+      (student) =>
+        sendType === "automatic" &&
+        Number(student.attendancePercentage) >= 75
     );
 
     if (ineligibleStudents.length > 0) {
-      return res.status(422).json({
+      return res.status(400).json({
         success: false,
-        message: "Email can only be sent to students below 75% attendance.",
+        message:
+          "Automatic attendance alerts are only available for students below 75%.",
         ineligibleStudents: ineligibleStudents.map((student) => ({
           id: student.id,
           name: student.name,
