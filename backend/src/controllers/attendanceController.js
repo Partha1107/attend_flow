@@ -299,28 +299,20 @@ const findStudentByEmail = async (
     return data;
 };
 
+
 // ============================================================
 // CREATE / UPDATE STUDENT
 // ============================================================
 
-const createOrUpdateStudent = async (
-    student
-) => {
-    const email = cleanString(
-        student.email
-    );
+const createOrUpdateStudent = async (student) => {
+    const email = cleanString(student.email);
 
-    const name = cleanString(
-        student.name
-    );
+    const name = cleanString(student.name);
 
-    const squad = cleanString(
-        student.squad
-    );
+    const squad = cleanString(student.squad);
 
-    const parentName = cleanString(
-        student.parent_name ||
-        student.parentName
+    const phone = cleanString(
+        student.phone
     );
 
     const parentEmail = cleanString(
@@ -340,9 +332,7 @@ const createOrUpdateStudent = async (
     }
 
     const existingStudent =
-        await findStudentByEmail(
-            email
-        );
+        await findStudentByEmail(email);
 
     // ----------------------------------------------------------
     // UPDATE EXISTING STUDENT
@@ -351,12 +341,11 @@ const createOrUpdateStudent = async (
     if (existingStudent) {
         const updateData = {
             name,
-
             squad,
 
-            parent_name:
-                parentName ||
-                existingStudent.parent_name ||
+            phone:
+                phone ||
+                existingStudent.phone ||
                 null,
 
             parent_email:
@@ -407,13 +396,11 @@ const createOrUpdateStudent = async (
         .from("students")
         .insert({
             email,
-
             name,
-
             squad,
 
-            parent_name:
-                parentName || null,
+            phone:
+                phone || null,
 
             parent_email:
                 parentEmail || null,
@@ -436,6 +423,7 @@ const createOrUpdateStudent = async (
         updated: false,
     };
 };
+
 
 // ============================================================
 // FIND SUBJECT
@@ -884,12 +872,20 @@ const bulkUpsertStudents = async (
     existingStudentsByEmail
 ) => {
     const rows = [];
+
     let studentsCreated = 0;
     let studentsUpdated = 0;
 
-    for (const studentData of students) {
-        const email = cleanString(studentData.email);
+    // ----------------------------------------------------------
+    // BUILD STUDENT ROWS
+    // ----------------------------------------------------------
 
+    for (const studentData of students) {
+        const email = cleanString(
+            studentData.email
+        );
+
+        // Skip students without email
         if (!email) {
             continue;
         }
@@ -897,9 +893,8 @@ const bulkUpsertStudents = async (
         const existingStudent =
             existingStudentsByEmail.get(email);
 
-        const parentName = cleanString(
-            studentData.parent_name ||
-            studentData.parentName
+        const phone = cleanString(
+            studentData.phone
         );
 
         const parentEmail = cleanString(
@@ -913,19 +908,30 @@ const bulkUpsertStudents = async (
         );
 
         rows.push({
+            // Keep existing ID when updating
             ...(existingStudent?.id
-                ? { id: existingStudent.id }
+                ? {
+                    id: existingStudent.id,
+                }
                 : {}),
 
             email,
 
-            name: cleanString(studentData.name),
+            name: cleanString(
+                studentData.name
+            ),
 
-            squad: cleanString(studentData.squad),
+            squad: cleanString(
+                studentData.squad
+            ),
 
-            parent_name:
-                parentName ||
-                existingStudent?.parent_name ||
+            // --------------------------------------------------
+            // CONTACT DETAILS
+            // --------------------------------------------------
+
+            phone:
+                phone ||
+                existingStudent?.phone ||
                 null,
 
             parent_email:
@@ -942,6 +948,10 @@ const bulkUpsertStudents = async (
                 new Date().toISOString(),
         });
 
+        // ------------------------------------------------------
+        // COUNTERS
+        // ------------------------------------------------------
+
         if (existingStudent) {
             studentsUpdated++;
         } else {
@@ -949,20 +959,38 @@ const bulkUpsertStudents = async (
         }
     }
 
+    // ----------------------------------------------------------
+    // NOTHING TO UPSERT
+    // ----------------------------------------------------------
+
     if (rows.length === 0) {
         return {
             students: [],
-            studentsCreated,
-            studentsUpdated,
+            studentsCreated: 0,
+            studentsUpdated: 0,
         };
     }
 
-    const { data, error } = await supabase
+    // ----------------------------------------------------------
+    // BULK UPSERT
+    // ----------------------------------------------------------
+
+    const {
+        data: upsertedStudents,
+        error,
+    } = await supabase
         .from("students")
-        .upsert(rows, {
-            onConflict: "email",
-        })
-        .select();
+        .upsert(
+            rows,
+            {
+                onConflict: "email",
+            }
+        )
+        .select("*");
+
+    // ----------------------------------------------------------
+    // HANDLE DATABASE ERROR
+    // ----------------------------------------------------------
 
     if (error) {
         throw new Error(
@@ -970,13 +998,16 @@ const bulkUpsertStudents = async (
         );
     }
 
+    // ----------------------------------------------------------
+    // RETURN UPSERTED STUDENTS
+    // ----------------------------------------------------------
+
     return {
-        students: data || [],
+        students: upsertedStudents || [],
         studentsCreated,
         studentsUpdated,
     };
 };
-
 // ============================================================
 // BULK UPSERT SUBJECTS
 // ============================================================
@@ -988,6 +1019,10 @@ const bulkUpsertSubjects = async (
 ) => {
     const subjectMap = new Map();
 
+    // ----------------------------------------------------------
+    // COLLECT UNIQUE SUBJECTS
+    // ----------------------------------------------------------
+
     for (const studentData of students) {
         const subjects = Array.isArray(
             studentData.subjects
@@ -996,8 +1031,13 @@ const bulkUpsertSubjects = async (
             : [];
 
         for (const subjectData of subjects) {
-            const id = cleanString(subjectData.id);
-            const name = cleanString(subjectData.name);
+            const id = cleanString(
+                subjectData.id
+            );
+
+            const name = cleanString(
+                subjectData.name
+            );
 
             if (!id || !name) {
                 continue;
@@ -1011,7 +1051,13 @@ const bulkUpsertSubjects = async (
         }
     }
 
-    const rows = [...subjectMap.values()];
+    const rows = [
+        ...subjectMap.values(),
+    ];
+
+    // ----------------------------------------------------------
+    // NO SUBJECTS
+    // ----------------------------------------------------------
 
     if (rows.length === 0) {
         return {
@@ -1021,29 +1067,55 @@ const bulkUpsertSubjects = async (
         };
     }
 
+    // ----------------------------------------------------------
+    // COUNT EXISTING / NEW SUBJECTS
+    // ----------------------------------------------------------
+
     let subjectsCreated = 0;
     let subjectsFound = 0;
 
     for (const subject of rows) {
-        if (existingSubjectsById.has(subject.id)) {
+        if (
+            existingSubjectsById.has(
+                subject.id
+            )
+        ) {
             subjectsFound++;
         } else {
             subjectsCreated++;
         }
     }
 
-    const { data, error } = await supabase
+    // ----------------------------------------------------------
+    // BULK UPSERT SUBJECTS
+    // ----------------------------------------------------------
+
+    const {
+        data,
+        error,
+    } = await supabase
         .from("subjects")
-        .upsert(rows, {
-            onConflict: "id",
-        })
-        .select();
+        .upsert(
+            rows,
+            {
+                onConflict: "id",
+            }
+        )
+        .select("*");
+
+    // ----------------------------------------------------------
+    // HANDLE DATABASE ERROR
+    // ----------------------------------------------------------
 
     if (error) {
         throw new Error(
             `Failed to bulk upsert subjects: ${error.message}`
         );
     }
+
+    // ----------------------------------------------------------
+    // RETURN SUBJECTS
+    // ----------------------------------------------------------
 
     return {
         subjects: data || [],
@@ -1951,7 +2023,6 @@ const updateStudentDetails =
             } = req.params;
 
             const {
-                parent_name,
                 parent_email,
                 parent_phone,
             } = req.body || {};
@@ -1964,10 +2035,6 @@ const updateStudentDetails =
                     "students"
                 )
                 .update({
-                    parent_name:
-                        parent_name ||
-                        null,
-
                     parent_email:
                         parent_email ||
                         null,
