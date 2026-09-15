@@ -17,7 +17,6 @@ function StudentPage() {
     () => localStorage.getItem("selectedSquad") || ""
   );
   const [squads, setSquads] = useState([]);
-  const [attendanceStatus, setAttendanceStatus] = useState("");
   const [error, setError] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -207,28 +206,16 @@ function StudentPage() {
     const matchesSquad =
       !squad || student.squad === squad;
 
-    const matchesStatus =
-      !attendanceStatus ||
-      student.status === attendanceStatus;
-
     return (
       matchesSearch &&
-      matchesSquad &&
-      matchesStatus
+      matchesSquad
     );
   });
 
   const clearFilters = () => {
     setSearch("");
     setSquad("");
-    setAttendanceStatus("");
   };
-
-  const presentCount = students.filter((student) => student.status === "Present").length;
-  const absentCount = students.filter((student) => student.status === "Absent").length;
-  const averageAttendance = students.length
-    ? (students.reduce((sum, student) => sum + Number(student.attendance || 0), 0) / students.length).toFixed(2)
-    : "0.00";
 
   return (
     <div className="student-page">
@@ -372,15 +359,6 @@ function StudentPage() {
           ))}
         </select>
 
-        <select
-          value={attendanceStatus}
-          onChange={(e) => setAttendanceStatus(e.target.value)}
-        >
-          <option value="">Attendance Status</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
-        </select>
-
         <button className="clear-filter-btn" onClick={clearFilters}>
           Clear Filters
         </button>
@@ -393,7 +371,6 @@ function StudentPage() {
           <span>Student</span>
           <span>Squad</span>
           <span>Attendance %</span>
-          <span>Status</span>
           <span>Action</span>
         </div>
 
@@ -411,20 +388,13 @@ function StudentPage() {
               <div>{student.squad}</div>
 
               <div>
-                <span className="attendance-badge">
-                  {student.attendance}%
-                </span>
-              </div>
-
-              <div>
                 <span
-                  className={`status-badge ${student.status === "Present"
-                    ? "status-present"
-                    : "status-absent"
+                  className={`attendance-badge ${Number(student.attendance) < 75
+                    ? "attendance-warning"
+                    : ""
                     }`}
                 >
-                  <span className="status-dot"></span>
-                  {student.status}
+                  {student.attendance}%
                 </span>
               </div>
 

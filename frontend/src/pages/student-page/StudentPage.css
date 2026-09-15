@@ -113,6 +113,7 @@
   border: 1px solid var(--student-border);
   border-radius: 18px;
   padding: 18px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -125,6 +126,8 @@
   position: relative;
   flex: 1 1 260px;
   min-width: 220px;
+  max-width: 100%;
+  box-sizing: border-box;
   height: 40px;
   overflow: hidden;
   border-radius: 10px;
@@ -285,7 +288,6 @@
     1.79fr
     1fr
     1.1fr
-    1fr
     1.2fr;
 
   align-items: center;
@@ -345,38 +347,10 @@
   font-weight: 700;
 }
 
-.status-badge {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 20px;
-  padding: 5px 12px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--student-primary);
-}
-
-.status-present {
-  color: #16834a;
-  background: #e8f7ee;
-}
-
-.status-absent {
+.attendance-badge.attendance-warning {
   color: var(--student-danger);
   border-color: rgba(239, 68, 68, 0.35);
   background: #fff1f2;
-}
-
-.status-absent .status-dot {
-  background: var(--student-danger);
 }
 
 .view-profile-btn {
@@ -762,7 +736,7 @@
 
   .student-table-header,
   .student-row {
-    min-width: 950px;
+    min-width: 760px;
   }
 }
 
@@ -803,20 +777,23 @@
   .filter-container {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
   }
 
   .search-box {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     flex-basis: auto;
   }
 
   .filter-container select {
     width: 100%;
+    min-width: 0;
   }
 
   .clear-filter-btn {
-    text-align: left;
-    padding-left: 0;
+    width: 100%;
   }
 
   .pagination {
