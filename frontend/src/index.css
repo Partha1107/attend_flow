@@ -125,12 +125,6 @@
    GLOBAL FONT APPLICATION
    ========================================================= */
 
-/*
- * Force the same typography across every component.
- * This prevents individual buttons, inputs, tables,
- * navigation items, etc. from falling back to another font.
- */
-
 html,
 body,
 #root {
@@ -251,12 +245,16 @@ button {
 }
 
 /* Kalvium-style action controls: compact, crisp, and consistent. */
+
 button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-toggle),
 .upload-button {
   min-height: 36px;
+
   border-radius: 6px;
+
   font-weight: 600;
   letter-spacing: 0;
+
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -264,11 +262,13 @@ button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-
     background-color 0.18s ease;
 }
 
+
 button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-toggle):focus-visible,
 .upload-button:focus-visible {
   outline: 2px solid var(--kalvium-red);
   outline-offset: 2px;
 }
+
 
 /* =========================================================
    AESA LIGHT PROFESSIONAL THEME
@@ -284,12 +284,14 @@ body,
   color: #111111;
 }
 
+
 button,
 input,
 select,
 textarea {
   border-color: #E5E5E5;
 }
+
 
 .access-denied-card button,
 .mentor-setup-card button,
@@ -307,6 +309,7 @@ textarea {
   color: #FFFFFF !important;
 }
 
+
 .access-denied-card button:hover,
 .mentor-setup-card button:hover,
 .generate-button:hover,
@@ -322,6 +325,7 @@ textarea {
   border-color: #C90000 !important;
   color: #FFFFFF !important;
 }
+
 
 .google-login-button,
 .preview-button,
@@ -342,6 +346,7 @@ textarea {
   color: #111111 !important;
 }
 
+
 .google-login-button:hover,
 .preview-button:hover,
 .edit-button:hover,
@@ -360,6 +365,7 @@ textarea {
   border-color: #6B7280 !important;
   color: #111111 !important;
 }
+
 
 .stat-icon.blue,
 .stat-icon.purple {
@@ -442,20 +448,27 @@ textarea::placeholder {
   height: 7px;
 }
 
+
 ::-webkit-scrollbar-track {
   background: #F7F7F7;
 }
+
 
 ::-webkit-scrollbar-thumb {
   background: #D1D5DB;
   border-radius: 10px;
 }
 
+
 ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
 
-/* Shared Attend Flow layout and visual tokens. */
+
+/* =========================================================
+   SHARED ATTEND FLOW LAYOUT & VISUAL TOKENS
+   ========================================================= */
+
 :root {
   --flow-bg: #FAFAF9;
   --flow-surface: #FFFFFF;
@@ -470,10 +483,12 @@ textarea::placeholder {
   --flow-warning: #C77A00;
   --flow-danger: #D64545;
   --flow-info: #3478F6;
+
   --flow-radius-sm: 6px;
   --flow-radius-md: 8px;
   --flow-radius-lg: 12px;
 }
+
 
 html,
 body,
@@ -482,6 +497,7 @@ body,
   color: var(--flow-text);
 }
 
+
 body,
 button,
 input,
@@ -489,6 +505,7 @@ select,
 textarea {
   font-family: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
 
 h1,
 h2,
@@ -499,12 +516,16 @@ h6 {
   letter-spacing: -0.03em;
 }
 
+
 button:not(.menu-button):not(.notification):not(.mobile-close):not(.mobile-menu-toggle),
 .upload-button {
   min-height: 40px;
+
   border-radius: var(--flow-radius-md);
+
   box-shadow: none;
 }
+
 
 button:focus-visible,
 input:focus-visible,
@@ -513,6 +534,11 @@ textarea:focus-visible {
   outline: 2px solid rgba(17, 17, 17, 0.16);
   outline-offset: 2px;
 }
+
+
+/* =========================================================
+   PAGE BACKGROUNDS
+   ========================================================= */
 
 .app-main,
 .communication-history,
@@ -528,6 +554,11 @@ textarea:focus-visible {
   color: var(--flow-text);
 }
 
+
+/* =========================================================
+   PANELS / CARDS
+   ========================================================= */
+
 .panel,
 .stat-card,
 .history-container,
@@ -541,16 +572,40 @@ textarea:focus-visible {
 .login-card,
 .access-denied-card {
   border: 1px solid var(--flow-border) !important;
+
   border-radius: var(--flow-radius-lg) !important;
+
   box-shadow: none !important;
 }
 
+
+/* =========================================================
+   MAIN PAGE CONTENT
+   ========================================================= */
+
+/*
+ * IMPORTANT:
+ * Previously this was limited to 1400px and centered.
+ *
+ * Now the content uses the complete width available
+ * beside the sidebar.
+ */
+
 .page-content {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 32px 36px;
+  max-width: none;
+
+  margin: 0;
+
+  padding: 28px 24px 32px;
+
+  box-sizing: border-box;
 }
+
+
+/* =========================================================
+   PAGE HEADINGS
+   ========================================================= */
 
 .dashboard-heading h1,
 .student-page-header h1,
@@ -560,10 +615,14 @@ textarea:focus-visible {
 .parent-email-header h1,
 .settings-header h1 {
   color: var(--flow-text) !important;
+
   font-size: clamp(28px, 3vw, 32px) !important;
+
   font-weight: 700 !important;
+
   letter-spacing: -0.03em !important;
 }
+
 
 .dashboard-heading p,
 .student-page-header p,
@@ -575,6 +634,11 @@ textarea:focus-visible {
   color: var(--flow-secondary) !important;
 }
 
+
+/* =========================================================
+   SURFACES
+   ========================================================= */
+
 .stat-card,
 .email-summary-card,
 .settings-card,
@@ -582,6 +646,11 @@ textarea:focus-visible {
 .history-filters {
   background: var(--flow-surface) !important;
 }
+
+
+/* =========================================================
+   SECONDARY TEXT
+   ========================================================= */
 
 .stat-card p,
 .stat-copy p,
@@ -592,11 +661,21 @@ textarea:focus-visible {
   color: var(--flow-muted) !important;
 }
 
+
+/* =========================================================
+   PRIMARY TEXT
+   ========================================================= */
+
 .stat-card h2,
 .stat-copy h2,
 .email-summary-card h2 {
   color: var(--flow-text) !important;
 }
+
+
+/* =========================================================
+   STAT ICONS
+   ========================================================= */
 
 .stat-icon.blue,
 .stat-icon.purple,
@@ -607,6 +686,11 @@ textarea:focus-visible {
   color: var(--flow-text) !important;
 }
 
+
+/* =========================================================
+   INPUTS / FILTERS
+   ========================================================= */
+
 input,
 select,
 textarea,
@@ -614,6 +698,7 @@ textarea,
 .history-filters {
   border-color: var(--flow-border-strong);
 }
+
 
 .filter-container input,
 .filter-container select,
@@ -625,17 +710,31 @@ textarea,
 .date-section input,
 .academic-year-field select {
   height: 42px;
+
   border-radius: var(--flow-radius-md) !important;
 }
+
+
+/* =========================================================
+   TABLE HEADERS
+   ========================================================= */
 
 .student-table th,
 .history-table th,
 .parent-email-table th {
   color: var(--flow-muted) !important;
+
   font-size: 11px !important;
+
   font-weight: 600 !important;
+
   letter-spacing: 0.04em;
 }
+
+
+/* =========================================================
+   TABLE BORDERS
+   ========================================================= */
 
 .student-table td,
 .history-table td,
@@ -644,29 +743,49 @@ textarea,
   border-color: var(--flow-border) !important;
 }
 
+
+/* =========================================================
+   TABLE HOVER
+   ========================================================= */
+
 .student-table tbody tr:hover,
 .student-row:hover {
   background: #FAFAF8 !important;
 }
 
+
+/* =========================================================
+   STATUS COLORS
+   ========================================================= */
+
 .status-present,
 .status-badge.sent,
 .status-badge.delivered {
   color: var(--flow-success) !important;
+
   background: #EDF8F2 !important;
 }
+
 
 .status-absent,
 .status-badge.failed,
 .status-badge.bounced {
   color: var(--flow-danger) !important;
+
   background: #FFF0F0 !important;
 }
 
+
 .status-badge.pending {
   color: var(--flow-warning) !important;
+
   background: #FFF7E8 !important;
 }
+
+
+/* =========================================================
+   PRIMARY ACTION BUTTONS
+   ========================================================= */
 
 .access-denied-card button,
 .mentor-setup-card button,
@@ -682,8 +801,14 @@ textarea,
 .parent-email-primary-button,
 .upload-button {
   background: var(--flow-primary) !important;
+
   border-color: var(--flow-primary) !important;
 }
+
+
+/* =========================================================
+   PRIMARY BUTTON HOVER
+   ========================================================= */
 
 .access-denied-card button:hover,
 .mentor-setup-card button:hover,
@@ -699,30 +824,195 @@ textarea,
 .parent-email-primary-button:hover:not(:disabled),
 .upload-button:hover {
   background: var(--flow-primary-hover) !important;
+
   border-color: var(--flow-primary-hover) !important;
 }
 
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
 @media (max-width: 1100px) {
   .page-content {
-    padding: 24px;
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
+    padding: 24px 20px;
   }
 }
 
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
 @media (max-width: 640px) {
   .page-content {
+    width: 100%;
+
+    max-width: none;
+
+    margin: 0;
+
     padding: 20px 16px 28px;
   }
 }
 
 
+/* =========================================================
+   PARENT EMAIL / STUDENT CONTACT PAGE
+   ========================================================= */
+
+/*
+ * The page itself also stays completely fluid.
+ * No additional font or color is introduced here.
+ */
+
+.parent-email-page {
+  width: 100%;
+  max-width: none;
+
+  min-width: 0;
+
+  margin: 0;
+
+  box-sizing: border-box;
+}
 
 
+/* =========================================================
+   PARENT EMAIL HEADER
+   ========================================================= */
+
+.parent-email-header {
+  width: 100%;
+  max-width: none;
+
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 24px;
+}
 
 
+.parent-email-header-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  flex-shrink: 0;
+}
 
 
+/* =========================================================
+   PARENT EMAIL CARD
+   ========================================================= */
+
+.parent-email-page .parent-email-card {
+  width: 100%;
+
+  max-width: none;
+
+  margin: 0;
+}
 
 
+/* =========================================================
+   PARENT EMAIL TABLE
+   ========================================================= */
+
+.parent-email-table-wrapper {
+  width: 100%;
+
+  max-width: none;
+
+  overflow-x: auto;
+}
 
 
+.parent-email-table {
+  width: 100%;
 
+  min-width: 1000px;
+}
+
+
+/* =========================================================
+   PARENT EMAIL RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .parent-email-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-email-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .parent-email-header-actions {
+    width: 100%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .parent-email-header-actions button {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBLE FOCUS STATES
+   ========================================================= */
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(17, 17, 17, 0.16);
+
+  outline-offset: 2px;
+}
+
+
+.parent-email-primary-button:focus-visible,
+.parent-email-secondary-button:focus-visible,
+.table-input:focus-visible {
+  outline: 3px solid rgba(242, 56, 63, 0.28);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

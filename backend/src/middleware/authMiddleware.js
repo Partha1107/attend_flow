@@ -2,12 +2,17 @@ const supabase = require("../config/supabase");
 
 const requireAuth = async (req, res, next) => {
     try {
+        
+
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({
                 success: false,
                 message: "Authentication required.",
+                debug: {
+                    authorizationReceived: !!authHeader,
+                },
             });
         }
 
@@ -26,7 +31,10 @@ const requireAuth = async (req, res, next) => {
         } = await supabase.auth.getUser(token);
 
         if (error || !user) {
-            console.error("Authentication error:", error?.message);
+            console.error(
+                "Authentication error:",
+                error?.message
+            );
 
             return res.status(401).json({
                 success: false,
@@ -34,8 +42,12 @@ const requireAuth = async (req, res, next) => {
             });
         }
 
+        
+
         req.user = user;
+
         return next();
+
     } catch (error) {
         console.error("Auth middleware error:", error);
 

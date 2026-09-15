@@ -32,62 +32,6 @@ const cleanString = (value) => {
 };
 
 // ============================================================
-// CALCULATE ATTENDANCE BY STUDENT
-// ============================================================
-
-const calculateAttendanceByStudent = (records) => {
-    const totals = new Map();
-
-    for (const record of records || []) {
-        if (!record.student_id) {
-            continue;
-        }
-
-        const current =
-            totals.get(record.student_id) || {
-                conducted: 0,
-                attended: 0,
-            };
-
-        current.conducted += toNumber(
-            record.sessions_conducted
-        );
-
-        current.attended += toNumber(
-            record.sessions_attended
-        );
-
-        totals.set(
-            record.student_id,
-            current
-        );
-    }
-
-    return totals;
-};
-
-// ============================================================
-// ATTENDANCE PERCENTAGE
-// ============================================================
-
-const getAttendancePercentage = (total) => {
-    if (
-        !total ||
-        total.conducted <= 0
-    ) {
-        return 0;
-    }
-
-    return Number(
-        (
-            (total.attended /
-                total.conducted) *
-            100
-        ).toFixed(2)
-    );
-};
-
-// ============================================================
 // GET SQUADS
 // ============================================================
 
@@ -130,6 +74,7 @@ const getSquads = async (req, res) => {
             success: true,
             squads,
         });
+
     } catch (error) {
         console.error(
             "Get squads error:",
@@ -148,18 +93,31 @@ const getSquads = async (req, res) => {
 // ============================================================
 // GET STUDENTS
 //
+// Mentor:
+//     Only assigned squad
+//
+// Campus Manager:
+//     ALL students
+//
 // GET /api/mentor/dashboard/students
-// GET /api/mentor/dashboard/students?squad=138
 // ============================================================
 
 const getStudents = async (req, res) => {
     try {
+        // ----------------------------------------------------
+        // GET LOGGED-IN USER PROFILE
+        // ----------------------------------------------------
+
         const {
             data: mentorProfile,
             error: profileError,
         } = await supabase
             .from("mentor_profiles")
-            .select("college_name, squad")
+            .select(`
+                college_name,
+                squad,
+                job_role
+            `)
             .eq("user_id", req.user.id)
             .maybeSingle();
 
@@ -171,15 +129,22 @@ const getStudents = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 profileExists: false,
-                message: "Please complete your mentor profile first.",
+                message:
+                    "Please complete your mentor profile first.",
             });
         }
 
-        const squad = cleanString(mentorProfile.squad);
+        const jobRole = cleanString(
+            mentorProfile.job_role
+        );
 
-        // --------------------------------------------------------
-        // GET STUDENTS
-        // --------------------------------------------------------
+        const mentorSquad = cleanString(
+            mentorProfile.squad
+        );
+
+        // ----------------------------------------------------
+        // BUILD STUDENT QUERY
+        // ----------------------------------------------------
 
         let studentQuery = supabase
             .from("students")
@@ -188,7 +153,52 @@ const getStudents = async (req, res) => {
                 ascending: true,
             });
 
-        studentQuery = studentQuery.eq("squad", squad);
+        // ----------------------------------------------------
+        // MENTOR
+        // Only their assigned squad
+        // ----------------------------------------------------
+
+        if (jobRole === "mentor") {
+            if (!mentorSquad) {
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "Mentor squad is not configured.",
+                });
+            }
+
+            studentQuery = studentQuery.eq(
+                "squad",
+                mentorSquad
+            );
+        }
+
+        // ----------------------------------------------------
+        // CAMPUS MANAGER
+        // Do NOT apply squad filter
+        //
+        // They can see every student
+        // ----------------------------------------------------
+
+        else if (jobRole === "campus_manager") {
+            // No squad filter
+        }
+
+        // ----------------------------------------------------
+        // UNKNOWN ROLE
+        // ----------------------------------------------------
+
+        else {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Invalid mentor job role.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // GET STUDENTS
+        // ----------------------------------------------------
 
         const {
             data: studentsData,
@@ -202,27 +212,29 @@ const getStudents = async (req, res) => {
         const students =
             studentsData || [];
 
-        // --------------------------------------------------------
-        // GET ONLY ATTENDANCE FOR THESE STUDENTS
-        // --------------------------------------------------------
+        // ----------------------------------------------------
+        // GET OVERALL ATTENDANCE
+        // ----------------------------------------------------
 
         const studentIds =
             students.map(
-                (student) =>
-                    student.id
+                (student) => student.id
             );
 
-        let attendanceData = [];
+        let overallAttendanceData = [];
 
         if (studentIds.length > 0) {
             const {
                 data,
                 error,
             } = await supabase
-                .from("attendance")
-                .select(
-                    "student_id, sessions_conducted, sessions_attended"
-                )
+                .from("overall_attendance")
+                .select(`
+                    student_id,
+                    total_sessions_attended,
+                    total_sessions_conducted,
+                    attendance_percentage
+                `)
                 .in(
                     "student_id",
                     studentIds
@@ -232,57 +244,81 @@ const getStudents = async (req, res) => {
                 throw error;
             }
 
-            attendanceData =
+            overallAttendanceData =
                 data || [];
         }
 
-        // --------------------------------------------------------
-        // CALCULATE ATTENDANCE
-        // --------------------------------------------------------
+        // ----------------------------------------------------
+        // CREATE ATTENDANCE LOOKUP
+        // ----------------------------------------------------
 
-        const totals =
-            calculateAttendanceByStudent(
-                attendanceData
+        const overallAttendanceMap =
+            new Map(
+                overallAttendanceData.map(
+                    (record) => [
+                        record.student_id,
+                        Number(
+                            record.attendance_percentage
+                        ) || 0,
+                    ]
+                )
             );
 
-        const result = students.map(
-            (student) => {
-                const attendance =
-                    getAttendancePercentage(
-                        totals.get(
+        // ----------------------------------------------------
+        // BUILD RESULT
+        // ----------------------------------------------------
+
+        const result =
+            students.map(
+                (student) => {
+                    const attendance =
+                        overallAttendanceMap.get(
                             student.id
-                        )
-                    );
+                        ) || 0;
 
-                return {
-                    ...student,
+                    return {
+                        ...student,
+                        attendance,
 
-                    attendance,
+                        status:
+                            attendance >= 75
+                                ? "Present"
+                                : "Absent",
+                    };
+                }
+            );
 
-                    status:
-                        attendance >= 75
-                            ? "Present"
-                            : "Absent",
-                };
-            }
-        );
+        // ----------------------------------------------------
+        // RESPONSE
+        // ----------------------------------------------------
 
         return res.status(200).json({
             success: true,
 
+            // For campus manager, return "all"
+            // For mentor, return assigned squad
             squad:
-                squad || null,
+                jobRole === "campus_manager"
+                    ? "all"
+                    : mentorSquad,
+
+            jobRole,
 
             mentor: {
                 email: req.user.email,
-                collegeName: mentorProfile.college_name,
-                squad,
+                collegeName:
+                    mentorProfile.college_name,
+                squad:
+                    jobRole === "campus_manager"
+                        ? "all"
+                        : mentorSquad,
+                jobRole,
             },
 
             count: result.length,
-
             students: result,
         });
+
     } catch (error) {
         console.error(
             "Get dashboard students error:",
@@ -291,10 +327,8 @@ const getStudents = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-
             message:
                 "Failed to fetch dashboard students",
-
             error: error.message,
         });
     }
@@ -303,8 +337,13 @@ const getStudents = async (req, res) => {
 // ============================================================
 // GET ATTENDANCE RECORDS
 //
+// Mentor:
+//     Only assigned squad
+//
+// Campus Manager:
+//     ALL students
+//
 // GET /api/mentor/dashboard/attendance
-// GET /api/mentor/dashboard/attendance?squad=138
 // ============================================================
 
 const getAttendanceRecords = async (
@@ -312,13 +351,45 @@ const getAttendanceRecords = async (
     res
 ) => {
     try {
-        const squad = cleanString(
-            req.query.squad
+        // ----------------------------------------------------
+        // GET LOGGED-IN USER PROFILE
+        // ----------------------------------------------------
+
+        const {
+            data: mentorProfile,
+            error: profileError,
+        } = await supabase
+            .from("mentor_profiles")
+            .select(`
+                squad,
+                job_role
+            `)
+            .eq("user_id", req.user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (!mentorProfile) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Mentor profile not found.",
+            });
+        }
+
+        const jobRole = cleanString(
+            mentorProfile.job_role
         );
 
-        // --------------------------------------------------------
-        // FIRST GET STUDENTS OF SELECTED SQUAD
-        // --------------------------------------------------------
+        const mentorSquad = cleanString(
+            mentorProfile.squad
+        );
+
+        // ----------------------------------------------------
+        // BUILD STUDENT QUERY
+        // ----------------------------------------------------
 
         let studentQuery = supabase
             .from("students")
@@ -326,13 +397,51 @@ const getAttendanceRecords = async (
                 "id, name, email, squad"
             );
 
-        if (squad) {
+        // ----------------------------------------------------
+        // MENTOR → ASSIGNED SQUAD ONLY
+        // ----------------------------------------------------
+
+        if (jobRole === "mentor") {
+            if (!mentorSquad) {
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "Mentor squad is not configured.",
+                });
+            }
+
             studentQuery =
                 studentQuery.eq(
                     "squad",
-                    squad
+                    mentorSquad
                 );
         }
+
+        // ----------------------------------------------------
+        // CAMPUS MANAGER → ALL STUDENTS
+        // ----------------------------------------------------
+
+        else if (
+            jobRole === "campus_manager"
+        ) {
+            // No squad filter
+        }
+
+        // ----------------------------------------------------
+        // INVALID ROLE
+        // ----------------------------------------------------
+
+        else {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Invalid mentor job role.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // GET STUDENTS
+        // ----------------------------------------------------
 
         const {
             data: students,
@@ -349,27 +458,35 @@ const getAttendanceRecords = async (
                     student.id
             );
 
+        // ----------------------------------------------------
+        // NO STUDENTS
+        // ----------------------------------------------------
+
         if (studentIds.length === 0) {
             return res.status(200).json({
                 success: true,
                 squad:
-                    squad || null,
+                    jobRole === "campus_manager"
+                        ? "all"
+                        : mentorSquad,
+
+                jobRole,
+
                 count: 0,
                 records: [],
             });
         }
 
-        // --------------------------------------------------------
-        // GET ATTENDANCE ONLY FOR THOSE STUDENTS
-        // --------------------------------------------------------
+        // ----------------------------------------------------
+        // GET ATTENDANCE
+        // ----------------------------------------------------
 
         const {
             data: attendance,
             error: attendanceError,
         } = await supabase
             .from("attendance")
-            .select(
-                `
+            .select(`
                 *,
                 students(
                     id,
@@ -380,8 +497,7 @@ const getAttendanceRecords = async (
                 subjects(
                     name
                 )
-                `
-            )
+            `)
             .in(
                 "student_id",
                 studentIds
@@ -397,11 +513,19 @@ const getAttendanceRecords = async (
             throw attendanceError;
         }
 
+        // ----------------------------------------------------
+        // RESPONSE
+        // ----------------------------------------------------
+
         return res.status(200).json({
             success: true,
 
             squad:
-                squad || null,
+                jobRole === "campus_manager"
+                    ? "all"
+                    : mentorSquad,
+
+            jobRole,
 
             count:
                 (attendance || [])
@@ -410,6 +534,7 @@ const getAttendanceRecords = async (
             records:
                 attendance || [],
         });
+
     } catch (error) {
         console.error(
             "Get dashboard attendance error:",
@@ -418,10 +543,8 @@ const getAttendanceRecords = async (
 
         return res.status(500).json({
             success: false,
-
             message:
                 "Failed to fetch attendance records",
-
             error: error.message,
         });
     }
@@ -430,8 +553,13 @@ const getAttendanceRecords = async (
 // ============================================================
 // GET DASHBOARD OVERVIEW
 //
+// Mentor:
+//     Assigned squad only
+//
+// Campus Manager:
+//     ALL students
+//
 // GET /api/mentor/dashboard/overview
-// GET /api/mentor/dashboard/overview?squad=138
 // ============================================================
 
 const getOverview = async (
@@ -439,13 +567,45 @@ const getOverview = async (
     res
 ) => {
     try {
-        const squad = cleanString(
-            req.query.squad
+        // ----------------------------------------------------
+        // GET LOGGED-IN USER PROFILE
+        // ----------------------------------------------------
+
+        const {
+            data: mentorProfile,
+            error: profileError,
+        } = await supabase
+            .from("mentor_profiles")
+            .select(`
+                squad,
+                job_role
+            `)
+            .eq("user_id", req.user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (!mentorProfile) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Mentor profile not found.",
+            });
+        }
+
+        const jobRole = cleanString(
+            mentorProfile.job_role
         );
 
-        // --------------------------------------------------------
-        // GET STUDENTS
-        // --------------------------------------------------------
+        const mentorSquad = cleanString(
+            mentorProfile.squad
+        );
+
+        // ----------------------------------------------------
+        // BUILD STUDENT QUERY
+        // ----------------------------------------------------
 
         let studentQuery = supabase
             .from("students")
@@ -453,13 +613,51 @@ const getOverview = async (
                 "id, name, email, squad"
             );
 
-        if (squad) {
+        // ----------------------------------------------------
+        // MENTOR → ASSIGNED SQUAD
+        // ----------------------------------------------------
+
+        if (jobRole === "mentor") {
+            if (!mentorSquad) {
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "Mentor squad is not configured.",
+                });
+            }
+
             studentQuery =
                 studentQuery.eq(
                     "squad",
-                    squad
+                    mentorSquad
                 );
         }
+
+        // ----------------------------------------------------
+        // CAMPUS MANAGER → ALL STUDENTS
+        // ----------------------------------------------------
+
+        else if (
+            jobRole === "campus_manager"
+        ) {
+            // No squad filter
+        }
+
+        // ----------------------------------------------------
+        // INVALID ROLE
+        // ----------------------------------------------------
+
+        else {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Invalid mentor job role.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // GET STUDENTS
+        // ----------------------------------------------------
 
         const {
             data: students,
@@ -479,16 +677,20 @@ const getOverview = async (
                     student.id
             );
 
-        // --------------------------------------------------------
+        // ----------------------------------------------------
         // NO STUDENTS
-        // --------------------------------------------------------
+        // ----------------------------------------------------
 
         if (studentIds.length === 0) {
             return res.status(200).json({
                 success: true,
 
                 squad:
-                    squad || null,
+                    jobRole === "campus_manager"
+                        ? "all"
+                        : mentorSquad,
+
+                jobRole,
 
                 overview: {
                     totalStudents: 0,
@@ -499,50 +701,66 @@ const getOverview = async (
             });
         }
 
-        // --------------------------------------------------------
-        // GET ATTENDANCE FOR SQUAD
-        // --------------------------------------------------------
+        // ----------------------------------------------------
+        // GET OVERALL ATTENDANCE
+        // ----------------------------------------------------
 
         const {
-            data: attendance,
-            error: attendanceError,
+            data: overallAttendance,
+            error: overallAttendanceError,
         } = await supabase
-            .from("attendance")
+            .from("overall_attendance")
             .select(
-                "student_id, sessions_conducted, sessions_attended"
+                "student_id, attendance_percentage"
             )
             .in(
                 "student_id",
                 studentIds
             );
 
-        if (attendanceError) {
-            throw attendanceError;
+        if (overallAttendanceError) {
+            throw overallAttendanceError;
         }
 
-        // --------------------------------------------------------
-        // CALCULATE
-        // --------------------------------------------------------
+        // ----------------------------------------------------
+        // CREATE LOOKUP MAP
+        // ----------------------------------------------------
 
-        const totals =
-            calculateAttendanceByStudent(
-                attendance
+        const overallAttendanceMap =
+            new Map(
+                (overallAttendance || [])
+                    .map(
+                        (record) => [
+                            record.student_id,
+                            Number(
+                                record.attendance_percentage
+                            ) || 0,
+                        ]
+                    )
             );
+
+        // ----------------------------------------------------
+        // GET EACH STUDENT'S ATTENDANCE
+        // ----------------------------------------------------
 
         const studentAttendance =
             studentList.map(
-                (student) => {
-                    return getAttendancePercentage(
-                        totals.get(
-                            student.id
-                        )
-                    );
-                }
+                (student) =>
+                    overallAttendanceMap.get(
+                        student.id
+                    ) || 0
             );
+
+        // ----------------------------------------------------
+        // CALCULATE STATISTICS
+        // ----------------------------------------------------
 
         const totalAttendance =
             studentAttendance.reduce(
-                (sum, percentage) =>
+                (
+                    sum,
+                    percentage
+                ) =>
                     sum + percentage,
                 0
             );
@@ -569,15 +787,19 @@ const getOverview = async (
                     attendance < 75
             ).length;
 
-        // --------------------------------------------------------
+        // ----------------------------------------------------
         // RESPONSE
-        // --------------------------------------------------------
+        // ----------------------------------------------------
 
         return res.status(200).json({
             success: true,
 
             squad:
-                squad || null,
+                jobRole === "campus_manager"
+                    ? "all"
+                    : mentorSquad,
+
+            jobRole,
 
             overview: {
                 totalStudents:
@@ -590,6 +812,7 @@ const getOverview = async (
                 studentsBelow75,
             },
         });
+
     } catch (error) {
         console.error(
             "Get dashboard overview error:",
@@ -598,10 +821,292 @@ const getOverview = async (
 
         return res.status(500).json({
             success: false,
-
             message:
                 "Failed to fetch dashboard overview",
+            error: error.message,
+        });
+    }
+};
 
+// ============================================================
+// UPDATE STUDENT CONTACT DETAILS
+//
+// Mentor:
+//     Can update only students in assigned squad
+//
+// Campus Manager:
+//     Can update any student
+//
+// PATCH /api/mentor/dashboard/students/:id/contact
+// ============================================================
+
+const updateStudentContact = async (
+    req,
+    res
+) => {
+    try {
+        const studentId =
+            cleanString(
+                req.params.id
+            );
+
+        const phone =
+            cleanString(
+                req.body.phone
+            );
+
+        const parentEmail =
+            cleanString(
+                req.body.parent_email
+            );
+
+        const parentPhone =
+            cleanString(
+                req.body.parent_phone
+            );
+
+        // ----------------------------------------------------
+        // VALIDATE STUDENT ID
+        // ----------------------------------------------------
+
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student ID is required.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // GET LOGGED-IN USER PROFILE
+        // ----------------------------------------------------
+
+        const {
+            data: mentorProfile,
+            error: profileError,
+        } = await supabase
+            .from("mentor_profiles")
+            .select(`
+                squad,
+                job_role
+            `)
+            .eq("user_id", req.user.id)
+            .maybeSingle();
+
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (!mentorProfile) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Mentor profile not found.",
+            });
+        }
+
+        const jobRole =
+            cleanString(
+                mentorProfile.job_role
+            );
+
+        const mentorSquad =
+            cleanString(
+                mentorProfile.squad
+            );
+
+        // ----------------------------------------------------
+        // FIND STUDENT
+        // ----------------------------------------------------
+
+        let studentQuery = supabase
+            .from("students")
+            .select(`
+                id,
+                name,
+                email,
+                squad
+            `)
+            .eq("id", studentId);
+
+        // ----------------------------------------------------
+        // MENTOR → MUST BELONG TO THEIR SQUAD
+        // ----------------------------------------------------
+
+        if (jobRole === "mentor") {
+            if (!mentorSquad) {
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "Mentor squad is not configured.",
+                });
+            }
+
+            studentQuery =
+                studentQuery.eq(
+                    "squad",
+                    mentorSquad
+                );
+        }
+
+        // ----------------------------------------------------
+        // CAMPUS MANAGER → ANY STUDENT
+        // ----------------------------------------------------
+
+        else if (
+            jobRole === "campus_manager"
+        ) {
+            // No squad restriction
+        }
+
+        // ----------------------------------------------------
+        // INVALID ROLE
+        // ----------------------------------------------------
+
+        else {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Invalid mentor job role.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // GET STUDENT
+        // ----------------------------------------------------
+
+        const {
+            data: student,
+            error: studentError,
+        } = await studentQuery.maybeSingle();
+
+        if (studentError) {
+            throw studentError;
+        }
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    jobRole === "mentor"
+                        ? "Student not found in your squad."
+                        : "Student not found.",
+            });
+        }
+
+        // ----------------------------------------------------
+        // VALIDATE PARENT EMAIL
+        // ----------------------------------------------------
+
+        if (parentEmail) {
+            const emailRegex =
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (
+                !emailRegex.test(
+                    parentEmail
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please enter a valid parent email.",
+                });
+            }
+        }
+
+        // ----------------------------------------------------
+        // VALIDATE PHONE NUMBERS
+        // ----------------------------------------------------
+
+        if (
+            phone &&
+            !/^\d{10}$/.test(phone)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    `${student.name} — Student Phone must be exactly 10 digits.`,
+            });
+        }
+
+        if (
+            parentPhone &&
+            !/^\d{10}$/.test(
+                parentPhone
+            )
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    `${student.name} — Parent Phone must be exactly 10 digits.`,
+            });
+        }
+
+        // ----------------------------------------------------
+        // UPDATE CONTACT INFORMATION
+        // ----------------------------------------------------
+
+        const {
+            data: updatedStudent,
+            error: updateError,
+        } = await supabase
+            .from("students")
+            .update({
+                phone:
+                    phone || null,
+
+                parent_email:
+                    parentEmail || null,
+
+                parent_phone:
+                    parentPhone || null,
+
+                updated_at:
+                    new Date().toISOString(),
+            })
+            .eq(
+                "id",
+                studentId
+            )
+            .select(`
+                id,
+                name,
+                email,
+                squad,
+                phone,
+                parent_email,
+                parent_phone,
+                updated_at
+            `)
+            .single();
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        // ----------------------------------------------------
+        // RESPONSE
+        // ----------------------------------------------------
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Student contact details updated successfully.",
+            student:
+                updatedStudent,
+        });
+
+    } catch (error) {
+        console.error(
+            "Update student contact error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Failed to update student contact details.",
             error: error.message,
         });
     }
@@ -616,4 +1121,5 @@ module.exports = {
     getStudents,
     getAttendanceRecords,
     getOverview,
+    updateStudentContact,
 };

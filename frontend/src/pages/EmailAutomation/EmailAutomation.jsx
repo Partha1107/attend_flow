@@ -1,1138 +1,411 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { getMentorEmailAlerts } from "../../api/mentor";
+import {
+  getMentorEmailAlerts,
+  getAvailableSquads,
+} from "../../api/mentor";
 import "./EmailAutomation.css";
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-/*
-  TEMPORARY ATTENDANCE DATA
+const getAttendanceStatus = (attendance) => {
+  if (Number(attendance) >= 75) return "Good";
+  if (Number(attendance) >= 65) return "Warning";
+  return "Critical";
+};
 
-  Later this data will come from:
-  Excel → Backend → Database/API → Email Automation
-*/
+const generateEmail = (student) => {
+  const status = getAttendanceStatus(student.attendance);
+  const isCritical = status === "Critical";
 
-
-
+  return {
+    ...student,
+    status,
+    subject: isCritical
+      ? "Attendance Alert - Immediate Attention Required"
+      : "Attendance Warning",
+    message: isCritical
+      ? `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`
+      : `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`,
+  };
+};
 
 function EmailAutomation() {
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [jobRole, setJobRole] = useState("");
   const [mentorSquad, setMentorSquad] = useState("");
-  const [selectedSquad, setSelectedSquad] = useState(
-    () => localStorage.getItem("selectedSquad") || ""
-  );
-
-  const fetchAttendanceData = async () => {
-    try {
-      setLoadingStudents(true);
-
-      const result = await getMentorEmailAlerts();
-
-      setMentorSquad(result.squad || "");
-      setAttendanceData(result.students || []);
-    } catch (error) {
-      console.error("Failed to fetch email alert data:", error);
-    } finally {
-      setLoadingStudents(false);
-    }
-  };
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void fetchAttendanceData();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  /*
-    Attendance rules
-  */
-  const getAttendanceStatus = (attendance) => {
-    if (attendance >= 75) {
-      return "Good";
-    }
-
-    if (attendance >= 65) {
-      return "Warning";
-    }
-
-    return "Critical";
-  };
-
-  /*
-    Generate email content
-  */
-  const generateEmail = (student) => {
-    const status = getAttendanceStatus(student.attendance);
-    const subject = status === "Critical"
-      ? "Attendance Alert - Immediate Attention Required"
-      : "Attendance Warning";
-    const message = status === "Critical"
-      ? `Your current attendance is ${student.attendance}%. Your attendance is below the required level. Please take immediate steps to improve your attendance.`
-      : `Your current attendance is ${student.attendance}%. Please make sure to attend your upcoming classes regularly and maintain the required attendance percentage.`;
-
-    return {
-      ...student,
-      status,
-      subject,
-      message,
-    };
-  };
-
-
+  const [selectedSquad, setSelectedSquad] = useState("");
+  const [squads, setSquads] = useState([]);
+  const [attendanceFilter, setAttendanceFilter] = useState("all");
   const [mentorName, setMentorName] = useState("Mentor");
   const [mentorEmail, setMentorEmail] = useState("");
-  /*
-    Today's date
-  */
-  const today = new Date().toISOString().split("T")[0];
+  const [attendanceDate, setAttendanceDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [sendingIds, setSendingIds] = useState([]);
+  const [sendError, setSendError] = useState("");
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [modalMode, setModalMode] = useState(null);
+  const [editSubject, setEditSubject] = useState("");
+  const [editMessage, setEditMessage] = useState("");
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateSubject, setTemplateSubject] = useState(
+    "Attendance Warning - Low Attendance"
+  );
+  const [templateMessage, setTemplateMessage] = useState(`Dear {{studentName}},
 
-  /*
-    Selected attendance date
-  */
-  const [attendanceDate, setAttendanceDate] = useState(today);
+Your current attendance is {{attendance}}%.
 
-  /*
-    Email drafts
-  */
-  const [emailDrafts, setEmailDrafts] = useState([]);
+The required attendance percentage is 75%.
+Please make sure to attend your upcoming classes regularly.
+
+Regards,
+{{mentorName}}
+AESA`);
 
   useEffect(() => {
-    const updateSelectedSquad = (event) => {
-      setSelectedSquad(event.detail || "");
-      setEmailDrafts([]);
-    };
+    const fetchAttendanceData = async () => {
+      try {
+        setLoadingStudents(true);
+        setLoadError("");
 
-    const handleStorageChange = (event) => {
-      if (event.key === "selectedSquad") {
-        setSelectedSquad(event.newValue || "");
-        setEmailDrafts([]);
+        const result =
+          await getMentorEmailAlerts();
+
+        setJobRole(
+          result.jobRole || "mentor"
+        );
+
+        setMentorSquad(
+          result.squad || ""
+        );
+
+        setStudents(
+          (result.students || []).map(
+            generateEmail
+          )
+        );
+
+        if (result.jobRole === "mentor") {
+          setSelectedSquad(
+            result.squad || ""
+          );
+        } else {
+          setSelectedSquad("");
+        }
+      } catch (error) {
+        console.error(
+          "Failed to fetch email alert data:",
+          error
+        );
+
+        setLoadError(
+          error.message ||
+          "Failed to load students."
+        );
+      } finally {
+        setLoadingStudents(false);
       }
     };
 
-    window.addEventListener("selectedSquadChange", updateSelectedSquad);
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("selectedSquadChange", updateSelectedSquad);
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    void fetchAttendanceData();
   }, []);
 
-  /*
-    Communication method
+  // useEffect(() => {
+  //   const updateSelectedSquad = (event) => {
+  //     setSelectedSquad(event.detail || "");
+  //   };
+  //   const handleStorageChange = (event) => {
+  //     if (event.key === "selectedSquad") setSelectedSquad(event.newValue || "");
+  //   };
 
-    {
-      STU001: "automatic",
-      STU002: "draft"
-    }
-  */
-  const [communicationMode, setCommunicationMode] = useState({});
-
-  const [showDraftOnly, setShowDraftOnly] = useState(false);
-
-  const [reviewedDrafts, setReviewedDrafts] = useState({});
-  const [sendingIds, setSendingIds] = useState([]);
-  const [sendError, setSendError] = useState("");
-
-  /*
-    Currently selected email
-  */
-  const [selectedEmail, setSelectedEmail] = useState(null);
-
-  /*
-    Preview / Edit modal
-  */
-  const [modalMode, setModalMode] = useState(null);
-
-  /*
-    Editable subject
-  */
-  const [editSubject, setEditSubject] = useState("");
-
-  /*
-    Editable message
-  */
-  const [editMessage, setEditMessage] = useState("");
+  //   window.addEventListener("selectedSquadChange", updateSelectedSquad);
+  //   window.addEventListener("storage", handleStorageChange);
+  //   return () => {
+  //     window.removeEventListener("selectedSquadChange", updateSelectedSquad);
+  //     window.removeEventListener("storage", handleStorageChange);
+  //   };
+  // }, []);
 
   useEffect(() => {
     const getMentor = async () => {
       if (!supabase) return;
-
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-
+      const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
         console.error("Failed to get mentor:", error.message);
         return;
       }
-
       if (user) {
-        const name =
+        setMentorName(
           user.user_metadata?.full_name ||
           user.user_metadata?.name ||
           user.email?.split("@")[0] ||
-          "Mentor";
-
-        setMentorName(name);
+          "Mentor"
+        );
         setMentorEmail(user.email || "");
       }
     };
 
-    getMentor();
+    void getMentor();
   }, []);
-
-  /*
-    Generate drafts
-  */
-  const handleGenerateDrafts = () => {
-    const studentsNeedingEmail = attendanceData.filter(
-      (student) =>
-        (!selectedSquad || String(student.squad) === String(selectedSquad)) &&
-        student.attendance < 75
-    );
-
-    const generatedEmails = studentsNeedingEmail.map((student) =>
-      generateEmail(student)
-    );
-
-    setEmailDrafts(generatedEmails);
-
-    /*
-      By default every generated email is set
-      to Automatic.
-
-      Mentor can change individual emails
-      to Draft later.
-    */
-    const defaultCommunication = {};
-
-    generatedEmails.forEach((email) => {
-      defaultCommunication[email.id] = "automatic";
-    });
-    setCommunicationMode(defaultCommunication);
-    setSelectedEmail(null);
-    setModalMode(null);
-  };
-
-  const sendEmail = async (email) => {
-    if (!email.parentEmail) {
-      throw new Error(`Parent email is missing for ${email.name}.`);
+  useEffect(() => {
+    if (jobRole !== "campus_manager") {
+      return;
     }
 
+    const loadSquads = async () => {
+      try {
+        const result =
+          await getAvailableSquads();
+
+        setSquads(
+          result.squads || []
+        );
+      } catch (error) {
+        console.error(
+          "Failed to load squads:",
+          error
+        );
+      }
+    };
+
+    void loadSquads();
+  }, [jobRole]);
+
+  const squadStudents = students.filter(
+    (student) => {
+      // Mentor:
+      // Backend already restricted the data
+      // to the mentor's assigned squad.
+      if (jobRole === "mentor") {
+        return true;
+      }
+
+      // Campus Manager:
+      // Allow local squad filtering.
+      if (jobRole === "campus_manager") {
+        return (
+          !selectedSquad ||
+          String(student.squad).trim() ===
+          String(selectedSquad).trim()
+        );
+      }
+
+      return true;
+    }
+  );
+
+  const filteredStudents = squadStudents.filter((student) => {
+    const attendance = Number(student.attendance || 0);
+    if (attendanceFilter === "below75") return attendance < 75;
+    if (attendanceFilter === "above75") return attendance >= 75;
+    return true;
+  });
+
+  const eligibleFilteredStudents = filteredStudents.filter(
+    (student) => Number(student.attendance) < 75
+  );
+  const below75Count = squadStudents.filter(
+    (student) => Number(student.attendance) < 75
+  ).length;
+  const atOrAbove75Count = squadStudents.filter(
+    (student) => Number(student.attendance) >= 75
+  ).length;
+  const isSending = sendingIds.length > 0;
+
+  const replaceTemplateVariables = (text, student) => text
+    .replaceAll("{{studentName}}", student.name || "")
+    .replaceAll("{{attendance}}", String(student.attendance ?? ""))
+    .replaceAll("{{mentorName}}", mentorName || "Mentor")
+    .replaceAll("{{mentorEmail}}", mentorEmail || "");
+
+  const sendEmail = async (student) => {
+    if (Number(student.attendance) >= 75) {
+      throw new Error("Attendance is 75% or above. Email should not be sent.");
+    }
+    if (!student.parentEmail) {
+      throw new Error(`Parent email is missing for ${student.name}.`);
+    }
+
+    const response = await fetch(`${API_URL}/api/email-automation/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mentorName,
+        mentorEmail,
+        studentId: student.id,
+        studentName: student.name,
+        studentEmail: student.email,
+        parentEmail: student.parentEmail,
+        attendancePercentage: student.attendance,
+        subject: student.subject,
+        message: student.message,
+      }),
+    });
+
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.message || result?.error || "Email sending failed");
+    }
+  };
+
+  const handleSend = async (student) => {
+    setSendingIds((current) => [...current, student.id]);
     setSendError("");
-
-    const response = await fetch(
-      `${API_URL}/api/email-automation/send`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mentorName,
-          mentorEmail,
-          studentId: email.id,
-          studentName: email.name,
-          studentEmail: email.email,
-          parentEmail: email.parentEmail,
-          attendancePercentage: email.attendance,
-          subject: email.subject,
-          message: email.message,
-        }),
-      });
-
-    const responseText = await response.text();
-    let result;
     try {
-      result = JSON.parse(responseText);
-    } catch {
-      throw new Error("The backend returned an invalid response.");
+      await sendEmail(student);
+      setStudents((current) => current.filter((item) => item.id !== student.id));
+      setSelectedEmail(null);
+      setModalMode(null);
+      alert(`Email sent successfully to ${student.parentEmail}`);
+    } catch (error) {
+      setSendError(error.message);
+      alert(`Failed to send email: ${error.message}`);
+    } finally {
+      setSendingIds((current) => current.filter((id) => id !== student.id));
     }
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || result.error || "Email sending failed");
-    }
   };
 
-  const handleCommunicationChange = (studentId, mode) => {
-    setCommunicationMode((current) => ({ ...current, [studentId]: mode }));
-  };
-
-  const handleSelectAllAutomatic = () => {
-    const modes = {};
-    emailDrafts.forEach((email) => { modes[email.id] = "automatic"; });
-    setCommunicationMode(modes);
-  };
-
-  const handleSelectAllDraft = () => {
-    const modes = {};
-    emailDrafts.forEach((email) => { modes[email.id] = "draft"; });
-    setCommunicationMode(modes);
-  };
-
-  const handleSendAutomaticEmails = async () => {
-    const automaticEmails = emailDrafts.filter(
-      (email) => communicationMode[email.id] === "automatic"
+  const handleSendAllFiltered = async () => {
+    const eligibleStudents = filteredStudents.filter(
+      (student) => Number(student.attendance) < 75
     );
 
-    if (automaticEmails.length === 0) {
-      alert("There are no automatic emails to send.");
+    if (eligibleStudents.length === 0) {
+      setSendError("Automatic attendance alerts are only available for students below 75%.");
+      return;
+    }
+    if (!window.confirm(`Send attendance alerts to ${eligibleStudents.length} students below 75%?`)) {
       return;
     }
 
-    let successCount = 0;
-    let failedCount = 0;
-    const successfulIds = [];
-    const failedNames = [];
-
     setSendError("");
-    setSendingIds(automaticEmails.map((email) => email.id));
+    setSendingIds(eligibleStudents.map((student) => student.id));
+    let successCount = 0;
+    const failures = [];
+    const successfulIds = [];
 
-    for (const email of automaticEmails) {
+    for (const student of eligibleStudents) {
       try {
-        await sendEmail(email);
-        successCount++;
-        successfulIds.push(email.id);
+        await sendEmail(student);
+        successCount += 1;
+        successfulIds.push(student.id);
       } catch (error) {
-        console.error(`Failed to send email to ${email.email}:`, error);
-        failedCount++;
-        failedNames.push(`${email.name}: ${error.message}`);
+        failures.push(`${student.name}: ${error.message}`);
       }
     }
 
-    setEmailDrafts((current) => current.filter((email) => !successfulIds.includes(email.id)));
-    setCommunicationMode((current) => {
-      const updated = { ...current };
-      successfulIds.forEach((id) => delete updated[id]);
-      return updated;
-    });
-
-    alert(`${successCount} email(s) sent successfully. ${failedCount} email(s) failed.`);
-    if (failedNames.length > 0) {
-      setSendError(failedNames.join(" | "));
-    }
+    setStudents((current) => current.filter((student) => !successfulIds.includes(student.id)));
     setSendingIds([]);
+    alert(`${successCount} emails sent successfully. ${failures.length} failed.`);
+    if (failures.length > 0) setSendError(failures.join(" | "));
   };
 
-
-  const handleReviewDrafts = () => {
-    setShowDraftOnly(true);
-  };
-
-  const handleSendReviewedDrafts = async () => {
-    const reviewedEmails = emailDrafts.filter(
-      (email) =>
-        communicationMode[email.id] === "draft" &&
-        reviewedDrafts[email.id]
-    );
-
-    if (reviewedEmails.length === 0) {
-      alert("There are no reviewed drafts to send.");
-      return;
-    }
-
-    let successCount = 0;
-    let failedCount = 0;
-    const successfulIds = [];
-    const failedNames = [];
-
-    setSendError("");
-    setSendingIds(reviewedEmails.map((email) => email.id));
-
-    for (const email of reviewedEmails) {
-      try {
-        await sendEmail(email);
-        successCount++;
-        successfulIds.push(email.id);
-      } catch (error) {
-        console.error(`Failed to send reviewed draft ${email.id}:`, error);
-        failedCount++;
-        failedNames.push(`${email.name}: ${error.message}`);
-      }
-    }
-
-    setEmailDrafts((currentEmails) =>
-      currentEmails.filter((email) => !successfulIds.includes(email.id))
-    );
-    setCommunicationMode((currentModes) => {
-      const updatedModes = { ...currentModes };
-
-      successfulIds.forEach((id) => {
-        delete updatedModes[id];
-      });
-
-      return updatedModes;
-    });
-    setReviewedDrafts((current) => {
-      const updatedReviews = { ...current };
-
-      successfulIds.forEach((id) => {
-        delete updatedReviews[id];
-      });
-
-      return updatedReviews;
-    });
-
-    alert(`${successCount} draft(s) sent successfully. ${failedCount} failed.`);
-    if (failedNames.length > 0) {
-      setSendError(failedNames.join(" | "));
-    }
-    setSendingIds([]);
-  };
-
-
-
-  /*
-    Open Preview
-  */
-  const handlePreview = (email) => {
-    setSelectedEmail(email);
+  const handlePreview = (student) => {
+    setSelectedEmail(student);
     setModalMode("preview");
   };
 
-  /*
-    Open Edit
-  */
-  const handleEdit = (email) => {
-    setSelectedEmail(email);
-
-    setEditSubject(email.subject);
-    setEditMessage(email.message);
-
+  const handleEdit = (student) => {
+    setSelectedEmail(student);
+    setEditSubject(student.subject);
+    setEditMessage(student.message);
     setModalMode("edit");
   };
 
-  /*
-    Save edited email
-  */
   const handleSaveEdit = () => {
-    const updatedEmails = emailDrafts.map((email) =>
-      email.id === selectedEmail.id
-        ? {
-          ...email,
-          subject: editSubject,
-          message: editMessage,
-        }
-        : email
-    );
-
-    setEmailDrafts(updatedEmails);
-
-    const updatedSelectedEmail = updatedEmails.find(
-      (email) => email.id === selectedEmail.id
-    );
-
-    setSelectedEmail(
-      updatedSelectedEmail
-    );
-
-    setReviewedDrafts((current) => ({
-      ...current,
-      [selectedEmail.id]: true,
-    }));
-
+    const updated = { ...selectedEmail, subject: editSubject, message: editMessage };
+    setStudents((current) => current.map((student) => (
+      student.id === updated.id ? updated : student
+    )));
+    setSelectedEmail(updated);
     setModalMode("preview");
   };
 
-  /*
-    Send email
-
-    For now this only simulates sending.
-    Later this will call the backend.
-  */
-  const handleSend = async (id) => {
-    const student = emailDrafts.find(
-      (email) => email.id === id
-    );
-
-    if (!student) return;
-
-    setSendingIds((current) => [...current, id]);
-    setSendError("");
-
-    try {
-      await sendEmail(student);
-
-      setEmailDrafts((currentEmails) =>
-        currentEmails.filter(
-          (email) => email.id !== id
-        )
-      );
-
-      setCommunicationMode((currentModes) => {
-        const updatedModes = {
-          ...currentModes,
-        };
-
-        delete updatedModes[id];
-
-        return updatedModes;
-      });
-
-      setSelectedEmail(null);
-      setModalMode(null);
-
-      alert(
-        `Email sent successfully to ${student.parentEmail}`
-      );
-    } catch (error) {
-      console.error("Email sending error:", error);
-
-      alert(
-        `Failed to send email: ${error.message}`
-      );
-      setSendError(error.message);
-    } finally {
-      setSendingIds((current) => current.filter((studentId) => studentId !== id));
-    }
+  const handleSaveTemplate = () => {
+    setStudents((current) => current.map((student) => ({
+      ...student,
+      subject: replaceTemplateVariables(templateSubject, student),
+      message: replaceTemplateVariables(templateMessage, student),
+    })));
+    setShowTemplateModal(false);
   };
-
-  /*
-    Calculate statistics
-  */
-  const criticalCount = emailDrafts.filter(
-    (email) => email.status === "Critical"
-  ).length;
-
-  const warningCount = emailDrafts.filter(
-    (email) => email.status === "Warning"
-  ).length;
-
-  /*
-    Communication statistics
-  */
-  const automaticCount = emailDrafts.filter(
-    (email) => communicationMode[email.id] === "automatic"
-  ).length;
-
-  const draftCount = emailDrafts.filter(
-    (email) => communicationMode[email.id] === "draft"
-  ).length;
 
   return (
     <section className="email-automation-page">
-
-      {/* =====================================
-          HEADER
-      ====================================== */}
-
       <div className="email-page-header">
-
         <div>
-          <div className="page-label">
-            COMMUNICATIONS
-          </div>
-
+          <div className="page-label">COMMUNICATIONS</div>
           <h1>Email Automation</h1>
-
           <p>
-            Generate, review and send
-            attendance alert emails for Squad {selectedSquad || mentorSquad}.
+            {jobRole === "campus_manager"
+              ? selectedSquad
+                ? `Attendance alerts for Squad ${selectedSquad}.`
+                : "Attendance alerts for all squads."
+              : `Attendance alerts for Squad ${mentorSquad || "your squad"}.`}
           </p>
         </div>
-
-        {/* DATE */}
-
         <div className="date-section">
-
-          <label htmlFor="attendance-date">
-            Attendance Date
-          </label>
-
-          <input
-            id="attendance-date"
-            type="date"
-            value={attendanceDate}
-            onChange={(event) =>
-              setAttendanceDate(event.target.value)
-            }
-          />
-
+          <label htmlFor="attendance-date">Attendance Date</label>
+          <input id="attendance-date" type="date" value={attendanceDate} onChange={(event) => setAttendanceDate(event.target.value)} />
         </div>
-
       </div>
-
-      {/* =====================================
-          SUMMARY
-      ====================================== */}
 
       <div className="email-summary">
-
-        <div className="email-summary-card">
-
-          <div className="summary-icon">
-            👥
-          </div>
-
-          <div>
-            <p>
-              Students Requiring Alerts
-            </p>
-
-            <h2>
-              {emailDrafts.length}
-            </h2>
-          </div>
-
-        </div>
-
-        <div className="email-summary-card">
-
-          <div className="summary-icon">
-            ⚠️
-          </div>
-
-          <div>
-            <p>
-              Critical Students
-            </p>
-
-            <h2>
-              {criticalCount}
-            </h2>
-          </div>
-
-        </div>
-
-        <div className="email-summary-card">
-
-          <div className="summary-icon">
-            ✉️
-          </div>
-
-          <div>
-            <p>
-              Warning Students
-            </p>
-
-            <h2>
-              {warningCount}
-            </h2>
-          </div>
-
-        </div>
-
+        <div className="email-summary-card"><div className="summary-icon">👥</div><div><p>Students Shown</p><h2>{filteredStudents.length}</h2></div></div>
+        <div className="email-summary-card"><div className="summary-icon">⚠️</div><div><p>Below 75%</p><h2>{below75Count}</h2></div></div>
+        <div className="email-summary-card"><div className="summary-icon">✓</div><div><p>75% and Above</p><h2>{atOrAbove75Count}</h2></div></div>
       </div>
 
-      {/* =====================================
-          GENERATE SECTION
-      ====================================== */}
+      <div className="communication-section">
+        <div className="communication-header">
+          <div><h2>Attendance Alerts</h2><p>Review personalized messages and send eligible alerts.</p></div>
+          <div className="attendance-filter">
 
-      <div className="generate-section">
-
-        <div>
-          <h2>
-            Attendance Alert Emails
-          </h2>
-
-          <p>
-            Generate emails for students
-            below the required attendance.
-          </p>
+            <label htmlFor="attendance-filter">Attendance Range</label>
+            <select id="attendance-filter" value={attendanceFilter} onChange={(event) => setAttendanceFilter(event.target.value)}>
+              <option value="all">All Students</option>
+              <option value="below75">Below 75%</option>
+              <option value="above75">75% and Above</option>
+            </select>
+          </div>
         </div>
-
-        <button
-          type="button"
-          className="generate-button"
-          onClick={handleGenerateDrafts}
-        >
-          Generate Email Drafts
-        </button>
-
+        <div className="communication-actions">
+          <button type="button" className="template-button" onClick={() => setShowTemplateModal(true)}>Edit Email Template</button>
+          <button type="button" className="send-filtered-button" onClick={handleSendAllFiltered} disabled={isSending || eligibleFilteredStudents.length === 0}>{isSending ? "Sending Emails..." : "Send All Filtered Emails"}</button>
+        </div>
+        {filteredStudents.length > 0 && eligibleFilteredStudents.length === 0 && <p className="filter-message">Automatic attendance alerts are only available for students below 75%.</p>}
       </div>
-
-      {/* =====================================
-          COMMUNICATION CONTROLS
-      ====================================== */}
-
-      {emailDrafts.length > 0 && (
-
-        <div className="communication-section">
-
-          <div className="communication-header">
-
-            <div>
-              <h2>
-                Communication Method
-              </h2>
-
-              <p>
-                Choose how each attendance
-                alert should be handled.
-              </p>
-            </div>
-
-            <div className="communication-counts">
-
-              <span className="automatic-count">
-                Automatic: {automaticCount}
-              </span>
-
-              <span className="draft-count">
-                Draft: {draftCount}
-              </span>
-
-            </div>
-
-          </div>
-
-          <div className="communication-actions">
-
-            <button
-              type="button"
-              className="select-automatic-button"
-              onClick={handleSelectAllAutomatic}
-            >
-              Select All as Automatic
-            </button>
-
-            <button
-              type="button"
-              className="select-draft-button"
-              onClick={handleSelectAllDraft}
-            >
-              Select All as Draft
-            </button>
-
-          </div>
-
-          <div className="automation-actions">
-
-            <button
-              type="button"
-              className="send-automatic-button"
-              onClick={handleSendAutomaticEmails}
-            >
-              Send Automatic Emails
-            </button>
-
-            <button
-              type="button"
-              className="review-drafts-button"
-              onClick={handleReviewDrafts}
-            >
-              Review Drafts
-            </button>
-
-            <button
-              type="button"
-              className="review-drafts-button"
-              onClick={handleSendReviewedDrafts}
-            >
-              Send Reviewed Drafts
-            </button>
-
-            <button
-              type="button"
-              className="show-all-button"
-              onClick={() => setShowDraftOnly(false)}
-            >
-              Show All Emails
-            </button>
-
-          </div>
-
-        </div>
-
-      )}
 
       {sendError && <div className="email-send-error">{sendError}</div>}
 
-      {/* =====================================
-          EMAIL LIST
-      ====================================== */}
-
-      {/* =====================================
-    EMAIL LIST
-====================================== */}
-
       <div className="email-list">
-
-        {loadingStudents ? (
-
-          <div className="empty-email">
-            <h3>Loading students...</h3>
-            <p>Fetching student and parent details.</p>
+        {loadingStudents ? <div className="empty-email"><h3>Loading students...</h3><p>Fetching student and parent details.</p></div> : loadError ? <div className="empty-email"><h3>Unable to load students</h3><p>{loadError}</p></div> : filteredStudents.length === 0 ? <div className="empty-email"><h3>No students match this attendance range.</h3><p>No students currently require attendance alerts in this view.</p></div> : filteredStudents.map((student) => (
+          <div className="email-card" key={student.id}>
+            <div className="student-email-info"><div className="student-avatar">{(student.name || "?").split(" ").map((word) => word[0]).join("").toUpperCase()}</div><div className="student-details"><h3>{student.name}</h3><p>{student.email || "Student email missing"}</p><p>{student.parentEmail || "Parent email missing"}</p></div></div>
+            <div className="attendance-info"><span>Attendance</span><strong>{student.attendance}%</strong></div>
+            <div className={`email-status ${student.status.toLowerCase()}`}>{student.status}</div>
+            <div className="email-subject"><span>Subject</span><p>{student.subject}</p><span>Message</span><p>{student.message}</p></div>
+            <div className="email-actions"><button type="button" className="preview-button" onClick={() => handlePreview(student)}>Preview</button><button type="button" className="edit-button" onClick={() => handleEdit(student)} disabled={sendingIds.includes(student.id)}>Edit Email</button><button type="button" className="send-button" onClick={() => handleSend(student)} disabled={sendingIds.includes(student.id) || Number(student.attendance) >= 75} title={Number(student.attendance) >= 75 ? "Attendance is 75% or above" : "Send email"}>{sendingIds.includes(student.id) ? "Sending..." : "Send"}</button>{Number(student.attendance) >= 75 && <span className="email-eligibility">Attendance is 75% or above. Email should not be sent.</span>}</div>
           </div>
-
-        ) : emailDrafts.length === 0 ? (
-
-          <div className="empty-email">
-            <h3>
-              No email drafts generated
-            </h3>
-
-            <p>
-              Select the attendance date
-              and click "Generate Email Drafts".
-            </p>
-
-          </div>
-
-        ) : (
-
-          emailDrafts
-            .filter((email) => {
-              if (!showDraftOnly) return true;
-
-              return communicationMode[email.id] === "draft";
-            })
-            .map((email) => (
-
-              <div
-                className="email-card"
-                key={email.id}
-              >
-
-                {/* STUDENT */}
-
-                <div className="student-email-info">
-
-                  <div className="student-avatar">
-                    {email.name
-                      .split(" ")
-                      .map((word) => word[0])
-                      .join("")
-                      .toUpperCase()}
-                  </div>
-
-                  <div>
-                    <h3>{email.name}</h3>
-
-                    <p>{email.email}</p>
-
-                    <p>{email.parentEmail || "Parent email missing"}</p>
-                  </div>
-
-                </div>
-
-                {/* ATTENDANCE */}
-
-                <div className="attendance-info">
-
-                  <span>
-                    Attendance
-                  </span>
-
-                  <strong>
-                    {email.attendance}%
-                  </strong>
-
-                </div>
-
-                {/* STATUS */}
-
-                <div
-                  className={`email-status ${email.status.toLowerCase()}`}
-                >
-                  {email.status}
-                </div>
-
-                {/* COMMUNICATION */}
-
-                <div className="communication-method">
-
-                  <span>
-                    Communication
-                  </span>
-
-                  <select
-                    value={
-                      communicationMode[email.id] ||
-                      "automatic"
-                    }
-                    onChange={(event) =>
-                      handleCommunicationChange(
-                        email.id,
-                        event.target.value
-                      )
-                    }
-                  >
-
-                    <option value="automatic">
-                      Automatic
-                    </option>
-
-                    <option value="draft">
-                      Draft
-                    </option>
-
-                  </select>
-
-                </div>
-
-                {/* SUBJECT */}
-
-                <div className="email-subject">
-
-                  <span>
-                    Subject
-                  </span>
-
-                  <p>
-                    {email.subject}
-                  </p>
-
-                </div>
-
-                {/* ACTIONS */}
-
-                <div className="email-actions">
-
-                  <button
-                    type="button"
-                    className="preview-button"
-                    onClick={() =>
-                      handlePreview(email)
-                    }
-                  >
-                    Preview
-                  </button>
-
-                  <button
-                    type="button"
-                    className="edit-button"
-                    onClick={() => handleEdit(email)}
-                    disabled={sendingIds.includes(email.id)}
-                  >
-                    Edit Email
-                  </button>
-
-                  {reviewedDrafts[email.id] && (
-                    <span className="reviewed-badge">
-                      ✓ Reviewed
-                    </span>
-                  )}
-
-                  {/* Send button */}
-
-                  <button
-                    type="button"
-                    className="send-button"
-                    onClick={() =>
-                      handleSend(email.id)
-                    }
-                    disabled={sendingIds.includes(email.id)}
-                  >
-                    {sendingIds.includes(email.id) ? "Sending..." : "Send"}
-                  </button>
-
-                </div>
-
-              </div>
-
-            ))
-
-        )}
-
+        ))}
       </div>
 
-      {/* =====================================
-          PREVIEW / EDIT MODAL
-      ====================================== */}
+      {showTemplateModal && <div className="modal-overlay" onClick={() => setShowTemplateModal(false)}><div className="email-modal template-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-header"><div><div className="page-label">EMAIL TEMPLATE</div><h2>Edit Email Template</h2></div><button type="button" className="close-button" onClick={() => setShowTemplateModal(false)}>×</button></div>
+        <div className="template-help"><p>Apply this template to all loaded students.</p><p>Variables: <strong>{"{{studentName}}"}</strong> <strong>{"{{attendance}}"}</strong> <strong>{"{{mentorName}}"}</strong> <strong>{"{{mentorEmail}}"}</strong></p></div>
+        <div className="template-form"><label htmlFor="template-subject">Subject</label><input id="template-subject" className="edit-input" value={templateSubject} onChange={(event) => setTemplateSubject(event.target.value)} /><label htmlFor="template-message">Message</label><textarea id="template-message" className="edit-textarea template-textarea" value={templateMessage} onChange={(event) => setTemplateMessage(event.target.value)} /></div>
+        <div className="modal-actions"><button type="button" className="cancel-button" onClick={() => setShowTemplateModal(false)}>Cancel</button><button type="button" className="modal-send-button" onClick={handleSaveTemplate}>Save Template</button></div>
+      </div></div>}
 
-      {selectedEmail && modalMode && (
-
-        <div className="modal-overlay">
-
-          <div className="email-modal">
-
-            {/* MODAL HEADER */}
-
-            <div className="modal-header">
-
-              <div>
-
-                <div className="page-label">
-                  {modalMode === "edit"
-                    ? "EDIT EMAIL"
-                    : "EMAIL PREVIEW"}
-                </div>
-
-                <h2>
-                  Attendance Alert
-                </h2>
-
-              </div>
-
-              <button
-                type="button"
-                className="close-button"
-                onClick={() => {
-                  setSelectedEmail(null);
-                  setModalMode(null);
-                }}
-              >
-                ×
-              </button>
-
-            </div>
-
-            {/* RECIPIENT */}
-
-            <div className="email-details">
-
-              <div>
-
-                <span>
-                  To
-                </span>
-
-                <p>
-                  {selectedEmail.parentEmail || "Parent email missing"}
-                </p>
-
-              </div>
-
-              <div>
-
-                <span>
-                  Student
-                </span>
-
-                <p>
-                  {selectedEmail.name}
-                </p>
-
-              </div>
-
-              {/* SUBJECT */}
-
-              <div>
-
-                <span>
-                  Subject
-                </span>
-
-                {modalMode === "edit" ? (
-
-                  <input
-                    className="edit-input"
-                    value={editSubject}
-                    onChange={(event) =>
-                      setEditSubject(
-                        event.target.value
-                      )
-                    }
-                  />
-
-                ) : (
-
-                  <p>
-                    {selectedEmail.subject}
-                  </p>
-
-                )}
-
-              </div>
-
-            </div>
-
-            {/* MESSAGE */}
-
-            <div className="email-message">
-
-              <p>
-                Dear{" "}
-                {selectedEmail.name},
-              </p>
-
-              {modalMode === "edit" ? (
-
-                <textarea
-                  className="edit-textarea"
-                  value={editMessage}
-                  onChange={(event) =>
-                    setEditMessage(
-                      event.target.value
-                    )
-                  }
-                />
-
-              ) : (
-
-                <p>
-                  {selectedEmail.message}
-                </p>
-
-              )}
-
-              {modalMode === "preview" && (
-                <>
-                  <p>
-                    Please take the
-                    necessary steps to
-                    improve your
-                    attendance.
-                  </p>
-
-                  <p>
-                    Regards,
-                    <br />
-                    Mentor
-                    <br />
-                    AESA
-                  </p>
-                </>
-              )}
-
-            </div>
-
-            {/* MODAL ACTIONS */}
-
-            <div className="modal-actions">
-
-              <button
-                type="button"
-                className="cancel-button"
-                onClick={() => {
-                  setSelectedEmail(null);
-                  setModalMode(null);
-                }}
-              >
-                Close
-              </button>
-
-              {modalMode === "edit" ? (
-
-                <button
-                  type="button"
-                  className="modal-send-button"
-                  onClick={handleSaveEdit}
-                >
-                  Save Changes
-                </button>
-
-              ) : (
-
-                <button
-                  type="button"
-                  className="modal-send-button"
-                  onClick={() =>
-                    handleSend(
-                      selectedEmail.id
-                    )
-                  }
-                  disabled={sendingIds.includes(selectedEmail.id)}
-                >
-                  {sendingIds.includes(selectedEmail.id) ? "Sending..." : "Send Email"}
-                </button>
-
-              )}
-
-            </div>
-
-
-
-          </div>
-
-
-        </div>
-
-      )}
-
+      {selectedEmail && modalMode && <div className="modal-overlay" onClick={() => { setSelectedEmail(null); setModalMode(null); }}><div className="email-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-header"><div><div className="page-label">{modalMode === "edit" ? "EDIT EMAIL" : "EMAIL PREVIEW"}</div><h2>Attendance Alert</h2></div><button type="button" className="close-button" onClick={() => { setSelectedEmail(null); setModalMode(null); }}>×</button></div>
+        <div className="email-details"><div><span>To</span><p>{selectedEmail.parentEmail || "Parent email missing"}</p></div><div><span>Student</span><p>{selectedEmail.name}</p></div><div><span>Subject</span>{modalMode === "edit" ? <input className="edit-input" value={editSubject} onChange={(event) => setEditSubject(event.target.value)} /> : <p>{selectedEmail.subject}</p>}</div></div>
+        <div className="email-message">{modalMode === "edit" ? <textarea className="edit-textarea" value={editMessage} onChange={(event) => setEditMessage(event.target.value)} /> : <p>{selectedEmail.message}</p>}</div>
+        <div className="modal-actions"><button type="button" className="cancel-button" onClick={() => { setSelectedEmail(null); setModalMode(null); }}>Close</button>{modalMode === "edit" ? <button type="button" className="modal-send-button" onClick={handleSaveEdit}>Save Changes</button> : <button type="button" className="modal-send-button" onClick={() => handleSend(selectedEmail)} disabled={isSending || Number(selectedEmail.attendance) >= 75}>{Number(selectedEmail.attendance) >= 75 ? "Not Eligible" : "Send Email"}</button>}</div>
+      </div></div>}
     </section>
   );
 }

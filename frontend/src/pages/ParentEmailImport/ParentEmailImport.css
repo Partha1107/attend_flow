@@ -1,259 +1,711 @@
+/* =========================================================
+   STUDENT CONTACT MANAGEMENT
+   ========================================================= */
+
 .parent-email-page {
   width: 100%;
-  padding-bottom: 24px;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 24px 18px 32px;
+  box-sizing: border-box;
+  color: #1f2937;
 }
 
+/* Make every direct child use available width */
+.parent-email-page > * {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
 .parent-email-header {
+  width: 100%;
+  max-width: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 24px;
+  box-sizing: border-box;
+}
+
+.parent-email-header > div:first-child {
+  min-width: 0;
 }
 
 .parent-email-header h1 {
-  margin: 0 0 8px;
-  color: #111827;
-  font-size: 30px;
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.25;
   font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #171717;
 }
 
 .parent-email-header p {
-  margin: 0;
-  color: #64748b;
-  font-size: 15px;
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #737373;
 }
 
-.parent-email-card {
-  width: 100%;
-  margin-bottom: 20px;
-  padding: 28px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-}
+/* =========================================================
+   TOP RIGHT ACTIONS
+   ========================================================= */
 
-.parent-email-upload-card {
+.parent-email-header-actions {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-}
-
-.parent-email-upload-icon {
-  display: grid;
-  width: 58px;
-  height: 58px;
-  margin-bottom: 14px;
-  place-items: center;
-  color: #F2383F;
-  background: #FFF0F1;
-  border-radius: 12px;
-}
-
-.parent-email-upload-card h2,
-.parent-email-summary-card h2,
-.parent-email-preview-header h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 20px;
-}
-
-.parent-email-upload-card p {
-  margin: 7px 0 20px;
-  color: #64748b;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .parent-email-file-input {
   display: none;
 }
 
-.parent-email-file-name {
-  width: min(100%, 600px);
-  margin-top: 14px;
-  padding: 10px 14px;
-  overflow: hidden;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* =========================================================
+   BUTTONS
+   ========================================================= */
 
 .parent-email-primary-button,
 .parent-email-secondary-button {
-  min-height: 42px;
+  height: 40px;
+  padding: 0 15px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 18px;
-  border: 0;
+
   border-radius: 8px;
-  font-size: 14px;
+
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 600;
+
   cursor: pointer;
+  white-space: nowrap;
+
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
 .parent-email-primary-button {
+  border: 1px solid #e8342a;
+  background: #e8342a;
   color: #ffffff;
-  background: #F2383F;
+
+  box-shadow:
+    0 2px 6px rgba(232, 52, 42, 0.15);
 }
 
 .parent-email-primary-button:hover:not(:disabled) {
-  background: #D92D34;
+  background: #cf2d24;
+  border-color: #cf2d24;
+
+  box-shadow:
+    0 4px 10px rgba(232, 52, 42, 0.2);
+
+  transform: translateY(-1px);
 }
+
+.parent-email-primary-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
+
+.parent-email-secondary-button {
+  border: 1px solid #d4d4d4;
+  background: #ffffff;
+  color: #404040;
+}
+
+.parent-email-secondary-button:hover:not(:disabled) {
+  border-color: #a3a3a3;
+  background: #fafafa;
+  color: #171717;
+}
+
+.parent-email-secondary-button:active:not(:disabled) {
+  background: #f5f5f5;
+}
+
+/* =========================================================
+   DISABLED BUTTON
+   ========================================================= */
 
 .parent-email-primary-button:disabled,
 .parent-email-secondary-button:disabled {
-  cursor: not-allowed;
   opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-.parent-email-upload-card .parent-email-primary-button {
-  margin-top: 14px;
+/* =========================================================
+   KEYBOARD ACCESSIBLE FOCUS
+   ========================================================= */
+
+.parent-email-primary-button:focus-visible,
+.parent-email-secondary-button:focus-visible,
+.table-input:focus-visible {
+  outline: 3px solid rgba(232, 52, 42, 0.28);
+  outline-offset: 2px;
 }
 
-.parent-email-secondary-button {
-  color: #111827;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
+/* Stronger focus for primary button */
+
+.parent-email-primary-button:focus-visible {
+  outline-color: rgba(232, 52, 42, 0.45);
+  outline-offset: 3px;
 }
+
+/* Remove focus outline when not keyboard-focused */
+
+.parent-email-primary-button:focus:not(:focus-visible),
+.parent-email-secondary-button:focus:not(:focus-visible),
+.table-input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
 
 .parent-email-message {
-  margin-bottom: 20px;
-  padding: 13px 16px;
+  width: 100%;
+  box-sizing: border-box;
+
+  margin-bottom: 18px;
+  padding: 12px 14px;
+
   border-radius: 8px;
-  font-weight: 500;
+
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .parent-email-error {
-  color: #991b1b;
-  background: #fee2e2;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .parent-email-success {
-  color: #166534;
-  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
 }
 
-.parent-email-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(110px, 1fr));
-  gap: 12px;
-  margin-top: 18px;
+/* =========================================================
+   MAIN CARD
+   ========================================================= */
+
+.parent-email-card {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.035);
 }
 
-.parent-email-summary-grid div {
-  padding: 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+.parent-email-preview-card {
+  overflow: hidden;
 }
 
-.parent-email-summary-grid strong,
-.parent-email-summary-grid span {
-  display: block;
-}
-
-.parent-email-summary-grid strong {
-  color: #111827;
-  font-size: 22px;
-}
-
-.parent-email-summary-grid span {
-  margin-top: 2px;
-  color: #64748b;
-  font-size: 12px;
-}
+/* =========================================================
+   TABLE CARD HEADER
+   ========================================================= */
 
 .parent-email-preview-header {
+  width: 100%;
+  min-height: 74px;
+
+  padding: 17px 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
+
+  gap: 20px;
+
+  border-bottom: 1px solid #e5e5e5;
+
+  box-sizing: border-box;
 }
 
-.parent-email-table-wrapper {
-  overflow-x: auto;
+.parent-email-preview-header > div:first-child {
+  min-width: 0;
 }
+
+.parent-email-preview-header h2 {
+  margin: 0;
+
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 650;
+
+  color: #171717;
+}
+
+.parent-email-preview-header p {
+  margin: 4px 0 0;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  color: #737373;
+}
+
+/* =========================================================
+   TABLE WRAPPER
+   ========================================================= */
+
+.parent-email-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: auto;
+
+  /*
+   * Keeps the header visible while scrolling.
+   */
+  max-height: calc(100vh - 250px);
+
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d4 transparent;
+}
+
+.parent-email-table-wrapper::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.parent-email-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.parent-email-table-wrapper::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 10px;
+}
+
+.parent-email-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
 
 .parent-email-table {
   width: 100%;
-  min-width: 680px;
-  border-collapse: collapse;
+  min-width: 1050px;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  table-layout: fixed;
 }
 
-.parent-email-table th,
-.parent-email-table td {
-  padding: 13px 14px;
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.parent-email-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  height: 48px;
+
+  padding: 0 14px;
+
+  background: #fafafa;
+
+  border-bottom: 1px solid #dedede;
+
+  color: #525252;
+
+  font-size: 11px;
+  font-weight: 700;
+
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.parent-email-table th {
-  color: #475569;
-  background: #f8fafc;
-  font-size: 12px;
-  font-weight: 700;
   text-transform: uppercase;
-}
 
-.parent-email-table td {
-  color: #334155;
-}
+  letter-spacing: 0.35px;
 
-.parent-email-status {
-  display: inline-flex;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
   white-space: nowrap;
 }
 
-.status-ready,
-.status-updated {
-  color: #166534;
-  background: #dcfce7;
+/* =========================================================
+   COLUMN WIDTHS
+   ========================================================= */
+
+.parent-email-table th:nth-child(1),
+.parent-email-table td:nth-child(1) {
+  width: 19%;
 }
 
-.status-student-not-found,
-.status-empty-row {
-  color: #475569;
-  background: #e2e8f0;
+.parent-email-table th:nth-child(2),
+.parent-email-table td:nth-child(2) {
+  width: 23%;
 }
 
-.status-duplicate-name {
-  color: #92400e;
-  background: #fef3c7;
+.parent-email-table th:nth-child(3),
+.parent-email-table td:nth-child(3) {
+  width: 17%;
 }
 
-.status-invalid-email {
-  color: #991b1b;
-  background: #fee2e2;
+.parent-email-table th:nth-child(4),
+.parent-email-table td:nth-child(4) {
+  width: 23%;
 }
 
-@media (max-width: 900px) {
-  .parent-email-summary-grid {
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
+.parent-email-table th:nth-child(5),
+.parent-email-table td:nth-child(5) {
+  width: 18%;
+}
+
+/* =========================================================
+   TABLE BODY
+   ========================================================= */
+
+.parent-email-table tbody td {
+  height: 66px;
+
+  padding: 8px 14px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+
+  box-sizing: border-box;
+
+  vertical-align: middle;
+}
+
+.parent-email-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.parent-email-table tbody tr:hover td {
+  background: #fcfcfc;
+}
+
+/* =========================================================
+   STUDENT NAME
+   ========================================================= */
+
+.student-name-cell {
+  color: #262626;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   STUDENT EMAIL
+   ========================================================= */
+
+.student-email-cell {
+  color: #737373;
+
+  font-size: 12.5px;
+  line-height: 1.35;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   EDITABLE INPUTS
+   ========================================================= */
+
+.table-input {
+  width: 100%;
+  height: 38px;
+
+  box-sizing: border-box;
+
+  padding: 0 10px;
+
+  border: 1px solid #d4d4d4;
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #262626;
+
+  font-family: inherit;
+  font-size: 12.5px;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.table-input::placeholder {
+  color: #a3a3a3;
+}
+
+.table-input:hover {
+  border-color: #b5b5b5;
+}
+
+.table-input:focus {
+  border-color: #e8342a;
+
+  box-shadow:
+    0 0 0 3px rgba(232, 52, 42, 0.09);
+
+  background: #ffffff;
+}
+
+.table-input:focus-visible {
+  outline: 3px solid rgba(232, 52, 42, 0.28);
+  outline-offset: 1px;
+
+  border-color: #e8342a;
+
+  box-shadow:
+    0 0 0 3px rgba(232, 52, 42, 0.08);
+}
+
+/* =========================================================
+   INVALID INPUT
+   ========================================================= */
+
+.table-input-error {
+  border-color: #ef4444;
+  background: #fff7f7;
+}
+
+.table-input-error:focus {
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+.table-input-error:focus-visible {
+  outline-color: rgba(220, 38, 38, 0.35);
+
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+/* =========================================================
+   ROW FOCUS FEEDBACK
+   ========================================================= */
+
+.parent-email-table tbody tr:has(.table-input:focus-visible) td {
+  background: #fffafa;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.parent-email-loading {
+  min-height: 180px;
+
+  padding: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #737373;
+
+  font-size: 13px;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.parent-email-empty {
+  min-height: 180px;
+
+  padding: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  color: #737373;
+
+  font-size: 13px;
+}
+
+.contact-error-box {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #ffb8b8;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #d91c1c;
+  margin-bottom: 18px;
+}
+
+.contact-error-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.contact-error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.contact-error-item {
+  line-height: 1.5;
+  font-size: 14px;
+}
+/* =========================================================
+   FULL WIDTH OVERRIDES
+   ========================================================= */
+
+/*
+ * These help if a generic page/card class is restricting
+ * the width of this specific page.
+ */
+
+.parent-email-page .parent-email-card,
+.parent-email-page .parent-email-preview-card,
+.parent-email-page .parent-email-table-wrapper {
+  max-width: none;
+}
+
+/* =========================================================
+   LARGE SCREENS
+   ========================================================= */
+
+@media (min-width: 1400px) {
+  .parent-email-page {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .parent-email-table {
+    min-width: 0;
   }
 }
 
-@media (max-width: 600px) {
-  .parent-email-card {
-    padding: 20px;
+/* =========================================================
+   MEDIUM SCREENS
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .parent-email-page {
+    padding: 24px 18px 35px;
+  }
+
+  .parent-email-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-email-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* =========================================================
+   SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .parent-email-page {
+    padding: 18px 14px 28px;
   }
 
   .parent-email-header h1 {
-    font-size: 25px;
+    font-size: 22px;
   }
 
-  .parent-email-summary-grid {
-    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  .parent-email-header p {
+    font-size: 13px;
+  }
+
+  .parent-email-header-actions {
+    width: 100%;
+
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .parent-email-header-actions
+    .parent-email-secondary-button {
+    width: 100%;
   }
 
   .parent-email-preview-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .parent-email-preview-header
+    .parent-email-primary-button {
+    width: 100%;
+  }
+
+  .parent-email-table-wrapper {
+    max-height: calc(100vh - 330px);
+  }
+
+  .parent-email-table {
+    min-width: 1050px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .parent-email-primary-button,
+  .parent-email-secondary-button,
+  .table-input {
+    transition: none;
   }
 }
