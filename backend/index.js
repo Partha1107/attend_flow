@@ -10,6 +10,7 @@ const mentorRoutes = require("./src/routes/mentorRoutes");
 const mentorProfileRoutes = require("./src/routes/mentorProfileRoutes");
 const mentorDashboardRoutes = require("./src/routes/mentorDashboardRoutes");
 const parentEmailRoutes = require("./src/routes/parentEmailRoutes");
+const managerRoutes = require("./src/routes/managerRoutes");
 
 const app = express();
 
@@ -110,9 +111,11 @@ app.use(
     parentEmailRoutes
 );
 
-app.use("/api/mentor", mentorRoutes);
-
-app.use("/api/mentor", mentorProfileRoutes);
+// Manager
+app.use(
+    "/api/manager",
+    managerRoutes
+);
 
 // ===============================
 // JSON ERROR HANDLER
