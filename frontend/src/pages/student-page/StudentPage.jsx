@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import {
-  getMentorStudents,
-  getAvailableSquads,
-} from "../../api/mentor";
+import { getMentorStudents } from "../../api/mentor";
+import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -15,10 +13,10 @@ function StudentPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [jobRole, setJobRole] = useState("");
-  const [squad, setSquad] = useState("");
+  const [squad, setSquad] = useState(
+    () => localStorage.getItem("selectedSquad") || ""
+  );
   const [squads, setSquads] = useState([]);
-  const [attendanceStatus, setAttendanceStatus] = useState("");
   const [error, setError] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -94,67 +92,36 @@ function StudentPage() {
 
       const result = await getMentorStudents();
 
-      // Backend decides what students this user is allowed to see
-      const fetchedStudents = (result.students || []).map(
-        (student) => ({
-          ...student,
-          attendance:
-            Number(student.attendance) || 0,
-        })
-      );
+      const fetchedStudents = (result.students || []).map((student) => ({
+        ...student,
+        attendance: Number(
+          student.attendance ??
+          calculateOverallAttendance(student)
+        ),
+      }));
 
       console.table(
         fetchedStudents.map((student) => ({
           name: student.name,
-          squad: student.squad,
           attendance: student.attendance,
-          subjects:
-            student.subjects?.length || 0,
+          subjects: student.subjects?.length || 0,
         }))
       );
 
-      // Get role from backend
-      setJobRole(result.jobRole || "mentor");
-
-      // Backend returns:
-      // Mentor          -> assigned squad
-      // Campus Manager  -> "all"
-      const returnedSquad = result.squad || "";
-
-      if (result.jobRole === "mentor") {
-        setSquad(returnedSquad);
-      } else {
-        // Campus Manager starts with all squads visible
-        setSquad("");
-      }
-
       setStudents(fetchedStudents);
 
-      // Open student from URL if provided
-      const studentId =
-        searchParams.get("student");
+      const studentId = searchParams.get("student");
 
-      const matchingStudent =
-        fetchedStudents.find(
-          (student) =>
-            String(student.id) === studentId
-        );
+      const matchingStudent = fetchedStudents.find(
+        (student) => String(student.id) === studentId
+      );
 
       if (matchingStudent) {
-        setSelectedStudent(
-          matchingStudent
-        );
+        setSelectedStudent(matchingStudent);
       }
     } catch (error) {
-      console.error(
-        "Failed to fetch students:",
-        error
-      );
-
-      setError(
-        error.message ||
-        "Failed to fetch students."
-      );
+      console.error("Failed to fetch students:", error);
+      setError(error.message || "Failed to fetch students.");
     } finally {
       setLoading(false);
     }
@@ -194,64 +161,61 @@ function StudentPage() {
   useEffect(() => {
     const loadSquads = async () => {
       try {
-        const result =
-          await getAvailableSquads();
+        const response = await fetch(
+          `${API_URL}/api/mentor/dashboard/squads`
+        );
+        const result = await response.json();
 
-        setSquads(
-          result.squads || []
-        );
+        if (response.status === 404) {
+          throw new Error(
+            "Squad API endpoint not found. Check the backend route."
+          );
+        }
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message || `Server error: ${response.status}`
+          );
+        }
+
+        setSquads(result.squads || []);
       } catch (loadError) {
-        console.error(
-          "Load squads error:",
-          loadError
-        );
+        console.error("Load squads error:", loadError);
       }
     };
 
+    const handleSquadChange = (event) => {
+      const nextSquad = event.detail || "";
+      setSquad(nextSquad);
+    };
+
     void loadSquads();
+    window.addEventListener("selectedSquadChange", handleSquadChange);
+
+    return () => {
+      window.removeEventListener("selectedSquadChange", handleSquadChange);
+    };
   }, []);
 
   const filteredStudents = students.filter((student) => {
-    const searchValue = search.trim().toLowerCase();
-
+    const searchValue = search.toLowerCase();
     const matchesSearch =
-      !searchValue ||
       student.name?.toLowerCase().includes(searchValue) ||
       String(student.id).toLowerCase().includes(searchValue);
 
-    // Campus Manager can filter by squad.
-    // Convert both values to String so 138 and "138" match.
     const matchesSquad =
-      jobRole !== "campus_manager" ||
-      !squad ||
-      String(student.squad).trim() === String(squad).trim();
-
-    const matchesStatus =
-      !attendanceStatus ||
-      student.status === attendanceStatus;
+      !squad || student.squad === squad;
 
     return (
       matchesSearch &&
-      matchesSquad &&
-      matchesStatus
+      matchesSquad
     );
   });
 
   const clearFilters = () => {
     setSearch("");
-    setAttendanceStatus("");
-
-    // Campus Manager can clear the squad filter.
-    // Mentor must remain locked to their assigned squad.
-    if (jobRole === "campus_manager") {
-      setSquad("");
-    }
+    setSquad("");
   };
-  // const presentCount = students.filter((student) => student.status === "Present").length;
-  // const absentCount = students.filter((student) => student.status === "Absent").length;
-  // const averageAttendance = students.length
-  //   ? (students.reduce((sum, student) => sum + Number(student.attendance || 0), 0) / students.length).toFixed(2)
-  //   : "0.00";
 
   return (
     <div className="student-page">
@@ -383,35 +347,16 @@ function StudentPage() {
           />
         </div>
 
-        {jobRole === "campus_manager" && (
-          <select
-            value={squad}
-            onChange={(e) => {
-              setSquad(e.target.value);
-            }}
-          >
-            <option value="">
-              All Squads
-            </option>
-
-            {squads.map((availableSquad) => (
-              <option
-                key={String(availableSquad)}
-                value={String(availableSquad)}
-              >
-                Squad {availableSquad}
-              </option>
-            ))}
-          </select>
-        )}
-
         <select
-          value={attendanceStatus}
-          onChange={(e) => setAttendanceStatus(e.target.value)}
+          value={squad}
+          onChange={(e) => setSquad(e.target.value)}
         >
-          <option value="">Attendance Status</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
+          <option value="">All Squads</option>
+          {squads.map((availableSquad) => (
+            <option key={availableSquad} value={availableSquad}>
+              {availableSquad}
+            </option>
+          ))}
         </select>
 
         <button className="clear-filter-btn" onClick={clearFilters}>
@@ -426,7 +371,6 @@ function StudentPage() {
           <span>Student</span>
           <span>Squad</span>
           <span>Attendance %</span>
-          <span>Status</span>
           <span>Action</span>
         </div>
 
@@ -444,20 +388,13 @@ function StudentPage() {
               <div>{student.squad}</div>
 
               <div>
-                <span className="attendance-badge">
-                  {student.attendance}%
-                </span>
-              </div>
-
-              <div>
                 <span
-                  className={`status-badge ${student.status === "Present"
-                    ? "status-present"
-                    : "status-absent"
+                  className={`attendance-badge ${Number(student.attendance) < 75
+                    ? "attendance-warning"
+                    : ""
                     }`}
                 >
-                  <span className="status-dot"></span>
-                  {student.status}
+                  {student.attendance}%
                 </span>
               </div>
 
@@ -696,7 +633,7 @@ function StudentPage() {
         )}
       </div>
     </div>
-  );
+      );
 }
 
-export default StudentPage;
+  export default StudentPage;
