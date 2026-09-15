@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 import {
   getMentorStudents,
@@ -10,6 +11,17 @@ import {
 
 import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
+
+const mapStudentDownloadRow = (student) => ({
+  "Student ID": student.id ?? "",
+  "Student Name": student.name || "",
+  "Student Email": student.email || "",
+  "Student Phone Number": student.phone || "",
+  "Parent Email": student.parent_email || "",
+  "Parent Phone Number": student.parent_phone || "",
+  Squad: student.squad || "",
+  "Overall Attendance %": Number(student.attendance) || 0,
+});
 
 function StudentPage() {
   const [searchParams] = useSearchParams();
@@ -451,6 +463,23 @@ function StudentPage() {
   // CLEAR FILTERS
   // ============================================================
 
+  const handleDownloadStudents = () => {
+    if (filteredStudents.length === 0) {
+      alert("No students to download.");
+      return;
+    }
+
+    const worksheetData = filteredStudents.map(mapStudentDownloadRow);
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    XLSX.writeFile(
+      workbook,
+      `AESA_Students_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   const clearFilters = () => {
     setSearch("");
 
@@ -525,6 +554,16 @@ function StudentPage() {
         ---------------------------------------------------- */}
 
         <div className="student-header-actions">
+
+          <button
+            className="import-student-btn"
+            type="button"
+            onClick={handleDownloadStudents}
+            disabled={loading}
+          >
+            <Download size={18} />
+            Download Students
+          </button>
 
           <button
             className="add-student-btn"
@@ -1189,13 +1228,24 @@ function StudentPage() {
                 <button
                   className="edit-profile-btn"
                   type="button"
-                  onClick={() =>
-                    alert(
-                      "Edit Profile functionality can be added here."
-                    )
-                  }
+                  onClick={() => {
+                    const worksheet = XLSX.utils.json_to_sheet([
+                      mapStudentDownloadRow(selectedStudent),
+                    ]);
+                    const workbook = XLSX.utils.book_new();
+
+                    XLSX.utils.book_append_sheet(
+                      workbook,
+                      worksheet,
+                      "Student"
+                    );
+                    XLSX.writeFile(
+                      workbook,
+                      `AESA_Student_${selectedStudent.id || "profile"}_${new Date().toISOString().split("T")[0]}.xlsx`
+                    );
+                  }}
                 >
-                  Edit Profile
+                  Download
                 </button>
 
                 <button

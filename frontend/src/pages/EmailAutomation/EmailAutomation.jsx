@@ -360,7 +360,7 @@ AESA`);
   };
 
   const handleDownloadBelow75 = () => {
-    const below75Students = filteredStudents.filter(
+    const below75Students = squadStudents.filter(
       (student) => Number(student.attendance) < 75
     );
 
