@@ -13,7 +13,6 @@ import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
 
 const mapStudentDownloadRow = (student) => ({
-  "Student ID": student.id ?? "",
   "Student Name": student.name || "",
   "Student Email": student.email || "",
   "Student Phone Number": student.phone || "",
@@ -778,35 +777,25 @@ function StudentPage() {
         </div>
 
         {/* ==================================================
-            CAMPUS MANAGER SQUAD FILTER
+            SQUAD DROPDOWN & ATTENDANCE FILTER
         ================================================== */}
+
+        <select
+          value={squad}
+          onChange={(e) => setSquad(e.target.value)}
+        >
+          <option value="">All Squads</option>
+          <option value="138">Squad 138</option>
+          <option value="139">Squad 139</option>
+        </select>
 
         <div className="student-filter-buttons">
           <button
             type="button"
-            className={`student-filter-btn ${!squad && attendanceFilter === "all" ? "active" : ""}`}
-            onClick={() => {
-              setSquad("");
-              setAttendanceFilter("all");
-            }}
+            className={`student-filter-btn ${attendanceFilter === "all" ? "active" : ""}`}
+            onClick={() => setAttendanceFilter("all")}
           >
-            All Students
-          </button>
-
-          <button
-            type="button"
-            className={`student-filter-btn ${squad === "138" ? "active" : ""}`}
-            onClick={() => setSquad("138")}
-          >
-            Squad 138
-          </button>
-
-          <button
-            type="button"
-            className={`student-filter-btn ${squad === "139" ? "active" : ""}`}
-            onClick={() => setSquad("139")}
-          >
-            Squad 139
+            All Attendance
           </button>
 
           <button
@@ -825,44 +814,6 @@ function StudentPage() {
             Above 75%
           </button>
         </div>
-
-        {jobRole ===
-          "campus_manager" && (
-
-          <select
-            value={squad}
-            onChange={(e) =>
-              setSquad(
-                e.target.value
-              )
-            }
-          >
-
-            <option value="">
-              All Squads
-            </option>
-
-            {squads.map(
-              (availableSquad) => (
-
-                <option
-                  key={String(
-                    availableSquad
-                  )}
-                  value={String(
-                    availableSquad
-                  )}
-                >
-                  Squad{" "}
-                  {availableSquad}
-                </option>
-
-              )
-            )}
-
-          </select>
-
-        )}
 
         {/* ----------------------------------------------------
             CLEAR FILTERS
