@@ -370,7 +370,6 @@ AESA`);
     }
 
     const worksheetData = below75Students.map((student) => ({
-      "Student ID": student.id,
       "Student Name": student.name,
       "Student Email": student.email || "",
       "Parent Email": student.parentEmail || "",
