@@ -38,7 +38,6 @@ function EmailAutomation() {
   const [jobRole, setJobRole] = useState("");
   const [mentorSquad, setMentorSquad] = useState("");
   const [selectedSquad, setSelectedSquad] = useState("");
-  const [squads, setSquads] = useState([]);
   const [attendanceFilter, setAttendanceFilter] = useState("all");
   const [mentorName, setMentorName] = useState("Mentor");
   const [mentorEmail, setMentorEmail] = useState("");
@@ -156,23 +155,16 @@ AESA`);
       return;
     }
 
-    const loadSquads = async () => {
+    void (async () => {
       try {
-        const result =
-          await getAvailableSquads();
-
-        setSquads(
-          result.squads || []
-        );
+        await getAvailableSquads();
       } catch (error) {
         console.error(
           "Failed to load squads:",
           error
         );
       }
-    };
-
-    void loadSquads();
+    })();
   }, [jobRole]);
 
   const squadStudents = students.filter(
