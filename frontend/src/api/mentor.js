@@ -78,6 +78,24 @@ export const getMentorRole = async () => {
   return result;
 };
 
+// =====================================================
+// GET CURRENT MENTOR PROFILE
+// =====================================================
+
+export const getMentorProfile = async () => {
+  const response = await fetch(
+    `${API_URL}/api/mentor/profile`,
+    {
+      method: "GET",
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to load mentor profile."
+  );
+};
 
 // =====================================================
 // SAVE / UPDATE MENTOR PROFILE

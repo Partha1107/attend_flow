@@ -18,7 +18,7 @@ const AccessDenied = () => {
                 <h1>Access Denied</h1>
 
                 <p>
-                    You don't have permission to access this portal.
+                    You don't have permission to access this portal Or You access was blocked by the admin. 
                 </p>
 
                 <p>

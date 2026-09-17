@@ -14,22 +14,26 @@ const getMentorProfile = async (req, res) => {
                 message: "Authentication required.",
             });
         }
-
         const { data, error } = await supabase
-            .from("mentor_profiles")
-            .select(`
-                id,
-                user_id,
-                email,
-                college_name,
-                squad,
-                job_role,
-                is_blocked,
-                created_at,
-                updated_at
+        .from("mentor_profiles")
+        .select(`
+            id,
+            user_id,
+            email,
+            college_name,
+            squad,
+            job_role,
+            is_blocked,
+            created_at,
+            updated_at
             `)
             .eq("user_id", userId)
             .maybeSingle();
+            console.log("🔥 PROTECTED PROFILE USER ID:", userId);
+            console.log("🔥 PROTECTED PROFILE DATA:", data);
+            console.log("🔥 PROTECTED PROFILE IS_BLOCKED:", data?.is_blocked);
+            console.log("🔥 PROTECTED PROFILE ROLE:", data?.job_role);
+            console.log("🔥 PROTECTED PROFILE EMAIL:", data?.email);
 
         if (error) {
             throw error;
