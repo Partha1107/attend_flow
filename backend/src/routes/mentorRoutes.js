@@ -10,7 +10,7 @@ router.get("/profile", requireAuth, async (req, res) => {
         const { data, error } = await supabase
             .from("mentor_profiles")
             .select(
-                "id, user_id, email, college_name, squad, created_at, updated_at"
+                "id, user_id, email, college_name, squad, job_role, is_blocked, created_at, updated_at"
             )
             .eq("user_id", req.user.id)
             .maybeSingle();

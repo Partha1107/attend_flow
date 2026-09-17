@@ -17,6 +17,8 @@ const cleanString = (value) => {
 // ============================================================
 
 const checkManager = async (userId) => {
+     console.log("🔥🔥🔥 CHECKMANAGER WAS CALLED 🔥🔥🔥");
+    console.log("🔥 MANAGER CHECK USER ID:", userId);
     const { data, error } = await supabase
         .from("mentor_profiles")
         .select(
