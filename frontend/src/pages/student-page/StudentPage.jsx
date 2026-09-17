@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 import {
   getMentorStudents,
@@ -10,6 +11,16 @@ import {
 
 import { calculateOverallAttendance } from "../../utils/attendanceUtils";
 import "./StudentPage.css";
+
+const mapStudentDownloadRow = (student) => ({
+  "Student Name": student.name || "",
+  "Student Email": student.email || "",
+  "Student Phone Number": student.phone || "",
+  "Parent Email": student.parent_email || "",
+  "Parent Phone Number": student.parent_phone || "",
+  Squad: student.squad || "",
+  "Overall Attendance %": Number(student.attendance) || 0,
+});
 
 function StudentPage() {
   const [searchParams] = useSearchParams();
@@ -38,6 +49,7 @@ function StudentPage() {
   // ============================================================
 
   const [search, setSearch] = useState("");
+  const [attendanceFilter, setAttendanceFilter] = useState("all");
 
   // ============================================================
   // ERROR
@@ -60,7 +72,6 @@ function StudentPage() {
   // PARENT DETAILS
   // ============================================================
 
-  const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [parentPhone, setParentPhone] = useState("");
 
@@ -71,7 +82,6 @@ function StudentPage() {
   const openDetailsModal = (student) => {
     setDetailsStudent(student);
 
-    setParentName(student.parent_name || "");
     setParentEmail(student.parent_email || "");
     setParentPhone(student.parent_phone || "");
 
@@ -438,14 +448,20 @@ function StudentPage() {
        */
 
       const matchesSquad =
-        jobRole !== "campus_manager" ||
         !squad ||
         String(student.squad).trim() ===
           String(squad).trim();
 
+      const attendance = Number(student.attendance) || 0;
+      const matchesAttendance =
+        attendanceFilter === "all" ||
+        (attendanceFilter === "below75" && attendance < 75) ||
+        (attendanceFilter === "above75" && attendance >= 75);
+
       return (
         matchesSearch &&
-        matchesSquad
+        matchesSquad &&
+        matchesAttendance
       );
     });
 
@@ -453,19 +469,27 @@ function StudentPage() {
   // CLEAR FILTERS
   // ============================================================
 
+  const handleDownloadStudents = () => {
+    if (filteredStudents.length === 0) {
+      alert("No students to download.");
+      return;
+    }
+
+    const worksheetData = filteredStudents.map(mapStudentDownloadRow);
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    XLSX.writeFile(
+      workbook,
+      `AESA_Students_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   const clearFilters = () => {
     setSearch("");
-
-    /*
-     * Only Campus Manager can clear/change
-     * the squad filter.
-     *
-     * Mentor remains locked to assigned squad.
-     */
-
-    if (jobRole === "campus_manager") {
-      setSquad("");
-    }
+    setAttendanceFilter("all");
+    setSquad("");
   };
 
   // ============================================================
@@ -516,7 +540,14 @@ function StudentPage() {
                 Campus Manager
               </strong>
               {" · "}
-              Viewing all squads
+              {squad
+                ? `Viewing Squad ${squad}`
+                : "Viewing all squads"}
+              {attendanceFilter === "below75"
+                ? " · Below 75%"
+                : attendanceFilter === "above75"
+                  ? " · 75% and above"
+                  : ""}
             </p>
           )}
 
@@ -527,6 +558,16 @@ function StudentPage() {
         ---------------------------------------------------- */}
 
         <div className="student-header-actions">
+
+          <button
+            className="import-student-btn"
+            type="button"
+            onClick={handleDownloadStudents}
+            disabled={loading}
+          >
+            <Download size={18} />
+            Download Students
+          </button>
 
           <button
             className="add-student-btn"
@@ -637,18 +678,6 @@ function StudentPage() {
                     placeholder="Student Email"
                   />
 
-                  {/* Parent Name */}
-                  <input
-                    type="text"
-                    value={parentName}
-                    onChange={(e) =>
-                      setParentName(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Parent Name"
-                  />
-
                   {/* Parent Email */}
                   <input
                     type="email"
@@ -748,46 +777,43 @@ function StudentPage() {
         </div>
 
         {/* ==================================================
-            CAMPUS MANAGER SQUAD FILTER
+            SQUAD DROPDOWN & ATTENDANCE FILTER
         ================================================== */}
 
-        {jobRole ===
-          "campus_manager" && (
+        <select
+          value={squad}
+          onChange={(e) => setSquad(e.target.value)}
+        >
+          <option value="">All Squads</option>
+          <option value="138">Squad 138</option>
+          <option value="139">Squad 139</option>
+        </select>
 
-          <select
-            value={squad}
-            onChange={(e) =>
-              setSquad(
-                e.target.value
-              )
-            }
+        <div className="student-filter-buttons">
+          <button
+            type="button"
+            className={`student-filter-btn ${attendanceFilter === "all" ? "active" : ""}`}
+            onClick={() => setAttendanceFilter("all")}
           >
+            All Attendance
+          </button>
 
-            <option value="">
-              All Squads
-            </option>
+          <button
+            type="button"
+            className={`student-filter-btn ${attendanceFilter === "below75" ? "active" : ""}`}
+            onClick={() => setAttendanceFilter("below75")}
+          >
+            Below 75%
+          </button>
 
-            {squads.map(
-              (availableSquad) => (
-
-                <option
-                  key={String(
-                    availableSquad
-                  )}
-                  value={String(
-                    availableSquad
-                  )}
-                >
-                  Squad{" "}
-                  {availableSquad}
-                </option>
-
-              )
-            )}
-
-          </select>
-
-        )}
+          <button
+            type="button"
+            className={`student-filter-btn ${attendanceFilter === "above75" ? "active" : ""}`}
+            onClick={() => setAttendanceFilter("above75")}
+          >
+            Above 75%
+          </button>
+        </div>
 
         {/* ----------------------------------------------------
             CLEAR FILTERS
@@ -1053,25 +1079,11 @@ function StudentPage() {
 
                 <div className="profile-grid">
 
-                  {/* Full Name */}
+                  {/* Student Email */}
                   <div>
 
                     <span>
-                      Full Name
-                    </span>
-
-                    <strong>
-                      {selectedStudent.name ||
-                        "Not provided"}
-                    </strong>
-
-                  </div>
-
-                  {/* Email */}
-                  <div>
-
-                    <span>
-                      Email
+                      Student Email
                     </span>
 
                     <strong>
@@ -1081,44 +1093,43 @@ function StudentPage() {
 
                   </div>
 
-                  {/* Parent Number */}
+                  {/* Student Phone Number */}
                   <div>
 
                     <span>
-                      Parent's Number
+                      Student Phone Number
+                    </span>
+
+                    <strong>
+                      {selectedStudent.phone ||
+                        "Not provided"}
+                    </strong>
+
+                  </div>
+
+                  {/* Parent Phone Number */}
+                  <div>
+
+                    <span>
+                      Parent Phone Number
                     </span>
 
                     <strong>
                       {selectedStudent.parent_phone ||
-                        selectedStudent.phone ||
                         "Not provided"}
                     </strong>
 
                   </div>
 
-                  {/* Date of Birth */}
+                  {/* Parent Email */}
                   <div>
 
                     <span>
-                      Date of Birth
+                      Parent Email
                     </span>
 
                     <strong>
-                      {selectedStudent.dob ||
-                        "Not provided"}
-                    </strong>
-
-                  </div>
-
-                  {/* Gender */}
-                  <div>
-
-                    <span>
-                      Gender
-                    </span>
-
-                    <strong>
-                      {selectedStudent.gender ||
+                      {selectedStudent.parent_email ||
                         "Not provided"}
                     </strong>
 
@@ -1218,13 +1229,24 @@ function StudentPage() {
                 <button
                   className="edit-profile-btn"
                   type="button"
-                  onClick={() =>
-                    alert(
-                      "Edit Profile functionality can be added here."
-                    )
-                  }
+                  onClick={() => {
+                    const worksheet = XLSX.utils.json_to_sheet([
+                      mapStudentDownloadRow(selectedStudent),
+                    ]);
+                    const workbook = XLSX.utils.book_new();
+
+                    XLSX.utils.book_append_sheet(
+                      workbook,
+                      worksheet,
+                      "Student"
+                    );
+                    XLSX.writeFile(
+                      workbook,
+                      `AESA_Student_${selectedStudent.id || "profile"}_${new Date().toISOString().split("T")[0]}.xlsx`
+                    );
+                  }}
                 >
-                  Edit Profile
+                  Download
                 </button>
 
                 <button

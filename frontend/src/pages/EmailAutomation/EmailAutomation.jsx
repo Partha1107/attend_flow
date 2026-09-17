@@ -4,6 +4,7 @@ import {
   getMentorEmailAlerts,
   getAvailableSquads,
 } from "../../api/mentor";
+import * as XLSX from "xlsx";
 import "./EmailAutomation.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -221,35 +222,52 @@ AESA`);
     .replaceAll("{{mentorName}}", mentorName || "Mentor")
     .replaceAll("{{mentorEmail}}", mentorEmail || "");
 
-  const sendEmail = async (student) => {
-    if (Number(student.attendance) >= 75) {
-      throw new Error("Not eligible: attendance must be below 75%.");
+  const sendEmail = async (student, { bulk = false } = {}) => {
+    if (bulk && Number(student.attendance) >= 75) {
+      throw new Error(
+        "Automatic attendance alerts are only available for students below 75%."
+      );
     }
+
     if (!student.parentEmail) {
       throw new Error(`Parent email is missing for ${student.name}.`);
     }
 
     const response = await fetch(`${API_URL}/api/email-automation/send`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         studentIds: [student.id],
+
+        // automatic = bulk attendance alert
+        // individual = manually sent email
+        sendType: bulk ? "automatic" : "individual",
+
         mentorName,
         mentorEmail,
+
         studentId: student.id,
         studentName: student.name,
         studentEmail: student.email,
         parentEmail: student.parentEmail,
         attendancePercentage: student.attendance,
+
         subject: student.subject,
         message: student.message,
       }),
     });
 
     const result = await response.json().catch(() => null);
+
     if (!response.ok || !result?.success) {
-      throw new Error(result?.message || result?.error || "Email sending failed");
+      throw new Error(
+        result?.message || result?.error || "Email sending failed"
+      );
     }
+
+    return result;
   };
 
   const handleSend = async (student) => {
@@ -290,7 +308,7 @@ AESA`);
 
     for (const student of eligibleStudents) {
       try {
-        await sendEmail(student);
+        await sendEmail(student, { bulk: true });
         successCount += 1;
         successfulIds.push(student.id);
       } catch (error) {
@@ -326,12 +344,48 @@ AESA`);
   };
 
   const handleSaveTemplate = () => {
-    setStudents((current) => current.map((student) => ({
-      ...student,
-      subject: replaceTemplateVariables(templateSubject, student),
-      message: replaceTemplateVariables(templateMessage, student),
-    })));
+    setStudents((current) =>
+      current.map((student) => ({
+        ...student,
+        subject: replaceTemplateVariables(templateSubject, student),
+        message: replaceTemplateVariables(templateMessage, student),
+      }))
+    );
+
     setShowTemplateModal(false);
+
+    alert(
+      "Email template saved. You can now send only the students below 75%."
+    );
+  };
+
+  const handleDownloadBelow75 = () => {
+    const below75Students = squadStudents.filter(
+      (student) => Number(student.attendance) < 75
+    );
+
+    if (below75Students.length === 0) {
+      alert("No students below 75% to download.");
+      return;
+    }
+
+    const worksheetData = below75Students.map((student) => ({
+      "Student ID": student.id,
+      "Student Name": student.name,
+      "Student Email": student.email || "",
+      "Parent Email": student.parentEmail || "",
+      Squad: student.squad || "",
+      "Attendance Percentage": Number(student.attendance),
+      "Attendance Status": Number(student.attendance) < 65 ? "Critical" : "Warning",
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Below 75% Attendance");
+    XLSX.writeFile(
+      workbook,
+      `AESA_Below_75_Attendance_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
   return (
@@ -375,6 +429,7 @@ AESA`);
         </div>
         <div className="communication-actions">
           <button type="button" className="template-button" onClick={() => setShowTemplateModal(true)}>Edit Email Template</button>
+          <button type="button" className="template-button" onClick={handleDownloadBelow75}>Download Below 75%</button>
           <button type="button" className="send-filtered-button" onClick={handleSendAllFiltered} disabled={isSending || eligibleFilteredStudents.length === 0}>{isSending ? "Sending Emails..." : "Send All Filtered Emails"}</button>
         </div>
         {filteredStudents.length > 0 && eligibleFilteredStudents.length === 0 && <p className="filter-message">Automatic attendance alerts are only available for students below 75%.</p>}
@@ -385,11 +440,73 @@ AESA`);
       <div className="email-list">
         {loadingStudents ? <div className="empty-email"><h3>Loading students...</h3><p>Fetching student and parent details.</p></div> : loadError ? <div className="empty-email"><h3>Unable to load students</h3><p>{loadError}</p></div> : filteredStudents.length === 0 ? <div className="empty-email"><h3>No students match this attendance range.</h3><p>No students currently require attendance alerts in this view.</p></div> : filteredStudents.map((student) => (
           <div className="email-card" key={student.id}>
-            <div className="student-email-info"><div className="student-avatar">{(student.name || "?").split(" ").map((word) => word[0]).join("").toUpperCase()}</div><div className="student-details"><h3>{student.name}</h3><p>{student.email || "Student email missing"}</p><p>{student.parentEmail || "Parent email missing"}</p></div></div>
-            <div className="attendance-info"><span>Attendance</span><strong>{student.attendance}%</strong></div>
-            <div className={`email-status ${student.status.toLowerCase()}`}>{student.status}</div>
-            <div className="email-subject"><span>Subject</span><p>{student.subject}</p><span>Message</span><p>{student.message}</p></div>
-            <div className="email-actions"><button type="button" className="preview-button" onClick={() => handlePreview(student)}>Preview</button><button type="button" className="edit-button" onClick={() => handleEdit(student)} disabled={sendingIds.includes(student.id)}>Edit Email</button><button type="button" className="send-button" onClick={() => handleSend(student)} disabled={sendingIds.includes(student.id)} title={Number(student.attendance) >= 75 ? "Not eligible: attendance must be below 75%" : "Send email"}>{sendingIds.includes(student.id) ? "Sending..." : Number(student.attendance) < 75 ? "Send" : "Not Eligible"}</button><span className="email-eligibility">{Number(student.attendance) < 75 ? "Eligible to send" : "Not eligible: attendance is 75% or above"}</span></div>
+            <div className="student-email-info">
+              <div className="student-avatar">
+                {(student.name || "?")
+                  .split(" ")
+                  .map((word) => word[0])
+                  .join("")
+                  .toUpperCase()}
+              </div>
+              <div className="student-details">
+                <h3>{student.name}</h3>
+                <p>{student.email || "Student email missing"}</p>
+                <p>{student.parentEmail || "Parent email missing"}</p>
+              </div>
+            </div>
+
+            <div className="attendance-info">
+              <span>Attendance</span>
+              <strong>{student.attendance}%</strong>
+            </div>
+
+            <div className={`email-status ${student.status.toLowerCase()}`}>
+              {student.status}
+            </div>
+
+            <div className="email-subject">
+              <span>Subject</span>
+              <p>{student.subject}</p>
+              <span>Message</span>
+              <p>{student.message}</p>
+            </div>
+
+            <div className="email-actions">
+              <button
+                type="button"
+                className="preview-button"
+                onClick={() => handlePreview(student)}
+              >
+                Preview
+              </button>
+
+              <button
+                type="button"
+                className="edit-button"
+                onClick={() => handleEdit(student)}
+                disabled={sendingIds.includes(student.id)}
+              >
+                Edit Email
+              </button>
+
+              <button
+                type="button"
+                className="send-button"
+                onClick={() => handleSend(student)}
+                disabled={sendingIds.includes(student.id)}
+                title="Send this student's email"
+              >
+                {sendingIds.includes(student.id)
+                  ? "Sending..."
+                  : "Send Email"}
+              </button>
+
+              <span className="email-eligibility">
+                {Number(student.attendance) < 75
+                  ? "Eligible to send"
+                  : "Not eligible: attendance is 75% or above"}
+              </span>
+            </div>
           </div>
         ))}
       </div>

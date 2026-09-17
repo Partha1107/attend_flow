@@ -183,7 +183,7 @@ return (
 
           <input
             type="text"
-            placeholder="Search recipient, message, or ID..."
+            placeholder="Search guardian email, message, or ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -223,7 +223,7 @@ return (
             <tr>
               <th>Date & Time</th>
               <th>Type</th>
-              <th>Recipient</th>
+              <th>Guardian Email</th>
               <th>Message Details</th>
               <th>Status</th>
               <th>Action</th>
@@ -327,7 +327,7 @@ return (
             />
 
             <DetailItem
-              label="Recipient"
+              label="Guardian Email"
               value={selectedMessage.recipient}
             />
 
