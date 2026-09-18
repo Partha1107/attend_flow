@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./ManagerSettingspage.css";
+import Loader from "../../components/Loader";
 
 import { supabase } from "../../lib/supabase";
 
@@ -199,7 +200,7 @@ function ManagerSettingspage() {
 
         <section className="mentor-management-card">
           <div className="manager-settings-loading">
-            Loading mentors...
+              <Loader text="Loading mentors..." delay={500} />
           </div>
         </section>
       </div>
