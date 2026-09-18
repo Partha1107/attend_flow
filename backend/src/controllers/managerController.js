@@ -58,9 +58,13 @@ const checkManager = async (userId) => {
 };
 
 // ============================================================
-// GET ALL MENTORS
+// GET ALL STAFF
 //
 // GET /api/manager/mentors
+//
+// Returns:
+//     - mentors
+//     - campus managers
 // ============================================================
 
 const getMentors = async (req, res) => {
@@ -77,12 +81,12 @@ const getMentors = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message:
-                    "Only an authorized campus manager can access mentor management.",
+                    "Only an authorized campus manager can access staff management.",
             });
         }
 
         // ----------------------------------------------------
-        // GET MENTORS
+        // GET ALL STAFF
         // ----------------------------------------------------
 
         const { data, error } = await supabase
@@ -97,7 +101,10 @@ const getMentors = async (req, res) => {
                 created_at,
                 updated_at
             `)
-            .eq("job_role", "mentor")
+            .in("job_role", [
+                "mentor",
+                "campus_manager",
+            ])
             .order("email", {
                 ascending: true,
             });
@@ -118,13 +125,13 @@ const getMentors = async (req, res) => {
 
     } catch (error) {
         console.error(
-            "Get manager mentors error:",
+            "Get manager staff error:",
             error
         );
 
         return res.status(500).json({
             success: false,
-            message: "Failed to fetch mentors.",
+            message: "Failed to fetch staff.",
             error: error.message,
         });
     }
