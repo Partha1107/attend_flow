@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { ALLOWED_USERS } from "../constants/allowedUsers";
 import { getMentorProfile } from "../api/mentor";
-
+import Loader from "../components/Loader";
 const ProtectedRoute = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(Boolean(supabase));
@@ -148,9 +148,11 @@ const ProtectedRoute = () => {
 
   if (loading) {
     return (
-      <div>
-        Checking authentication...
-      </div>
+      <Loader
+        fullScreen={true}
+        size="large"
+        text="Loading..."
+      />
     );
   }
 
@@ -176,9 +178,11 @@ const ProtectedRoute = () => {
 
   if (accessChecking) {
     return (
-      <div>
-        Checking access...
-      </div>
+      <Loader
+        fullScreen={true}
+        size="large"
+        text="Checking access..."
+      />
     );
   }
 
