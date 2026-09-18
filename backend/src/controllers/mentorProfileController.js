@@ -29,11 +29,7 @@ const getMentorProfile = async (req, res) => {
             `)
             .eq("user_id", userId)
             .maybeSingle();
-            console.log("🔥 PROTECTED PROFILE USER ID:", userId);
-            console.log("🔥 PROTECTED PROFILE DATA:", data);
-            console.log("🔥 PROTECTED PROFILE IS_BLOCKED:", data?.is_blocked);
-            console.log("🔥 PROTECTED PROFILE ROLE:", data?.job_role);
-            console.log("🔥 PROTECTED PROFILE EMAIL:", data?.email);
+            
 
         if (error) {
             throw error;

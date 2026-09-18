@@ -59,8 +59,7 @@ function ManagerSettingspage() {
 
       const result = await response.json();
 
-      console.log("🔥 MANAGER API STATUS:", response.status);
-      console.log("🔥 MANAGER API RESPONSE:", result);
+      
 
       if (!response.ok || !result.success) {
         throw new Error(
