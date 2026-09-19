@@ -173,7 +173,7 @@ const ProtectedRoute = () => {
     return () => {
       mounted = false;
     };
-  }, [session]);
+  }, [session, location.pathname]);
 
   // ============================================================
   // LOADING AUTHENTICATION
