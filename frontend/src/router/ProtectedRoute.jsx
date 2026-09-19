@@ -1,16 +1,29 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import { supabase } from "../lib/supabase";
 import { ALLOWED_USERS } from "../constants/allowedUsers";
 import { getMentorProfile } from "../api/mentor";
 import Loader from "../components/Loader";
+
 const ProtectedRoute = () => {
+  const location = useLocation();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(Boolean(supabase));
 
+  // ============================================================
+  // ACCESS CONTROL STATE
+  // ============================================================
+
   const [accessChecking, setAccessChecking] = useState(false);
+
+  // IMPORTANT:
+  // Prevents protected pages from rendering before
+  // mentor profile verification is completed.
+  const [accessResolved, setAccessResolved] = useState(false);
+
   const [isBlocked, setIsBlocked] = useState(false);
+  const [profileMissing, setProfileMissing] = useState(false);
   const [accessError, setAccessError] = useState(false);
 
   // ============================================================
@@ -69,7 +82,8 @@ const ProtectedRoute = () => {
   }, []);
 
   // ============================================================
-  // CHECK ACCOUNT BLOCK STATUS
+  // CHECK ACCOUNT ACCESS
+  //
   // Applies to:
   // - Mentor
   // - Campus Manager
@@ -83,8 +97,13 @@ const ProtectedRoute = () => {
     let mounted = true;
 
     const checkUserAccess = async () => {
+      // Start access verification
       setAccessChecking(true);
+      setAccessResolved(false);
+
+      // Reset previous access state
       setAccessError(false);
+      setProfileMissing(false);
       setIsBlocked(false);
 
       try {
@@ -97,18 +116,27 @@ const ProtectedRoute = () => {
 
         if (!mounted) return;
 
-        // No profile = cannot verify access
-        if (!result?.profile) {
-          console.error(
-            "❌ User profile not found."
+        // ========================================================
+        // CHECK PROFILE
+        // ========================================================
+
+        const profile = result?.profile;
+
+        if (!profile) {
+          console.warn(
+            "⚠️ User profile not found. Redirecting to profile settings."
           );
 
-          setAccessError(true);
+          setProfileMissing(true);
           return;
         }
 
+        // ========================================================
+        // CHECK BLOCK STATUS
+        // ========================================================
+
         const blocked =
-          result.profile.is_blocked === true;
+          profile.is_blocked === true;
 
         console.log(
           "🔥 USER IS BLOCKED:",
@@ -124,13 +152,18 @@ const ProtectedRoute = () => {
 
         if (mounted) {
           // Fail closed.
-          // If the account status cannot be verified,
+          // If account status cannot be verified,
           // do not grant access.
           setAccessError(true);
         }
       } finally {
         if (mounted) {
           setAccessChecking(false);
+
+          // IMPORTANT:
+          // Only after profile verification finishes,
+          // protected pages are allowed to render.
+          setAccessResolved(true);
         }
       }
     };
@@ -173,7 +206,30 @@ const ProtectedRoute = () => {
   }
 
   // ============================================================
-  // CHECKING ACCOUNT ACCESS
+  // ACCESS CHECK NOT COMPLETED
+  //
+  // IMPORTANT:
+  // This prevents Dashboard from mounting early.
+  //
+  // Without this, Dashboard can call:
+  //
+  // /api/mentor/dashboard/students
+  //
+  // before mentor profile verification finishes.
+  // ============================================================
+
+  if (!accessResolved) {
+    return (
+      <Loader
+        fullScreen={true}
+        size="large"
+        text="Checking access..."
+      />
+    );
+  }
+
+  // ============================================================
+  // ACCESS CHECKING
   // ============================================================
 
   if (accessChecking) {
@@ -185,6 +241,26 @@ const ProtectedRoute = () => {
       />
     );
   }
+
+  // ============================================================
+  // PROFILE DOES NOT EXIST
+  // ============================================================
+
+  if (profileMissing) {
+  // Allow the profile setup page to render.
+  // The user has no profile yet, so they need this page
+  // to create one.
+  if (location.pathname === "/mentor/setup") {
+    return <Outlet />;
+  }
+
+  return (
+    <Navigate
+      to="/mentor/setup"
+      replace
+    />
+  );
+}
 
   // ============================================================
   // PROFILE VERIFICATION FAILED
@@ -205,8 +281,7 @@ const ProtectedRoute = () => {
   // ============================================================
   // BLOCKED USER
   //
-  // IMPORTANT:
-  // This check applies regardless of role.
+  // Applies regardless of role:
   //
   // mentor + is_blocked = true
   //        → /access-denied

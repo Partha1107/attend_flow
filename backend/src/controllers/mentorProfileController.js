@@ -15,8 +15,8 @@ const getMentorProfile = async (req, res) => {
             });
         }
         const { data, error } = await supabase
-        .from("mentor_profiles")
-        .select(`
+            .from("mentor_profiles")
+            .select(`
             id,
             user_id,
             email,
@@ -29,7 +29,7 @@ const getMentorProfile = async (req, res) => {
             `)
             .eq("user_id", userId)
             .maybeSingle();
-            
+
 
         if (error) {
             throw error;
@@ -189,6 +189,7 @@ const saveMentorProfile = async (req, res) => {
                 college_name: collegeName.trim(),
                 squad: squad.trim(),
                 job_role: jobRole,
+                is_blocked: false,
             })
             .select(`
                 id,
