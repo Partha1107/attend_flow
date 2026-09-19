@@ -24,19 +24,22 @@ router.get("/profile", requireAuth, async (req, res) => {
             });
         }
 
+        // Profile does not exist
         if (!data) {
-            return res.status(404).json({
-                success: false,
+            return res.status(200).json({
+                success: true,
                 profileExists: false,
-                message: "Mentor profile not completed.",
+                profile: null,
             });
         }
 
-        return res.json({
+        // Profile exists
+        return res.status(200).json({
             success: true,
             profileExists: true,
             profile: data,
         });
+
     } catch (error) {
         console.error("Mentor profile GET error:", error);
 
