@@ -74,6 +74,8 @@ function AppRoutes() {
             element={<EmailAutomation />}
           />
 
+          {/* Legacy alias: Email Automation is now merged into Students. */}
+
           <Route
             path="parent-email-import"
             element={<ParentEmailImport />}
