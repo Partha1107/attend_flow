@@ -109,10 +109,7 @@ const ProtectedRoute = () => {
       try {
         const result = await getMentorProfile();
 
-        console.log(
-          "🔥 USER PROFILE RESPONSE:",
-          result
-        );
+        
 
         if (!mounted) return;
 
@@ -138,10 +135,7 @@ const ProtectedRoute = () => {
         const blocked =
           profile.is_blocked === true;
 
-        console.log(
-          "🔥 USER IS BLOCKED:",
-          blocked
-        );
+        
 
         setIsBlocked(blocked);
       } catch (error) {
@@ -173,7 +167,7 @@ const ProtectedRoute = () => {
     return () => {
       mounted = false;
     };
-  }, [session, location.pathname]);
+  }, [session]);
 
   // ============================================================
   // LOADING AUTHENTICATION

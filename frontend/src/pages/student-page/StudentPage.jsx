@@ -218,16 +218,6 @@ function StudentPage() {
       // DEBUG
       // ----------------------------------------------------------
 
-      console.table(
-        fetchedStudents.map((student) => ({
-          name: student.name,
-          email: student.email,
-          squad: student.squad,
-          attendance: student.attendance,
-          subjects:
-            student.subjects?.length || 0,
-        }))
-      );
 
       // ----------------------------------------------------------
       // ROLE
