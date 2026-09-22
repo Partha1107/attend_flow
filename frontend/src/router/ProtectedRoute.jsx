@@ -304,7 +304,7 @@ const ProtectedRoute = () => {
     session.user?.email?.toLowerCase();
 
   const isKalviumUser =
-    email?.endsWith("@kalvium.community");
+    email?.endsWith("@kalvium.com");
 
   const isDeveloper =
     email &&
