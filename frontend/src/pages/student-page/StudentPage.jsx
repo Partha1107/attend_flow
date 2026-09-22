@@ -1829,7 +1829,7 @@ AESA`
                   setSelectedStudent(null)
                 }
               >
-                Ã—
+                X
               </button>
 
               {/* =================================================
@@ -2251,7 +2251,7 @@ AESA`
                   setShowAddStudent(false)
                 }
               >
-                Ã—
+                X
               </button>
 
               <h2>
@@ -2421,7 +2421,7 @@ AESA`
                   <div className="page-label">EMAIL TEMPLATE</div>
                   <h2>Edit Email Template</h2>
                 </div>
-                <button type="button" className="close-button" onClick={() => setShowTemplateModal(false)}>Ã—</button>
+                <button type="button" className="close-button" onClick={() => setShowTemplateModal(false)}>X</button>
               </div>
               <div className="template-help">
                 <p>Apply this template to all loaded students.</p>
@@ -2449,7 +2449,7 @@ AESA`
                   <div className="page-label">{emailModalMode === "edit" ? "EDIT EMAIL" : "EMAIL PREVIEW"}</div>
                   <h2>Attendance Alert</h2>
                 </div>
-                <button type="button" className="close-button" onClick={() => { setSelectedEmail(null); setEmailModalMode(null); }}>Ã—</button>
+                <button type="button" className="close-button" onClick={() => { setSelectedEmail(null); setEmailModalMode(null); }}>X</button>
               </div>
               <div className="email-details">
                 <div><span>To</span><p>{resolveEmails(selectedEmail).parentEmail || "Parent email missing"}</p></div>
@@ -2475,7 +2475,7 @@ AESA`
                   <div className="page-label">BULK EMAIL</div>
                   <h2>Send All Below 75%?</h2>
                 </div>
-                <button type="button" className="close-button" onClick={() => setConfirmBulkSend(false)}>Ã—</button>
+                <button type="button" className="close-button" onClick={() => setConfirmBulkSend(false)}>X</button>
               </div>
               <div className="email-message">
                 <p>This sends attendance alerts only to students below 75% ({below75Students.length} students). Students at 75% and above are excluded automatically.</p>
