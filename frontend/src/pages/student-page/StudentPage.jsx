@@ -1024,7 +1024,7 @@ AESA`
     const worksheetData = below75Students.map(mapStudentDownloadRow);
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
 
-  
+
     const workbook = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(workbook, worksheet, "Below 75");
@@ -1125,7 +1125,7 @@ AESA`
             Students & Email Automation
           </h1>
 
-        
+
           {/* --------------------------------------------------
               MENTOR
           -------------------------------------------------- */}
@@ -1554,124 +1554,151 @@ AESA`
             {/* ==================================================
              STUDENT CARDS
           ================================================== */}
+            <div className="student-table-scroll">
+              <table className="student-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Student Email</th>
+                    <th>Squad</th>
+                    <th>Attendance %</th>
+                    <th>Status</th>
+                    <th>Parent Email</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
 
-            <div className="student-cards">
-              {paginatedStudents.map(
-                (student) => {
-                  const emails = resolveEmails(student);
-                  const attendance = Number(student.attendance) || 0;
-                  const below = attendance < 75;
-                  const isSending = sendingIds.includes(student.id);
-                  const initials = String(student.name || "?")
-                    .trim()
-                    .split(/\s+/)
-                    .slice(0, 2)
-                    .map((part) => part.charAt(0).toUpperCase())
-                    .join("") || "?";
+                <tbody>
+                  {paginatedStudents.map((student) => {
+                    const emails = resolveEmails(student);
+                    const attendance = Number(student.attendance) || 0;
+                    const isSending = sendingIds.includes(student.id);
+                    const status = getAttendanceStatus(attendance);
 
-                  return (
-                    <article
-                      className={`student-card${below ? " student-card-below" : ""}`}
-                      key={student.id}
-                    >
-                      <div className="student-card-main">
+                    return (
+                      <tr
+                        key={student.id}
+                        className={
+                          attendance < 75 ? "student-row-below" : ""
+                        }
+                      >
+                        {/* STUDENT */}
+                        <td className="student-name-cell">
+                          <button
+                            type="button"
+                            className="student-table-name"
+                            onClick={() =>
+                              openStudentProfile(student, false)
+                            }
+                          >
+                            {student.name || "Unnamed student"}
+                          </button>
+                        </td>
 
-                        {/* STUDENT NAME + EMAIL */}
-                        <div className="student-card-identity">
-                          <span className="student-avatar" aria-hidden="true">
-                            {initials}
+                        {/* STUDENT EMAIL */}
+                        <td className="student-email-cell">
+                          {emails.studentEmail || "Not provided"}
+                        </td>
+
+                        {/* SQUAD */}
+                        <td>
+                          <span className="squad-badge">
+                            {student.squad || "—"}
                           </span>
+                        </td>
 
-                          <div className="student-identity-text">
+                        {/* ATTENDANCE */}
+                        <td>
+                          <span
+                            className={`attendance-badge ${attendance < 75
+                                ? "attendance-below"
+                                : "attendance-good"
+                              }`}
+                          >
+                            {attendance.toFixed(2)}%
+                          </span>
+                        </td>
+
+                        {/* STATUS */}
+                        <td>
+                          <span
+                            className={`status-badge status-${status
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
+                          >
+                            {status}
+                          </span>
+                        </td>
+
+                        {/* PARENT EMAIL */}
+                        <td className="parent-email-cell">
+                          {emails.parentEmail || "Parent email missing"}
+                        </td>
+
+                        {/* ACTIONS */}
+                        <td className="student-action-cell">
+                          <div className="table-actions">
                             <button
-                              className="student-name-link"
                               type="button"
+                              className="subjects-button"
+                              aria-expanded={
+                                selectedStudent !== null &&
+                                String(selectedStudent.id) ===
+                                String(student.id) &&
+                                showSubjects
+                              }
                               onClick={() =>
-                                openStudentProfile(student, false)
+                                handleSubjectsToggle(student)
                               }
                             >
-                              {student.name}
+                              {selectedStudent !== null &&
+                                String(selectedStudent.id) ===
+                                String(student.id) &&
+                                showSubjects
+                                ? "Hide Subjects"
+                                : "Subjects"}
                             </button>
 
-                            <span className="student-email-text">
-                              {emails.studentEmail || "Student email not provided"}
-                            </span>
+                            <button
+                              type="button"
+                              className="preview-button"
+                              onClick={() =>
+                                openEmailPreview(student)
+                              }
+                            >
+                              Preview
+                            </button>
+
+                            <button
+                              type="button"
+                              className="edit-button"
+                              onClick={() =>
+                                openEmailEditor(student)
+                              }
+                              disabled={isSending}
+                            >
+                              Edit Email
+                            </button>
+
+                            <button
+                              type="button"
+                              className="send-button"
+                              onClick={() =>
+                                handleSend(student)
+                              }
+                              disabled={isSending}
+                            >
+                              {isSending
+                                ? "Sending..."
+                                : "Send Email"}
+                            </button>
                           </div>
-                        </div>
-
-                        {/* STUDENT INFORMATION */}
-                        <div className="student-card-info">
-                          <div>
-                            <span>Squad</span>
-                            <strong>Squad {student.squad || "—"}</strong>
-                          </div>
-
-                          <div>
-                            <span>Attendance</span>
-                            <strong>{attendance.toFixed(2)}%</strong>
-                          </div>
-
-                          <div>
-                            <span>Parent Email</span>
-                            <strong>
-                              {emails.parentEmail || "Parent email missing"}
-                            </strong>
-                          </div>
-                        </div>
-
-                        {/* EMAIL ACTIONS */}
-                        <div className="student-card-actions">
-                          <button
-                            type="button"
-                            className="subjects-button"
-                            aria-expanded={
-                              selectedStudent !== null &&
-                              String(selectedStudent.id) === String(student.id) &&
-                              showSubjects
-                            }
-                            onClick={() =>
-                              handleSubjectsToggle(student)
-                            }
-                          >
-                            {selectedStudent !== null &&
-                            String(selectedStudent.id) === String(student.id) &&
-                            showSubjects
-                              ? "Hide Subjects"
-                              : "Subjects"}
-                          </button>
-
-                          <button
-                            type="button"
-                            className="preview-button"
-                            onClick={() => openEmailPreview(student)}
-                          >
-                            Preview
-                          </button>
-
-                          <button
-                            type="button"
-                            className="edit-button"
-                            onClick={() => openEmailEditor(student)}
-                            disabled={isSending}
-                          >
-                            Edit Email
-                          </button>
-
-                          <button
-                            type="button"
-                            className="send-button"
-                            onClick={() => handleSend(student)}
-                            disabled={isSending}
-                          >
-                            {isSending ? "Sending..." : "Send Email"}
-                          </button>
-                        </div>
-
-                      </div>
-                    </article>
-                  );
-                }
-              )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
             <div className="pagination combined-pagination">
@@ -2468,4 +2495,4 @@ AESA`
   );
 }
 
-export default StudentPage;
+export default StudentPage; 
