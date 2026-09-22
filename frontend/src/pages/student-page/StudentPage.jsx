@@ -96,6 +96,40 @@ const mapStudentDownloadRow = (student) => ({
   "Parent Phone": student.parent_phone || "",
 });
 
+// ===========================================================
+// EXCEL DOWNLOAD HELPERS
+// ===========================================================
+
+const getTodayIso = () =>
+  new Date().toISOString().split("T")[0];
+
+const buildFilename = (
+  base,
+  variant = ""
+) => {
+  const variantPart =
+    variant && !variant.startsWith("_")
+      ? `_${variant}`
+      : variant;
+  return `AESA_${base}${variantPart}_${getTodayIso()}.xlsx`;
+};
+
+const downloadExcel = (
+  rows,
+  sheetName,
+  filename
+) => {
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    sheetName
+  );
+  XLSX.writeFile(workbook, filename);
+}
+
 function StudentPage() {
   const [searchParams] = useSearchParams();
 
@@ -206,6 +240,17 @@ AESA`
   const [showAddStudent, setShowAddStudent] = useState(false);
 
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  // ===========================================================
+  // CUSTOM DOWNLOAD STATE
+  // ===========================================================
+
+  const [customDownload, setCustomDownload] = useState({
+    type: "below",
+    threshold: "",
+  });
+  const [showCustomDownloadModal, setShowCustomDownloadModal] =
+    useState(false);
 
   const [detailsStudent, setDetailsStudent] = useState(null);
 
@@ -702,6 +747,26 @@ AESA`
 
     });
 
+  const studentsMatchingCurrentAttendanceFilter =
+    filteredStudents;
+
+  const customThreshold =
+    Number(customDownload.threshold);
+
+  const studentsMatchingCustomDownload = useMemo(() => {
+    if (!(customThreshold >= 0 && customThreshold <= 100)) {
+      return [];
+    }
+
+    return filteredStudents.filter((student) => {
+      const attendance = Number(student.attendance) || 0;
+      if (customDownload.type === "below") {
+        return attendance < customThreshold;
+      }
+      return attendance >= customThreshold;
+    });
+  }, [filteredStudents, customDownload.type, customThreshold]);
+
   const baseFilteredStudents = useMemo(
     () =>
       students.filter((student) => {
@@ -946,7 +1011,7 @@ AESA`
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
     XLSX.writeFile(
       workbook,
-      `AESA_Students_${new Date().toISOString().split("T")[0]}.xlsx`
+      buildFilename("All_Students")
     );
   };
 
@@ -965,15 +1030,84 @@ AESA`
     XLSX.utils.book_append_sheet(workbook, worksheet, "Below 75");
     XLSX.writeFile(
       workbook,
-      `AESA_Below75_${new Date().toISOString().split("T")[0]}.xlsx`
+      buildFilename("Below_75_Percent_Attendance")
     );
   };
+
+  // ===========================================================
+  // DYNAMIC DOWNLOAD HELPER
+  // ===========================================================
+
+  const handleDynamicDownload = () => {
+    if (attendanceFilter === "all") {
+      handleDownloadStudents();
+    } else if (attendanceFilter === "below75") {
+      handleDownloadBelow75();
+    } else if (attendanceFilter === "above75") {
+      handleDownloadAbove75();
+    }
+  };
+
+  // ===========================================================
+  // DYNAMIC DOWNLOAD BUTTON LABEL
+  // ===========================================================
+
+  const downloadButtonLabel = (() => {
+    if (attendanceFilter === "all") {
+      return "Download All Students";
+    }
+    if (attendanceFilter === "below75") {
+      return "Download Below 75%";
+    }
+    if (attendanceFilter === "above75") {
+      return "Download 75% and Above";
+    }
+    return "Download";
+  })();
+
+  // ===========================================================
+  // CUSTOM DOWNLOAD VALIDATION HELPER
+  // ===========================================================
+
+  const customDownloadThresholdValid =
+    customThreshold >= 0 && customThreshold <= 100;
 
   const clearFilters = () => {
     setSearch("");
     setAttendanceFilter("all");
     if (jobRole === "campus_manager") setSquad("");
     resetToFirstPage();
+  };
+
+  const handleCustomDownload = () => {
+    if (!(customThreshold >= 0 && customThreshold <= 100)) {
+      alert(
+        "Please enter a valid threshold between 0 and 100."
+      );
+      return;
+    }
+
+    const matchingStudents =
+      studentsMatchingCustomDownload;
+
+    if (matchingStudents.length === 0) {
+      alert(
+        "No students match the selected attendance range."
+      );
+      return;
+    }
+
+    downloadExcel(
+      matchingStudents.map(mapStudentDownloadRow),
+      customDownload.type === "below"
+        ? "Below Threshold"
+        : "At or Above Threshold",
+      buildFilename(
+        customDownload.type === "below"
+          ? `Below_${customThreshold}_Percent_Attendance`
+          : `${customThreshold}_Percent_And_Above_Attendance`
+      )
+    );
   };
 
   return (
@@ -1351,11 +1485,23 @@ AESA`
           <button
             className="import-student-btn filter-btn"
             type="button"
-            onClick={handleDownloadStudents}
+            onClick={handleDynamicDownload}
             disabled={loading}
           >
             <Download size={16} />
-            Download
+            {downloadButtonLabel}
+          </button>
+
+          <button
+            className="import-student-btn filter-btn"
+            type="button"
+            onClick={() =>
+              setShowCustomDownloadModal(true)
+            }
+            disabled={loading}
+          >
+            <Download size={16} />
+            Custom Download
           </button>
 
           {/* ----------------------------------------------------
