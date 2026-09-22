@@ -2,7 +2,6 @@
 import {
   CalendarDays,
   Download,
-  Eye,
   Mail,
   MailWarning,
   PencilLine,
@@ -16,11 +15,16 @@ import * as XLSX from "xlsx";
 import {
   getMentorStudents,
   getMentorEmailAlerts,
+  getMentorAttendanceRecords,
   getAvailableSquads,
   updateStudentContact,
 } from "../../api/mentor";
 
-import { calculateOverallAttendance } from "../../utils/attendanceUtils";
+import {
+  calculateOverallAttendance,
+  calculateAttendanceWithoutGrowthHour,
+  calculateSubjectWiseAttendance,
+} from "../../utils/attendanceUtils";
 import "./StudentPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -29,6 +33,20 @@ const getAttendanceStatus = (attendance) => {
   if (Number(attendance) >= 75) return "Good";
   if (Number(attendance) >= 65) return "Warning";
   return "Critical";
+};
+
+// ============================================================
+// SUBJECT ATTENDANCE STATUS
+//
+// Reuses the existing status thresholds above.
+// A subject without conducted sessions has no attendance
+// to judge, so it is reported as "No Data".
+// ============================================================
+
+const getSubjectAttendanceStatus = (conductedSessions, percentage) => {
+  if (Number(conductedSessions) <= 0) return "No Data";
+
+  return getAttendanceStatus(percentage);
 };
 
 const resolveEmails = (student = {}) => ({
@@ -70,11 +88,12 @@ const applyTemplateVariables = (text, student, mentorName, mentorEmail) =>
 const mapStudentDownloadRow = (student) => ({
   "Student Name": student.name || "",
   "Student Email": resolveEmails(student).studentEmail || "",
-  "Student Phone Number": student.phone || "",
-  "Parent Email": resolveEmails(student).parentEmail || "",
-  "Parent Phone Number": student.parent_phone || "",
   Squad: student.squad || "",
-  "Overall Attendance %": Number(student.attendance) || 0,
+  "Attendance Percentage": Number(student.attendance) || 0,
+  "Attendance Status": getAttendanceStatus(student.attendance),
+  "Parent Name": student.parent_name || "",
+  "Parent Email": resolveEmails(student).parentEmail || "",
+  "Parent Phone": student.parent_phone || "",
 });
 
 function StudentPage() {
@@ -159,9 +178,35 @@ AESA`
 
   const [selectedStudent, setSelectedStudent] = useState(null);
 
+  // ----------------------------------------------------------
+  // ATTENDANCE CALCULATION TOGGLE (STUDENT PROFILE POPUP ONLY)
+  //
+  //   true  -> existing overall attendance
+  //   false -> attendance without growth hour
+  //            (present sessions / conducted sessions)
+  // ----------------------------------------------------------
+
+  const [showOverallAttendance, setShowOverallAttendance] = useState(true);
+
+  // ----------------------------------------------------------
+  // SUBJECT-WISE ATTENDANCE (STUDENT PROFILE POPUP ONLY)
+  //
+  // controlled by the [ Subjects ] button on each student card.
+  //
+  //   true  -> subject-wise section expanded
+  //   false -> subject-wise section hidden
+  // ----------------------------------------------------------
+
+  const [showSubjects, setShowSubjects] = useState(false);
+
+  // Existing attendance rows (subjects + growth hour) used
+  // only to count present / conducted sessions in the popup.
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+
   const [showAddStudent, setShowAddStudent] = useState(false);
 
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+
   const [detailsStudent, setDetailsStudent] = useState(null);
 
   // ============================================================
@@ -174,16 +219,50 @@ AESA`
   const resetToFirstPage = () => setCurrentPage(1);
 
   // ============================================================
-  // OPEN STUDENT DETAILS
+  // OPEN STUDENT PROFILE POPUP
+  //
+  // withSubjects = false -> student name click, popup opens
+  //                         normally (toggle reset to ON,
+  //                         subject-wise section hidden)
+  //
+  // withSubjects = true  -> [ Subjects ] button click, popup
+  //                         opens with the subject-wise
+  //                         section expanded
   // ============================================================
 
-  const openDetailsModal = (student) => {
-    setDetailsStudent(student);
+  const openStudentProfile = (student, withSubjects = false) => {
+    setSelectedStudent(student);
 
-    setParentEmail(student.parent_email || "");
-    setParentPhone(student.parent_phone || "");
+    // The attendance calculation toggle always starts at ON
+    // when a student profile is opened.
+    setShowOverallAttendance(true);
 
-    setShowDetailsModal(true);
+    setShowSubjects(withSubjects);
+  };
+
+  // ============================================================
+  // [ SUBJECTS ] BUTTON
+  //
+  // - profile popup closed (or showing another student)
+  //     -> open the popup with the subject-wise section shown
+  // - popup already open for the same student
+  //     -> simply show / hide the subject-wise section
+  //
+  // The section is shown/hidden only. No extra ON/OFF toggle
+  // is added for subjects.
+  // ============================================================
+
+  const handleSubjectsToggle = (student) => {
+    const isSameStudentOpen =
+      selectedStudent !== null &&
+      String(selectedStudent.id) === String(student.id);
+
+    if (!isSameStudentOpen) {
+      openStudentProfile(student, true);
+      return;
+    }
+
+    setShowSubjects((value) => !value);
   };
 
   // ============================================================
@@ -222,9 +301,9 @@ AESA`
         currentStudents.map((student) =>
           student.id === detailsStudent.id
             ? {
-                ...student,
-                ...result.student,
-              }
+              ...student,
+              ...result.student,
+            }
             : student
         )
       );
@@ -264,7 +343,7 @@ AESA`
 
       alert(
         error.message ||
-          "Failed to save student details."
+        "Failed to save student details."
       );
     }
   };
@@ -305,6 +384,26 @@ AESA`
         if (alertResult?.attendanceDate) setEmailDate(alertResult.attendanceDate);
       } catch (alertError) {
         console.warn("Email alert metadata unavailable:", alertError);
+      }
+
+      // ----------------------------------------------------------
+      // ATTENDANCE RECORDS
+      //
+      // Existing attendance rows for the students this user can
+      // see. Used ONLY by the Student Profile popup to count
+      // present / conducted sessions across all subjects.
+      //
+      // This does not change import, database or email logic.
+      // ----------------------------------------------------------
+
+      try {
+        const attendanceResult = await getMentorAttendanceRecords();
+
+        setAttendanceRecords(attendanceResult?.records || []);
+      } catch (attendanceError) {
+        console.warn("Attendance records unavailable:", attendanceError);
+
+        setAttendanceRecords([]);
       }
 
       // ----------------------------------------------------------
@@ -410,6 +509,9 @@ AESA`
           setSelectedStudent(
             matchingStudent
           );
+
+          setShowOverallAttendance(true);
+          setShowSubjects(false);
         }
       }
     } catch (error) {
@@ -420,7 +522,7 @@ AESA`
 
       setError(
         error.message ||
-          "Failed to fetch students."
+        "Failed to fetch students."
       );
     } finally {
       setLoading(false);
@@ -584,7 +686,7 @@ AESA`
       const matchesSquad =
         !squad ||
         String(student.squad).trim() ===
-          String(squad).trim();
+        String(squad).trim();
 
       const attendance = Number(student.attendance) || 0;
       const matchesAttendance =
@@ -643,6 +745,51 @@ AESA`
   const paginatedStudents = filteredStudents.slice(
     (safeCurrentPage - 1) * studentsPerPage,
     safeCurrentPage * studentsPerPage
+  );
+
+  // ============================================================
+  // SELECTED STUDENT - ATTENDANCE WITHOUT GROWTH HOUR
+  //
+  // Counts present / conducted sessions for the student whose
+  // profile popup is open, using the existing attendance rows:
+  //
+  //   present   = sum of sessions_attended  (all subjects)
+  //   conducted = sum of sessions_conducted (all subjects)
+  //
+  // Growth hour rows are excluded by the helper.
+  // ============================================================
+
+  const selectedStudentAttendanceRecords = useMemo(() => {
+    if (!selectedStudent) return [];
+
+    return attendanceRecords.filter(
+      (record) =>
+        String(record?.student_id ?? "") === String(selectedStudent.id)
+    );
+  }, [attendanceRecords, selectedStudent]);
+
+  const {
+    presentSessions,
+    conductedSessions,
+    percentage: withoutGrowthHourAttendance,
+  } = calculateAttendanceWithoutGrowthHour(selectedStudentAttendanceRecords);
+
+  // ============================================================
+  // SELECTED STUDENT - SUBJECT-WISE ATTENDANCE
+  //
+  // One entry per subject, built from the same existing
+  // attendance rows. Subject names come from the records
+  // (subjects.name) - nothing is hardcoded.
+  //
+  // Growth hour rows are excluded by the helper.
+  // ============================================================
+
+  const subjectWiseAttendance = useMemo(
+    () =>
+      calculateSubjectWiseAttendance(
+        selectedStudentAttendanceRecords
+      ),
+    [selectedStudentAttendanceRecords]
   );
 
   const handleSend = async (student, bulk = false) => {
@@ -711,10 +858,9 @@ AESA`
     let failed = 0;
     for (const student of eligible) {
       try {
-        // eslint-disable-next-line no-await-in-loop
         await handleSend(student, true);
         sent += 1;
-      } catch (bulkError) {
+      } catch {
         failed += 1;
       }
     }
@@ -812,6 +958,8 @@ AESA`
 
     const worksheetData = below75Students.map(mapStudentDownloadRow);
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+
+  
     const workbook = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(workbook, worksheet, "Below 75");
@@ -828,10 +976,6 @@ AESA`
     resetToFirstPage();
   };
 
-  // ============================================================
-  // RENDER
-  // ============================================================
-
   return (
     <div className="student-page">
 
@@ -847,11 +991,7 @@ AESA`
             Students & Email Automation
           </h1>
 
-          <p>
-            View student details, manage attendance and send email
-            notifications â€” all in one place.
-          </p>
-
+        
           {/* --------------------------------------------------
               MENTOR
           -------------------------------------------------- */}
@@ -996,10 +1136,10 @@ AESA`
                 className="modal-close"
                 type="button"
                 onClick={() =>
-                  setShowDetailsModal(false)
+                  setShowDetailsModal(null)
                 }
               >
-                Ã—
+                x
               </button>
 
               {/* Title */}
@@ -1110,125 +1250,125 @@ AESA`
 
         <div className="filter-row filter-row-top">
 
-        {/* ----------------------------------------------------
+          {/* ----------------------------------------------------
             SEARCH
         ---------------------------------------------------- */}
 
-        <div className="search-box">
+          <div className="search-box">
 
-          <svg
-            viewBox="0 0 24 24"
-            className="search-icon"
-            aria-hidden="true"
-          >
+            <svg
+              viewBox="0 0 24 24"
+              className="search-icon"
+              aria-hidden="true"
+            >
 
-            <circle
-              cx="11"
-              cy="11"
-              r="7"
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+              />
+
+              <path d="m20 20-4-4" />
+
+            </svg>
+
+            <input
+              type="text"
+              placeholder="Search students by name, email or student ID..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                resetToFirstPage();
+              }}
             />
 
-            <path d="m20 20-4-4" />
+          </div>
 
-          </svg>
-
-          <input
-            type="text"
-            placeholder="Search students by name, email or student ID..."
-            value={search}
+          <select
+            value={squad}
             onChange={(e) => {
-              setSearch(e.target.value);
+              setSquad(e.target.value);
               resetToFirstPage();
             }}
-          />
-
-        </div>
-
-        <select
-          value={squad}
-          onChange={(e) => {
-            setSquad(e.target.value);
-            resetToFirstPage();
-          }}
-          disabled={jobRole === "mentor"}
-        >
-          <option value="">All Squads</option>
-          {jobRole === "mentor" && assignedSquad ? (
-            <option value={assignedSquad}>Squad {assignedSquad}</option>
-          ) : (
-            squads.map((availableSquad) => (
-              <option key={String(availableSquad)} value={String(availableSquad)}>
-                Squad {availableSquad}
-              </option>
-            ))
-          )}
-          {jobRole !== "mentor" &&
-            squads.length === 0 && (
-              <>
-                <option value="138">Squad 138</option>
-                <option value="139">Squad 139</option>
-              </>
+            disabled={jobRole === "mentor"}
+          >
+            <option value="">All Squads</option>
+            {jobRole === "mentor" && assignedSquad ? (
+              <option value={assignedSquad}>Squad {assignedSquad}</option>
+            ) : (
+              squads.map((availableSquad) => (
+                <option key={String(availableSquad)} value={String(availableSquad)}>
+                  Squad {availableSquad}
+                </option>
+              ))
             )}
-        </select>
+            {jobRole !== "mentor" &&
+              squads.length === 0 && (
+                <>
+                  <option value="138">Squad 138</option>
+                  <option value="139">Squad 139</option>
+                </>
+              )}
+          </select>
 
-        <select
-          value={attendanceFilter}
-          onChange={(e) => {
-            setAttendanceFilter(e.target.value);
-            resetToFirstPage();
-          }}
-          aria-label="Attendance filter"
-        >
-          <option value="all">All Students</option>
-          <option value="below75">Below 75%</option>
-          <option value="above75">75% and Above</option>
-        </select>
+          <select
+            value={attendanceFilter}
+            onChange={(e) => {
+              setAttendanceFilter(e.target.value);
+              resetToFirstPage();
+            }}
+            aria-label="Attendance filter"
+          >
+            <option value="all">All Students</option>
+            <option value="below75">Below 75%</option>
+            <option value="above75">75% and Above</option>
+          </select>
 
         </div>
 
         <div className="filter-row filter-row-actions">
 
-        <button
-          className="send-all-btn"
-          type="button"
-          onClick={() => setConfirmBulkSend(true)}
-          disabled={loading || below75Students.length === 0}
-          title="Send alerts only to students below 75%"
-        >
-          <Send size={16} />
-          Send All Below 75% ({below75Students.length})
-        </button>
+          <button
+            className="send-all-btn"
+            type="button"
+            onClick={() => setConfirmBulkSend(true)}
+            disabled={loading || below75Students.length === 0}
+            title="Send alerts only to students below 75%"
+          >
+            <Send size={16} />
+            Send All Below 75% ({below75Students.length})
+          </button>
 
-        <button
-          className="template-action-btn"
-          type="button"
-          onClick={() => setShowTemplateModal(true)}
-        >
-          <PencilLine size={16} />
-          Edit Email Template
-        </button>
+          <button
+            className="template-action-btn"
+            type="button"
+            onClick={() => setShowTemplateModal(true)}
+          >
+            <PencilLine size={16} />
+            Edit Email Template
+          </button>
 
-        <button
-          className="import-student-btn filter-btn"
-          type="button"
-          onClick={handleDownloadStudents}
-          disabled={loading}
-        >
-          <Download size={16} />
-          Download
-        </button>
+          <button
+            className="import-student-btn filter-btn"
+            type="button"
+            onClick={handleDownloadStudents}
+            disabled={loading}
+          >
+            <Download size={16} />
+            Download
+          </button>
 
-        {/* ----------------------------------------------------
+          {/* ----------------------------------------------------
             CLEAR FILTERS
         ---------------------------------------------------- */}
 
-        <button
-          className="clear-filter-btn"
-          type="button"
-          onClick={clearFilters}
-        >
-          Clear Filters
-        </button>
+          <button
+            className="clear-filter-btn"
+            type="button"
+            onClick={clearFilters}
+          >
+            Clear Filters
+          </button>
 
         </div>
 
@@ -1265,190 +1405,197 @@ AESA`
 
         ) : filteredStudents.length > 0 ? (
           <>
-          {/* ==================================================
+            {/* ==================================================
              STUDENT CARDS
           ================================================== */}
 
-          <div className="student-cards">
-          {paginatedStudents.map(
-            (student) => {
-              const emails = resolveEmails(student);
-              const attendance = Number(student.attendance) || 0;
-              const below = attendance < 75;
-              const isSending = sendingIds.includes(student.id);
-              const initials = String(student.name || "?")
-                .trim()
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((part) => part.charAt(0).toUpperCase())
-                .join("") || "?";
+            <div className="student-cards">
+              {paginatedStudents.map(
+                (student) => {
+                  const emails = resolveEmails(student);
+                  const attendance = Number(student.attendance) || 0;
+                  const below = attendance < 75;
+                  const isSending = sendingIds.includes(student.id);
+                  const initials = String(student.name || "?")
+                    .trim()
+                    .split(/\s+/)
+                    .slice(0, 2)
+                    .map((part) => part.charAt(0).toUpperCase())
+                    .join("") || "?";
 
-              return (
-              <article
-                className={`student-card${below ? " student-card-below" : ""}`}
-                key={student.id}
-              >
+                  return (
+                    <article
+                      className={`student-card${below ? " student-card-below" : ""}`}
+                      key={student.id}
+                    >
+                      <div className="student-card-main">
 
-                <div className="student-card-main">
+                        {/* STUDENT NAME + EMAIL */}
+                        <div className="student-card-identity">
+                          <span className="student-avatar" aria-hidden="true">
+                            {initials}
+                          </span>
 
-                  <div className="student-card-identity">
-                    <span className="student-avatar" aria-hidden="true">
-                      {initials}
-                    </span>
-                    <div className="student-identity-text">
-                      <button
-                        className="student-name-link"
-                        type="button"
-                        onClick={() => setSelectedStudent(student)}
-                      >
-                        {student.name}
-                      </button>
-                      <span className="student-email-text">
-                        {emails.studentEmail || "Student email not provided"}
-                      </span>
-                    </div>
-                  </div>
+                          <div className="student-identity-text">
+                            <button
+                              className="student-name-link"
+                              type="button"
+                              onClick={() =>
+                                openStudentProfile(student, false)
+                              }
+                            >
+                              {student.name}
+                            </button>
 
-                  <dl className="student-card-meta">
-                    <div className="student-meta-block">
-                      <dt>Squad</dt>
-                      <dd>
-                        <span className="squad-pill">Squad {student.squad}</span>
-                      </dd>
-                    </div>
-                    <div className="student-meta-block">
-                      <dt>Attendance</dt>
-                      <dd className="attendance-line">
-                        <span className="attendance-value">
-                          {student.attendance}%
+                            <span className="student-email-text">
+                              {emails.studentEmail || "Student email not provided"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* STUDENT INFORMATION */}
+                        <div className="student-card-info">
+                          <div>
+                            <span>Squad</span>
+                            <strong>Squad {student.squad || "—"}</strong>
+                          </div>
+
+                          <div>
+                            <span>Attendance</span>
+                            <strong>{attendance.toFixed(2)}%</strong>
+                          </div>
+
+                          <div>
+                            <span>Parent Email</span>
+                            <strong>
+                              {emails.parentEmail || "Parent email missing"}
+                            </strong>
+                          </div>
+                        </div>
+
+                        {/* EMAIL ACTIONS */}
+                        <div className="student-card-actions">
+                          <button
+                            type="button"
+                            className="subjects-button"
+                            aria-expanded={
+                              selectedStudent !== null &&
+                              String(selectedStudent.id) === String(student.id) &&
+                              showSubjects
+                            }
+                            onClick={() =>
+                              handleSubjectsToggle(student)
+                            }
+                          >
+                            {selectedStudent !== null &&
+                            String(selectedStudent.id) === String(student.id) &&
+                            showSubjects
+                              ? "Hide Subjects"
+                              : "Subjects"}
+                          </button>
+
+                          <button
+                            type="button"
+                            className="preview-button"
+                            onClick={() => openEmailPreview(student)}
+                          >
+                            Preview
+                          </button>
+
+                          <button
+                            type="button"
+                            className="edit-button"
+                            onClick={() => openEmailEditor(student)}
+                            disabled={isSending}
+                          >
+                            Edit Email
+                          </button>
+
+                          <button
+                            type="button"
+                            className="send-button"
+                            onClick={() => handleSend(student)}
+                            disabled={isSending}
+                          >
+                            {isSending ? "Sending..." : "Send Email"}
+                          </button>
+                        </div>
+
+                      </div>
+                    </article>
+                  );
+                }
+              )}
+            </div>
+
+            <div className="pagination combined-pagination">
+              <span className="pagination-count">
+                Showing{" "}
+                <strong>
+                  {filteredStudents.length === 0
+                    ? 0
+                    : (safeCurrentPage - 1) * studentsPerPage + 1}
+                  {" - "}
+                  {Math.min(safeCurrentPage * studentsPerPage, filteredStudents.length)}
+                </strong>{" "}
+                of <strong>{filteredStudents.length}</strong> students
+              </span>
+              <div className="pagination-right">
+                <label className="per-page-label">
+                  Students per page:
+                  <select
+                    value={studentsPerPage}
+                    onChange={(event) => {
+                      setStudentsPerPage(Number(event.target.value));
+                      resetToFirstPage();
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={30}>30</option>
+                    <option value={50}>50</option>
+                  </select>
+                </label>
+                <div className="pagination-buttons">
+                  <button
+                    type="button"
+                    disabled={safeCurrentPage <= 1}
+                    onClick={() => setCurrentPage(safeCurrentPage - 1)}
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }, (_, index) => index + 1)
+                    .filter((page) => {
+                      if (totalPages <= 7) return true;
+                      if (page === 1 || page === totalPages) return true;
+                      return Math.abs(page - safeCurrentPage) <= 1;
+                    })
+                    .map((page, position, visible) => {
+                      const previous = visible[position - 1];
+                      const gap = previous && page - previous > 1;
+                      return (
+                        <span key={page} className="page-number-wrap">
+                          {gap && <span className="page-gap">...</span>}
+                          <button
+                            type="button"
+                            className={page === safeCurrentPage ? "active-page" : ""}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </button>
                         </span>
-                        <span
-                          className={`attendance-badge ${
-                            below ? "attendance-warning" : "attendance-good"
-                          }`}
-                        >
-                          {below ? "Below 75%" : "Good"}
-                        </span>
-                      </dd>
-                    </div>
-                    <div className="student-meta-block student-meta-contact">
-                      <dt>Parent Email</dt>
-                      <dd className="contact-value">
-                        {emails.parentEmail || (
-                          <span className="missing-email">Parent email missing</span>
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
-
+                      );
+                    })}
+                  <button
+                    type="button"
+                    disabled={safeCurrentPage >= totalPages}
+                    onClick={() => setCurrentPage(safeCurrentPage + 1)}
+                  >
+                    Next
+                  </button>
                 </div>
-
-                <div className="student-card-actions">
-
-                  <button
-                    className="email-row-btn preview-row-btn card-action-btn"
-                    type="button"
-                    onClick={() => openEmailPreview(student)}
-                  >
-                    <Eye size={15} />
-                    Preview
-                  </button>
-
-                  <button
-                    className="email-row-btn edit-row-btn card-action-btn"
-                    type="button"
-                    onClick={() => openEmailEditor(student)}
-                  >
-                    <PencilLine size={15} />
-                    Edit Email
-                  </button>
-
-                  <button
-                    className="email-row-btn send-row-btn card-action-btn card-primary-btn"
-                    type="button"
-                    onClick={() => handleSend(student)}
-                    disabled={isSending}
-                  >
-                    <Send size={15} />
-                    {isSending ? "Sending..." : "Send Email"}
-                  </button>
-
-                </div>
-
-              </article>
-              );
-            }
-          )}
-          </div>
-
-          <div className="pagination combined-pagination">
-            <span className="pagination-count">
-              Showing{" "}
-              <strong>
-                {filteredStudents.length === 0
-                  ? 0
-                  : (safeCurrentPage - 1) * studentsPerPage + 1}
-                {" - "}
-                {Math.min(safeCurrentPage * studentsPerPage, filteredStudents.length)}
-              </strong>{" "}
-              of <strong>{filteredStudents.length}</strong> students
-            </span>
-            <div className="pagination-right">
-              <label className="per-page-label">
-                Students per page:
-                <select
-                  value={studentsPerPage}
-                  onChange={(event) => {
-                    setStudentsPerPage(Number(event.target.value));
-                    resetToFirstPage();
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={30}>30</option>
-                  <option value={50}>50</option>
-                </select>
-              </label>
-              <div className="pagination-buttons">
-                <button
-                  type="button"
-                  disabled={safeCurrentPage <= 1}
-                  onClick={() => setCurrentPage(safeCurrentPage - 1)}
-                >
-                  Previous
-                </button>
-                {Array.from({ length: totalPages }, (_, index) => index + 1)
-                  .filter((page) => {
-                    if (totalPages <= 7) return true;
-                    if (page === 1 || page === totalPages) return true;
-                    return Math.abs(page - safeCurrentPage) <= 1;
-                  })
-                  .map((page, position, visible) => {
-                    const previous = visible[position - 1];
-                    const gap = previous && page - previous > 1;
-                    return (
-                      <span key={page} className="page-number-wrap">
-                        {gap && <span className="page-gap">...</span>}
-                        <button
-                          type="button"
-                          className={page === safeCurrentPage ? "active-page" : ""}
-                          onClick={() => setCurrentPage(page)}
-                        >
-                          {page}
-                        </button>
-                      </span>
-                    );
-                  })}
-                <button
-                  type="button"
-                  disabled={safeCurrentPage >= totalPages}
-                  onClick={() => setCurrentPage(safeCurrentPage + 1)}
-                >
-                  Next
-                </button>
               </div>
             </div>
-          </div>
           </>
 
         ) : (
@@ -1621,109 +1768,237 @@ AESA`
               </div>
 
               {/* =================================================
-                  STUDENT ID
+                  ATTENDANCE CALCULATION
+                  (toggle exists ONLY inside this popup)
               ================================================= */}
 
-              <div className="profile-section">
+              <div className="profile-section attendance-calculation">
 
-                <h4>
-                  Student ID
-                </h4>
+                <div className="attendance-calculation-header">
 
-                <div className="profile-grid">
+                  <h4>
+                    Attendance Calculation
+                  </h4>
 
-                  <div>
-
-                    <strong>
-                      {selectedStudent.id ? String(selectedStudent.id) : "Not available"}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  ACADEMIC INFORMATION
-              ================================================= */}
-
-              <div className="profile-section">
-
-                <h4>
-                  Academic Information
-                </h4>
-
-                <div className="profile-grid">
-
-                  <div>
-
-                    <span>
-                      Squad
+                  <button
+                    className={`attendance-toggle ${showOverallAttendance ? "on" : "off"}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={showOverallAttendance}
+                    aria-label="Toggle growth hour in the attendance calculation"
+                    onClick={() =>
+                      setShowOverallAttendance((value) => !value)
+                    }
+                  >
+                    <span className="attendance-toggle-track">
+                      <span className="attendance-toggle-thumb" />
                     </span>
 
-                    <strong>
-                      {selectedStudent.squad ||
-                        "Not assigned"}
+                    <span className="attendance-toggle-label">
+                      {showOverallAttendance ? "ON" : "OFF"}
+                    </span>
+                  </button>
+
+                </div>
+
+                {/* ==============================================
+                    TOGGLE ON - EXISTING OVERALL ATTENDANCE
+                ============================================== */}
+
+                {showOverallAttendance ? (
+
+                  <div className="attendance-calculation-result">
+
+                    <span className="attendance-calculation-label">
+                      Overall Attendance
+                    </span>
+
+                    <strong className="attendance-calculation-value">
+                      {Number(selectedStudent.attendance || 0).toFixed(2)}
+                      %
                     </strong>
 
                   </div>
 
-                </div>
+                ) : (
+
+                  /* ==============================================
+                     TOGGLE OFF - WITHOUT GROWTH HOUR
+                  ============================================== */
+
+                  <div className="attendance-calculation-result">
+
+                    <span className="attendance-calculation-label">
+                      Attendance Without Growth Hour
+                    </span>
+
+                    <strong className="attendance-calculation-value">
+                      {(conductedSessions > 0
+                        ? withoutGrowthHourAttendance
+                        : 0
+                      ).toFixed(2)}
+                      %
+                    </strong>
+
+                    <div className="attendance-calculation-counts">
+
+                      <div>
+
+                        <span>
+                          Present Sessions
+                        </span>
+
+                        <strong>
+                          {presentSessions}
+                        </strong>
+
+                      </div>
+
+                      <div>
+
+                        <span>
+                          Conducted Sessions
+                        </span>
+
+                        <strong>
+                          {conductedSessions}
+                        </strong>
+
+                      </div>
+
+                    </div>
+
+                    {conductedSessions === 0 && (
+
+                      <p className="attendance-calculation-note">
+                        No conducted sessions available.
+                      </p>
+
+                    )}
+
+                  </div>
+
+                )}
 
               </div>
 
               {/* =================================================
-                  ATTENDANCE
+                  SUBJECT-WISE ATTENDANCE
+                  (shown / hidden by the [ Subjects ] button)
               ================================================= */}
 
-              <div className="attendance-summary">
+              {showSubjects && (
 
-                <div>
+                <div className="profile-section subject-wise-section">
 
-                  <span>
-                    Overall Attendance
-                  </span>
+                  <div className="subject-wise-header">
 
-                  <strong>
-                    {Number(
-                      selectedStudent.attendance ||
-                        0
-                    )}
-                    %
-                  </strong>
+                    <h4>
+                      Subject-wise Attendance
+                    </h4>
+
+                    <button
+                      className="subject-wise-toggle"
+                      type="button"
+                      aria-expanded={showSubjects}
+                      onClick={() =>
+                        setShowSubjects((value) => !value)
+                      }
+                    >
+                      Hide Subjects
+                    </button>
+
+                  </div>
+
+                  {subjectWiseAttendance.length === 0 ? (
+
+                    <p className="subject-wise-empty">
+                      No subject attendance records available for this
+                      student.
+                    </p>
+
+                  ) : (
+
+                    <div className="subject-wise-list">
+
+                      {subjectWiseAttendance.map((subject) => {
+
+                        const conducted =
+                          Number(subject.conductedSessions) || 0;
+
+                        const present =
+                          Number(subject.presentSessions) || 0;
+
+                        // ==================================
+                        // SUBJECT ATTENDANCE PERCENTAGE
+                        //
+                        // (present / conducted) * 100
+                        //
+                        // Growth hours are excluded by the
+                        // helper. Subject percentages are never
+                        // averaged into the overall attendance.
+                        // ==================================
+
+                        const percentage =
+                          conducted > 0
+                            ? (present / conducted) * 100
+                            : 0;
+
+                        const status =
+                          getSubjectAttendanceStatus(
+                            conducted,
+                            percentage
+                          );
+
+                        return (
+                          <div
+                            className="subject-wise-item"
+                            key={
+                              subject.subjectId ||
+                              subject.subjectName
+                            }
+                          >
+
+                            <div className="subject-wise-item-top">
+
+                              <strong className="subject-wise-name">
+                                {subject.subjectName}
+                              </strong>
+
+                              <span
+                                className={`subject-wise-status ${status
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "-")}`}
+                              >
+                                {status}
+                              </span>
+
+                            </div>
+
+                            <div className="subject-wise-item-body">
+
+                              <span>
+                                {present} Present /{" "}
+                                {conducted} Conducted
+                              </span>
+
+                              <strong className="subject-wise-value">
+                                {percentage.toFixed(2)}%
+                              </strong>
+
+                            </div>
+
+                          </div>
+                        );
+                      })}
+
+                    </div>
+
+                  )}
 
                 </div>
 
-                {/* Progress */}
-                <div className="progress-bar">
-
-                  <div
-                    style={{
-                      width: `${Math.max(
-                        0,
-                        Math.min(
-                          100,
-                          Number(
-                            selectedStudent.attendance
-                          ) || 0
-                        )
-                      )}%`,
-                    }}
-                  ></div>
-
-                </div>
-
-                <div className="attendance-details">
-
-                  <span>
-                    Attendance is calculated
-                    from imported records.
-                  </span>
-
-                </div>
-
-              </div>
+              )}
 
               {/* =================================================
                   MODAL ACTIONS
@@ -1765,16 +2040,6 @@ AESA`
                   }}
                 >
                   Download
-                </button>
-
-                <button
-                  className="close-profile-btn"
-                  type="button"
-                  onClick={() =>
-                    setSelectedStudent(null)
-                  }
-                >
-                  Close
                 </button>
 
               </div>

@@ -86,7 +86,14 @@ function ManagerSettingspage() {
   // ============================================================
 
   useEffect(() => {
-    fetchMentors();
+    // Load after mount inside a callback so the initial
+    // render is not cascaded by synchronous setState
+    // (same pattern as the Dashboard page).
+    const loadTimer = setTimeout(() => {
+      fetchMentors();
+    }, 0);
+
+    return () => clearTimeout(loadTimer);
   }, []);
 
   // ============================================================

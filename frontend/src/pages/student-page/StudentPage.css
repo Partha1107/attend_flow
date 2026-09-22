@@ -392,7 +392,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-  padding: 20px 24px;
+  padding: 24px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   gap: 20px;
@@ -409,6 +409,7 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  width: 100%;
 }
 
 .student-card-identity {
@@ -502,7 +503,7 @@
 
 .student-card-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   align-content: start;
   min-width: 0;
@@ -1377,6 +1378,171 @@
 }
 
 /* =========================
+   STUDENT PROFILE - ATTENDANCE CALCULATION
+   (inside the Student Profile popup only)
+========================= */
+
+.profile-section.attendance-calculation {
+  padding: 22px 0;
+}
+
+.attendance-calculation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.attendance-calculation-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--student-text);
+}
+
+/* Height / radius are raised in specificity because
+   index.css applies global button styles. */
+
+.attendance-calculation .attendance-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 14px 0 7px;
+  background: #f3f3f3;
+  border: 1px solid var(--student-border);
+  border-radius: 999px;
+  color: var(--student-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.attendance-calculation .attendance-toggle:hover {
+  border-color: var(--student-text);
+}
+
+.attendance-calculation .attendance-toggle:focus-visible {
+  outline: 2px solid var(--student-primary);
+  outline-offset: 2px;
+}
+
+.attendance-calculation .attendance-toggle.on {
+  background: #eaf7ef;
+  border-color: var(--student-success);
+  color: var(--student-success);
+}
+
+.attendance-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  background: #c9c9c9;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.attendance-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: left 0.2s ease;
+}
+
+.attendance-calculation .attendance-toggle.on .attendance-toggle-track {
+  background: var(--student-success);
+}
+
+.attendance-calculation .attendance-toggle.on .attendance-toggle-thumb {
+  left: 23px;
+}
+
+.attendance-toggle-label {
+  min-width: 26px;
+  text-align: center;
+  letter-spacing: 0.4px;
+}
+
+.attendance-calculation-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: #f7f7f7;
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  border-radius: 12px;
+}
+
+.attendance-calculation-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--student-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.attendance-calculation-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--student-primary);
+}
+
+.attendance-calculation-counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.attendance-calculation-counts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 10px;
+}
+
+.attendance-calculation-counts span {
+  font-size: 12px;
+  color: var(--student-muted);
+}
+
+.attendance-calculation-counts strong {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--student-text);
+}
+
+.attendance-calculation-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--student-muted);
+}
+
+@media (max-width: 600px) {
+  .attendance-calculation-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .attendance-calculation-counts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
    ADD STUDENT FORM
 ========================= */
 
@@ -1435,7 +1601,7 @@
   }
 
   .student-card-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .card-primary-btn {
@@ -1469,7 +1635,7 @@
   }
 
   .student-card-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .filter-row-top,
@@ -1598,8 +1764,12 @@
 .student-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
 }
 
 .add-details-btn {
@@ -1618,3 +1788,268 @@
   background: #dff7ed;
   border-color: #0e8a5c;
 }
+
+.student-card-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.student-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-name {
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.student-name:hover {
+  text-decoration: underline;
+}
+
+.student-email {
+  font-size: 14px;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.student-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+  padding: 18px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.student-card-info {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+  padding: 18px;
+  background: #f8fafc;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.student-card-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.student-card-info span {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.student-card-info strong {
+  font-size: 15px;
+  color: #1e293b;
+  overflow-wrap: anywhere;
+}
+
+.student-card-actions button {
+  min-width: 130px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.student-name-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  cursor: pointer;
+  text-align: left;
+}
+
+.student-name-link:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   SUBJECT-WISE ATTENDANCE
+   (STUDENT PROFILE POPUP ONLY)
+========================= */
+
+/* The [ Subjects ] button lives in .student-card-actions,
+   so it inherits the existing action button metrics. */
+
+.subject-wise-section {
+  padding: 22px 0;
+}
+
+.subject-wise-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.subject-wise-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--student-text);
+}
+
+/* Height / radius are raised because index.css applies
+   global button styles with higher specificity. */
+
+.subject-wise-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-height: 32px !important;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid var(--student-border);
+  border-radius: 999px !important;
+  color: var(--student-muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.subject-wise-toggle:hover {
+  background: #f7f7f7;
+  border-color: var(--student-text);
+  color: var(--student-text);
+}
+
+.subject-wise-toggle:focus-visible {
+  outline: 2px solid var(--student-primary);
+  outline-offset: 2px;
+}
+
+.subject-wise-empty {
+  margin: 0;
+  padding: 16px;
+  background: var(--student-panel-alt);
+  border: 1px dashed var(--student-border);
+  border-radius: 10px;
+  color: var(--student-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Scrollable so many subjects never break the popup. */
+
+.subject-wise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.subject-wise-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--student-panel-alt);
+  border: 1px solid var(--student-border);
+  border-radius: 10px;
+}
+
+.subject-wise-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subject-wise-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--student-text);
+  overflow-wrap: anywhere;
+}
+
+.subject-wise-status {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: #e5e7eb;
+  color: var(--student-muted);
+}
+
+.subject-wise-status.good {
+  background: #dff7ed;
+  color: var(--student-success);
+}
+
+.subject-wise-status.warning {
+  background: #fdf1dc;
+  color: var(--student-warning);
+}
+
+.subject-wise-status.critical {
+  background: #fde8e8;
+  color: var(--student-danger);
+}
+
+.subject-wise-status.no-data {
+  background: #e5e7eb;
+  color: var(--student-muted);
+}
+
+.subject-wise-item-body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--student-muted);
+}
+
+.subject-wise-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--student-text);
+}
+
+@media (max-width: 600px) {
+  .subject-wise-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .subject-wise-item-body {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+
+
