@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   LogOut,
   ShieldCheck,
-  Mail,
   Users,
   X,
 } from "lucide-react";
@@ -24,14 +23,9 @@ const mainItems = [
     to: "/dashboard",
   },
   {
-    label: "Students",
+    label: "Students & Email",
     icon: Users,
     to: "/students",
-  },
-  {
-    label: "Email Automation",
-    icon: Mail,
-    to: "/email-automation",
   },
   {
     label: "Communication History",

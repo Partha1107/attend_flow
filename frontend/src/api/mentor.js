@@ -214,6 +214,31 @@ export const getMentorEmailAlerts = async () => {
 };
 
 // =====================================================
+// GET ATTENDANCE RECORDS
+//
+// Reads the existing mentor dashboard attendance
+// endpoint (GET /api/mentor/dashboard/attendance).
+// Used by the Student Profile popup to count
+// present / conducted sessions across all subjects.
+// =====================================================
+
+export const getMentorAttendanceRecords = async () => {
+  const response = await fetch(
+    `${API_URL}/api/mentor/dashboard/attendance`,
+    {
+      method: "GET",
+      headers: await getAuthHeaders(),
+    }
+  );
+
+  return readResponse(
+    response,
+    "Failed to load attendance records."
+  );
+};
+
+
+// =====================================================
 // UPDATE STUDENT CONTACT DETAILS
 // =====================================================
 

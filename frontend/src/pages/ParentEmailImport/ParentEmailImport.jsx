@@ -66,40 +66,40 @@ const isValidEmail = (value) =>
   PHONE_PATTERN.test(
     String(value).trim()
   );
-  
-  
-  // =====================================================
-  // COMPONENT
-  // =====================================================
-  
-  function ParentEmailImport() {
+
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
+function ParentEmailImport() {
     const fileInputRef = useRef(null);
 
   const [students, setStudents] =
     useState([]);
-    
-    const [loading, setLoading] =
+
+  const [loading, setLoading] =
     useState(true);
-    
-    const [saving, setSaving] =
+
+  const [saving, setSaving] =
     useState(false);
-    
-    const [importing, setImporting] =
+
+  const [importing, setImporting] =
     useState(false);
-    
-    const [error, setError] =
+
+  const [error, setError] =
     useState("");
-    
-    const [success, setSuccess] =
+
+  const [success, setSuccess] =
     useState("");
-    
-    const [squad, setSquad] = 
+
+  const [squad, setSquad] =
     useState("");
 
   // =====================================================
   // LOAD ASSIGNED SQUAD STUDENTS
   // =====================================================
-    
+
   useEffect(() => {
     loadStudents();
   }, []);
@@ -121,7 +121,7 @@ const isValidEmail = (value) =>
 
       const result =
         await getMentorStudents();
-        setSquad(result.squad || "");
+      setSquad(result.squad || "");
 
       const loadedStudents =
         (result.students || []).map(
@@ -170,9 +170,16 @@ const isValidEmail = (value) =>
   };
 
 
-  // =====================================================
-  // UPDATE TABLE CELL
-  // =====================================================
+  useEffect(() => {
+    // Load after mount inside a callback so the initial
+    // render is not cascaded by synchronous setState.
+    const loadTimer = setTimeout(() => {
+      loadStudents();
+    }, 0);
+
+    return () => clearTimeout(loadTimer);
+  }, []);
+
 
   const updateStudent = (
     studentId,
