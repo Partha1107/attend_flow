@@ -70,6 +70,10 @@ const SEMESTERS = [
     value: "Sem 3",
     label: "Semester 3",
   },
+  {
+    value:"Sem 4",
+    label: "Semester 4",
+  }
 ];
 
 // ============================================================
