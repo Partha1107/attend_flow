@@ -1588,7 +1588,7 @@ const clearFilters = () => {
               </div>
             )}
           </div>
-         
+        
         </div>
 
         <div className="filter-row filter-row-actions">
@@ -1673,7 +1673,7 @@ const clearFilters = () => {
         ) : filteredStudents.length > 0 ? (
           <>
             {/* ==================================================
-             STUDENT CARDS
+            STUDENT CARDS
           ================================================== */}
             <div className="student-table-scroll">
               <table className="student-table">
