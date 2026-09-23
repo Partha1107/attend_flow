@@ -20,7 +20,7 @@ const app = express();
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://attendance-recored.vercel.app",
+    "https://attendflow-system.vercel.app",
 ];
 
 app.use(

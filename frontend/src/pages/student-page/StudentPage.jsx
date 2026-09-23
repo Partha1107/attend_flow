@@ -1324,14 +1324,7 @@ AESA`
               placeholder="Search students by name, email or student ID..."
               value={search}
               onChange={(e) => {
-                const value = e.target.value;
-
-                setAttendanceFilter(value);
-
-                if (value !== "all") {
-                  setCustomDownloadThreshold("");
-                }
-
+                setSearch(e.target.value);
                 resetToFirstPage();
               }}
             />
@@ -1570,7 +1563,7 @@ AESA`
         ) : filteredStudents.length > 0 ? (
           <>
             {/* ==================================================
-             STUDENT CARDS
+            STUDENT CARDS
           ================================================== */}
             <div className="student-table-scroll">
               <table className="student-table">

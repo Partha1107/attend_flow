@@ -23,7 +23,7 @@ const mainItems = [
     to: "/dashboard",
   },
   {
-    label: "Students & Email",
+    label: "Students",
     icon: Users,
     to: "/students",
   },
