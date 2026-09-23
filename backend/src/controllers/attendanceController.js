@@ -1,3 +1,4 @@
+const { randomUUID } = require("crypto");
 const supabase = require("../config/supabase");
 
 // ============================================================
@@ -876,14 +877,8 @@ const bulkUpsertStudents = async (
     let studentsCreated = 0;
     let studentsUpdated = 0;
 
-    // ----------------------------------------------------------
-    // BUILD STUDENT ROWS
-    // ----------------------------------------------------------
-
     for (const studentData of students) {
-        const email = cleanString(
-            studentData.email
-        );
+        const email = cleanString(studentData.email);
 
         // Skip students without email
         if (!email) {
@@ -907,13 +902,8 @@ const bulkUpsertStudents = async (
             studentData.parentPhone
         );
 
-        rows.push({
-            // Keep existing ID when updating
-            ...(existingStudent?.id
-                ? {
-                    id: existingStudent.id,
-                }
-                : {}),
+        const row = {
+            id: existingStudent?.id || randomUUID(),
 
             email,
 
@@ -924,10 +914,6 @@ const bulkUpsertStudents = async (
             squad: cleanString(
                 studentData.squad
             ),
-
-            // --------------------------------------------------
-            // CONTACT DETAILS
-            // --------------------------------------------------
 
             phone:
                 phone ||
@@ -946,11 +932,9 @@ const bulkUpsertStudents = async (
 
             updated_at:
                 new Date().toISOString(),
-        });
+        };
 
-        // ------------------------------------------------------
-        // COUNTERS
-        // ------------------------------------------------------
+        rows.push(row);
 
         if (existingStudent) {
             studentsUpdated++;
@@ -958,10 +942,6 @@ const bulkUpsertStudents = async (
             studentsCreated++;
         }
     }
-
-    // ----------------------------------------------------------
-    // NOTHING TO UPSERT
-    // ----------------------------------------------------------
 
     if (rows.length === 0) {
         return {
@@ -971,9 +951,30 @@ const bulkUpsertStudents = async (
         };
     }
 
-    // ----------------------------------------------------------
-    // BULK UPSERT
-    // ----------------------------------------------------------
+    // DEBUG
+    console.log(
+        "[AESA] Student rows before upsert:"
+    );
+
+    console.log(
+        rows.map((row) => ({
+            id: row.id,
+            email: row.email,
+            name: row.name,
+            squad: row.squad,
+        }))
+    );
+
+    // Safety check
+    const invalidRows = rows.filter(
+        (row) => !row.id
+    );
+
+    if (invalidRows.length > 0) {
+        throw new Error(
+            `Student rows contain missing IDs: ${invalidRows.length}`
+        );
+    }
 
     const {
         data: upsertedStudents,
@@ -988,23 +989,23 @@ const bulkUpsertStudents = async (
         )
         .select("*");
 
-    // ----------------------------------------------------------
-    // HANDLE DATABASE ERROR
-    // ----------------------------------------------------------
-
     if (error) {
+        console.error(
+            "[AESA] Student bulk upsert error:",
+            error
+        );
+
         throw new Error(
             `Failed to bulk upsert students: ${error.message}`
         );
     }
 
-    // ----------------------------------------------------------
-    // RETURN UPSERTED STUDENTS
-    // ----------------------------------------------------------
-
     return {
-        students: upsertedStudents || [],
+        students:
+            upsertedStudents || [],
+
         studentsCreated,
+
         studentsUpdated,
     };
 };
