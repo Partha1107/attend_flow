@@ -331,6 +331,9 @@ function ImportAttendance() {
   const [fileName, setFileName] =
     useState("");
 
+  const [isDragging, setIsDragging] =
+    useState(false);
+
   // ==========================================================
   // ATTENDANCE DATA
   // ==========================================================
@@ -536,395 +539,464 @@ function ImportAttendance() {
   // FILE CHANGE
   // ==========================================================
 
-  const handleFileChange =
-    async (event) => {
-      const file =
-        event.target.files?.[0];
+  const handleFile = async (file) => {
+    if (!file) {
+      return;
+    }
 
-      if (!file) {
-        return;
-      }
+    // ======================================================
+    // VALIDATE FILE TYPE
+    // ======================================================
 
-      // ======================================================
-      // RESET OLD DATA
-      // ======================================================
+    const validExtensions = [".xlsx", ".xls"];
 
-      setFileName(
+    const fileExtension =
+      file.name
+        .substring(file.name.lastIndexOf("."))
+        .toLowerCase();
+
+    if (!validExtensions.includes(fileExtension)) {
+      setError(
+        "Please select a valid Excel file (.xlsx or .xls)."
+      );
+
+      return;
+    }
+
+    // ======================================================
+    // RESET OLD DATA
+    // ======================================================
+
+    setFileName(file.name);
+
+    setError("");
+    setSuccess("");
+
+    setAttendanceData([]);
+
+    localStorage.removeItem(
+      IMPORT_DRAFT_KEY
+    );
+
+    // ======================================================
+    // EXTRACT PERIOD FROM FILE NAME
+    // ======================================================
+
+    const attendancePeriod =
+      extractAttendancePeriodFromFileName(
         file.name
       );
 
-      setError("");
+    if (!attendancePeriod) {
+      setPeriodStart("");
+      setPeriodEnd("");
 
-      setSuccess("");
-
-      setAttendanceData([]);
-
-      localStorage.removeItem(
-        IMPORT_DRAFT_KEY
+      setError(
+        "Invalid Excel filename. Expected format: attendance_report_squad_138_2026-07-23_to_2026-08-19.xlsx"
       );
 
-      // ======================================================
-      // EXTRACT PERIOD FROM FILE NAME
-      // ======================================================
+      return;
+    }
 
-      const attendancePeriod =
-        extractAttendancePeriodFromFileName(
-          file.name
-        );
+    const {
+      periodStart: extractedPeriodStart,
+      periodEnd: extractedPeriodEnd,
+    } = attendancePeriod;
 
-      if (!attendancePeriod) {
-        setPeriodStart("");
-        setPeriodEnd("");
+    setPeriodStart(
+      extractedPeriodStart
+    );
 
-        setError(
-          "Invalid Excel filename. Expected format: attendance_report_squad_138_2026-07-23_to_2026-08-19.xlsx"
-        );
+    setPeriodEnd(
+      extractedPeriodEnd
+    );
 
-        return;
-      }
+    // ======================================================
+    // VALIDATE DATE ORDER
+    // ======================================================
 
-      const {
-        periodStart:
-          extractedPeriodStart,
-        periodEnd:
-          extractedPeriodEnd,
-      } = attendancePeriod;
-
-      setPeriodStart(
-        extractedPeriodStart
+    const startDate =
+      new Date(
+        `${extractedPeriodStart}T00:00:00`
       );
 
-      setPeriodEnd(
-        extractedPeriodEnd
+    const endDate =
+      new Date(
+        `${extractedPeriodEnd}T00:00:00`
       );
 
-      // ======================================================
-      // VALIDATE DATE ORDER
-      // ======================================================
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime())
+    ) {
+      setError(
+        "The attendance dates in the filename are invalid."
+      );
 
-      const startDate =
-        new Date(
-          `${extractedPeriodStart}T00:00:00`
-        );
+      return;
+    }
 
-      const endDate =
-        new Date(
-          `${extractedPeriodEnd}T00:00:00`
-        );
+    if (startDate > endDate) {
+      setError(
+        "Attendance period start date cannot be after the end date."
+      );
 
-      if (
-        Number.isNaN(
-          startDate.getTime()
-        ) ||
-        Number.isNaN(
-          endDate.getTime()
-        )
-      ) {
-        setError(
-          "The attendance dates in the filename are invalid."
-        );
+      return;
+    }
 
-        return;
-      }
+    // ======================================================
+    // READ EXCEL FILE
+    // ======================================================
 
-      if (
-        startDate > endDate
-      ) {
-        setError(
-          "Attendance period start date cannot be after the end date."
-        );
+    try {
+      const arrayBuffer =
+        await file.arrayBuffer();
 
-        return;
-      }
-
-      // ======================================================
-      // READ EXCEL FILE
-      // ======================================================
-
-      try {
-        const arrayBuffer =
-          await file.arrayBuffer();
-
-        const workbook =
-          XLSX.read(
-            arrayBuffer,
-            {
-              type: "array",
-            }
-          );
-
-        // ====================================================
-        // CHECK SHEETS
-        // ====================================================
-
-        if (
-          !workbook.SheetNames.length
-        ) {
-          setError(
-            "The Excel file does not contain any sheets."
-          );
-
-          return;
-        }
-
-        // ====================================================
-        // FIRST SHEET
-        // ====================================================
-
-        const firstSheetName =
-          workbook.SheetNames[0];
-
-        const worksheet =
-          workbook.Sheets[
-            firstSheetName
-          ];
-
-        const data =
-          XLSX.utils.sheet_to_json(
-            worksheet,
-            {
-              defval: "",
-            }
-          );
-
-        // ====================================================
-        // EMPTY FILE
-        // ====================================================
-
-        if (
-          data.length === 0
-        ) {
-          setError(
-            "The Excel sheet is empty."
-          );
-
-          return;
-        }
-
-        // ====================================================
-        // COLUMNS
-        // ====================================================
-
-        const actualColumns =
-          Object.keys(
-            data[0]
-          );
-
-        console.log(
-          "Excel columns:",
-          actualColumns
-        );
-
-        // ====================================================
-        // VALIDATE CONSTANT COLUMNS
-        // ====================================================
-
-        const missingConstantColumns =
-          CONSTANT_COLUMNS.filter(
-            (column) =>
-              !actualColumns.includes(
-                column
-              )
-          );
-
-        if (
-          missingConstantColumns.length >
-          0
-        ) {
-          setError(
-            `Invalid Excel file. Missing required column(s): ${missingConstantColumns.join(
-              ", "
-            )}`
-          );
-
-          return;
-        }
-
-        // ====================================================
-        // DETECT SUBJECTS
-        // ====================================================
-
-        const subjectNumbers =
-          detectSubjects(
-            actualColumns
-          );
-
-        // ====================================================
-        // DETECT GROWTH HOUR
-        // ====================================================
-
-        const hasGrowthHour =
-          detectGrowthHour(
-            actualColumns
-          );
-
-        if (
-          subjectNumbers.length ===
-            0 &&
-          !hasGrowthHour
-        ) {
-          setError(
-            "Invalid Excel file. No subjects or Growth Hour were detected."
-          );
-
-          return;
-        }
-
-        console.log(
-          "Detected subjects:",
-          subjectNumbers
-        );
-
-        console.log(
-          "Growth Hour detected:",
-          hasGrowthHour
-        );
-
-        // ====================================================
-        // VALIDATE SUBJECT COLUMNS
-        // ====================================================
-
-        const missingSubjectColumns =
-          [];
-
-        subjectNumbers.forEach(
-          (subjectNumber) => {
-            SUBJECT_FIELDS.forEach(
-              (field) => {
-                const columnName =
-                  `Subject ${subjectNumber} ${field}`;
-
-                if (
-                  !actualColumns.includes(
-                    columnName
-                  )
-                ) {
-                  missingSubjectColumns.push(
-                    columnName
-                  );
-                }
-              }
-            );
+      const workbook =
+        XLSX.read(
+          arrayBuffer,
+          {
+            type: "array",
           }
         );
 
-        // ====================================================
-        // VALIDATE GROWTH HOUR
-        // ====================================================
+      // ====================================================
+      // CHECK SHEETS
+      // ====================================================
 
-        const missingGrowthHourColumns =
-          [];
+      if (
+        !workbook.SheetNames.length
+      ) {
+        setError(
+          "The Excel file does not contain any sheets."
+        );
 
-        if (hasGrowthHour) {
-          GROWTH_HOUR_FIELDS.forEach(
+        return;
+      }
+
+      // ====================================================
+      // FIRST SHEET
+      // ====================================================
+
+      const firstSheetName =
+        workbook.SheetNames[0];
+
+      const worksheet =
+        workbook.Sheets[
+          firstSheetName
+        ];
+
+      const data =
+        XLSX.utils.sheet_to_json(
+          worksheet,
+          {
+            defval: "",
+          }
+        );
+
+      // ====================================================
+      // EMPTY FILE
+      // ====================================================
+
+      if (data.length === 0) {
+        setError(
+          "The Excel sheet is empty."
+        );
+
+        return;
+      }
+
+      // ====================================================
+      // COLUMNS
+      // ====================================================
+
+      const actualColumns =
+        Object.keys(data[0]);
+
+      console.log(
+        "Excel columns:",
+        actualColumns
+      );
+
+      // ====================================================
+      // VALIDATE CONSTANT COLUMNS
+      // ====================================================
+
+      const missingConstantColumns =
+        CONSTANT_COLUMNS.filter(
+          (column) =>
+            !actualColumns.includes(
+              column
+            )
+        );
+
+      if (
+        missingConstantColumns.length > 0
+      ) {
+        setError(
+          `Invalid Excel file. Missing required column(s): ${missingConstantColumns.join(
+            ", "
+          )}`
+        );
+
+        return;
+      }
+
+      // ====================================================
+      // DETECT SUBJECTS
+      // ====================================================
+
+      const subjectNumbers =
+        detectSubjects(
+          actualColumns
+        );
+
+      // ====================================================
+      // DETECT GROWTH HOUR
+      // ====================================================
+
+      const hasGrowthHour =
+        detectGrowthHour(
+          actualColumns
+        );
+
+      if (
+        subjectNumbers.length === 0 &&
+        !hasGrowthHour
+      ) {
+        setError(
+          "Invalid Excel file. No subjects or Growth Hour were detected."
+        );
+
+        return;
+      }
+
+      console.log(
+        "Detected subjects:",
+        subjectNumbers
+      );
+
+      console.log(
+        "Growth Hour detected:",
+        hasGrowthHour
+      );
+
+      // ====================================================
+      // VALIDATE SUBJECT COLUMNS
+      // ====================================================
+
+      const missingSubjectColumns =
+        [];
+
+      subjectNumbers.forEach(
+        (subjectNumber) => {
+          SUBJECT_FIELDS.forEach(
             (field) => {
               const columnName =
-                `Growth Hour ${field}`;
+                `Subject ${subjectNumber} ${field}`;
 
               if (
                 !actualColumns.includes(
                   columnName
                 )
               ) {
-                missingGrowthHourColumns.push(
+                missingSubjectColumns.push(
                   columnName
                 );
               }
             }
           );
         }
+      );
 
-        // ====================================================
-        // ALL MISSING COLUMNS
-        // ====================================================
+      // ====================================================
+      // VALIDATE GROWTH HOUR
+      // ====================================================
 
-        const missingColumns = [
-          ...missingSubjectColumns,
-          ...missingGrowthHourColumns,
-        ];
+      const missingGrowthHourColumns =
+        [];
 
-        if (
-          missingColumns.length > 0
-        ) {
-          setError(
-            `Invalid Excel file. Missing ${missingColumns.length} required column(s).`
-          );
+      if (hasGrowthHour) {
+        GROWTH_HOUR_FIELDS.forEach(
+          (field) => {
+            const columnName =
+              `Growth Hour ${field}`;
 
-          console.error(
-            "Missing columns:",
-            missingColumns
-          );
-
-          return;
-        }
-
-        // ====================================================
-        // TRANSFORM DATA
-        // ====================================================
-
-        const transformedData =
-          transformAttendanceData(
-            data
-          );
-
-        console.log(
-          "Transformed attendance data:",
-          transformedData
-        );
-
-        setAttendanceData(
-          transformedData
-        );
-
-        // ====================================================
-        // SAVE IMPORT DRAFT
-        // ====================================================
-
-        const detectedCount =
-          subjectNumbers.length +
-          (hasGrowthHour ? 1 : 0);
-
-        const validationMessage =
-          `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`;
-
-        const draft = {
-          fileName: file.name,
-          semester,
-          periodStart:
-            extractedPeriodStart,
-          periodEnd:
-            extractedPeriodEnd,
-          attendanceData:
-            transformedData,
-          success:
-            validationMessage,
-          savedAt:
-            new Date().toISOString(),
-        };
-
-        localStorage.setItem(
-          IMPORT_DRAFT_KEY,
-          JSON.stringify(draft)
-        );
-
-        // ====================================================
-        // SUCCESS
-        // ====================================================
-
-        setSuccess(
-          validationMessage
-        );
-      } catch (err) {
-        console.error(
-          "Excel parsing error:",
-          err
-        );
-
-        setError(
-          "Unable to read the Excel file. Please check the file format."
+            if (
+              !actualColumns.includes(
+                columnName
+              )
+            ) {
+              missingGrowthHourColumns.push(
+                columnName
+              );
+            }
+          }
         );
       }
-    };
+
+      // ====================================================
+      // ALL MISSING COLUMNS
+      // ====================================================
+
+      const missingColumns = [
+        ...missingSubjectColumns,
+        ...missingGrowthHourColumns,
+      ];
+
+      if (
+        missingColumns.length > 0
+      ) {
+        setError(
+          `Invalid Excel file. Missing ${missingColumns.length} required column(s).`
+        );
+
+        console.error(
+          "Missing columns:",
+          missingColumns
+        );
+
+        return;
+      }
+
+      // ====================================================
+      // TRANSFORM DATA
+      // ====================================================
+
+      const transformedData =
+        transformAttendanceData(
+          data
+        );
+
+      console.log(
+        "Transformed attendance data:",
+        transformedData
+      );
+
+      setAttendanceData(
+        transformedData
+      );
+
+      // ====================================================
+      // SAVE IMPORT DRAFT
+      // ====================================================
+
+      const detectedCount =
+        subjectNumbers.length +
+        (hasGrowthHour ? 1 : 0);
+
+      const validationMessage =
+        `Excel validated successfully. ${data.length} students and ${detectedCount} attendance categories detected.`;
+
+      const draft = {
+        fileName: file.name,
+        semester,
+        periodStart:
+          extractedPeriodStart,
+        periodEnd:
+          extractedPeriodEnd,
+        attendanceData:
+          transformedData,
+        success:
+          validationMessage,
+        savedAt:
+          new Date().toISOString(),
+      };
+
+      localStorage.setItem(
+        IMPORT_DRAFT_KEY,
+        JSON.stringify(draft)
+      );
+
+      // ====================================================
+      // SUCCESS
+      // ====================================================
+
+      setSuccess(
+        validationMessage
+      );
+    } catch (err) {
+      console.error(
+        "Excel parsing error:",
+        err
+      );
+
+      setError(
+        "Unable to read the Excel file. Please check the file format."
+      );
+    }
+  };
+
+  // ==========================================================
+  // FILE CHANGE
+  // ==========================================================
+
+  const handleFileChange = async (event) => {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    await handleFile(file);
+
+    // Allow selecting the same file again
+    event.target.value = "";
+  };
+
+  // ==========================================================
+  // DRAG & DROP
+  // ==========================================================
+
+  const handleDragEnter = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!isImporting) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!isImporting) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (
+      event.currentTarget === event.target
+    ) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setIsDragging(false);
+
+    if (isImporting) {
+      return;
+    }
+
+    const file =
+      event.dataTransfer.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    await handleFile(file);
+  };
 
   // ==========================================================
   // IMPORT
@@ -1317,31 +1389,59 @@ function ImportAttendance() {
         {/* FILE UPLOAD */}
         {/* ================================================ */}
 
-        <label className="upload-button">
+        <div
+          className={`upload-drop-zone ${
+            isDragging
+              ? "dragging"
+              : ""
+          } ${
+            isImporting
+              ? "disabled"
+              : ""
+          }`}
+          onDragEnter={
+            handleDragEnter
+          }
+          onDragOver={
+            handleDragOver
+          }
+          onDragLeave={
+            handleDragLeave
+          }
+          onDrop={
+            handleDrop
+          }
+        >
+          <label className="upload-button">
 
-          <Upload
-            size={18}
-          />
+            <Upload
+              size={18}
+            />
 
-          <span>
-            {fileName
-              ? "Change Excel File"
-              : "Select Excel File"}
+            <span>
+              {fileName
+                ? "Change Excel File"
+                : "Select Excel File"}
+            </span>
+
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              hidden
+              onChange={
+                handleFileChange
+              }
+              disabled={
+                isImporting
+              }
+            />
+
+          </label>
+
+          <span className="drag-drop-text">
+            or drag and drop your Excel file here
           </span>
-
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            hidden
-            onChange={
-              handleFileChange
-            }
-            disabled={
-              isImporting
-            }
-          />
-
-        </label>
+        </div>
 
         {/* ================================================ */}
         {/* SUPPORTED FORMAT */}
