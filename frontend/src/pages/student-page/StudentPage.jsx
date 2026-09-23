@@ -36,6 +36,37 @@ const getAttendanceStatus = (attendance) => {
   return "Critical";
 };
 
+const getSubjectShortName = (subjectName = "") => {
+  const normalizedName = String(subjectName)
+    .trim()
+    .toLowerCase();
+
+  const subjectShortNames = {
+    "computer organisation and architecture": "COA",
+    "computer organization and architecture": "COA",
+    "discrete mathematics": "DM",
+    "environmental sciences": "ES",
+    "innovation and design thinking": "IDT",
+    "introduction to artificial intelligence": "AI",
+    "operating systems": "OS",
+    "ui and ux design for computer science engineering": "UI/UX",
+    "growth hour": "GH",
+  };
+
+  if (subjectShortNames[normalizedName]) {
+    return subjectShortNames[normalizedName];
+  }
+
+  const words = normalizedName
+    .split(/\s+/)
+    .filter(Boolean);
+
+  return words
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 5);
+};
 // ============================================================
 // SUBJECT ATTENDANCE STATUS
 //
@@ -240,7 +271,7 @@ AESA`
 
   const [showAddStudent, setShowAddStudent] = useState(false);
 
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
 
   // ===========================================================
   // CUSTOM DOWNLOAD STATE
@@ -251,15 +282,9 @@ AESA`
   const [attendanceDropdownOpen, setAttendanceDropdownOpen] =
     useState(false);
 
-
-  const [detailsStudent, setDetailsStudent] = useState(null);
-
   // ============================================================
   // PARENT DETAILS
   // ============================================================
-
-  const [parentEmail, setParentEmail] = useState("");
-  const [parentPhone, setParentPhone] = useState("");
 
   const resetToFirstPage = () => setCurrentPage(1);
 
@@ -1264,134 +1289,6 @@ AESA`
           STUDENT DETAILS MODAL
       ====================================================== */}
 
-      {showDetailsModal &&
-        detailsStudent && (
-
-          <div
-            className="modal-overlay"
-            onClick={() =>
-              setShowDetailsModal(false)
-            }
-          >
-
-            <div
-              className="add-student-modal"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
-            >
-
-              {/* Close */}
-              <button
-                className="modal-close"
-                type="button"
-                onClick={() =>
-                  setShowDetailsModal(null)
-                }
-              >
-                x
-              </button>
-
-              {/* Title */}
-              <h2>
-                {detailsStudent.parent_email
-                  ? "Edit Student Details"
-                  : "Add Student Details"}
-              </h2>
-
-              <p>
-                {detailsStudent.name} Â·{" "}
-                {detailsStudent.email}
-              </p>
-
-              {/* Form */}
-              <form
-                onSubmit={
-                  saveStudentDetails
-                }
-              >
-
-                <div className="form-grid">
-
-                  {/* Student Name */}
-                  <input
-                    type="text"
-                    value={
-                      detailsStudent.name ||
-                      ""
-                    }
-                    readOnly
-                    placeholder="Student Name"
-                  />
-
-                  {/* Student Email */}
-                  <input
-                    type="email"
-                    value={
-                      detailsStudent.email ||
-                      ""
-                    }
-                    readOnly
-                    placeholder="Student Email"
-                  />
-
-                  {/* Parent Email */}
-                  <input
-                    type="email"
-                    value={parentEmail}
-                    onChange={(e) =>
-                      setParentEmail(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Parent Email"
-                  />
-
-                  {/* Parent Phone */}
-                  <input
-                    type="tel"
-                    value={parentPhone}
-                    onChange={(e) =>
-                      setParentPhone(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Parent Phone"
-                  />
-
-                </div>
-
-                {/* Modal Actions */}
-                <div className="modal-actions">
-
-                  <button
-                    type="button"
-                    className="close-profile-btn"
-                    onClick={() =>
-                      setShowDetailsModal(
-                        false
-                      )
-                    }
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="edit-profile-btn"
-                  >
-                    Save Details
-                  </button>
-
-                </div>
-
-              </form>
-
-            </div>
-
-          </div>
-        )}
-
       {/* ======================================================
           SEARCH + FILTERS
       ====================================================== */}
@@ -2179,110 +2076,63 @@ AESA`
 
                 <div className="profile-section subject-wise-section">
 
-                  <div className="subject-wise-header">
 
-                    <h4>
-                      Subject-wise Attendance
-                    </h4>
 
-                    <button
-                      className="subject-wise-toggle"
-                      type="button"
-                      aria-expanded={showSubjects}
-                      onClick={() =>
-                        setShowSubjects((value) => !value)
-                      }
-                    >
-                      Hide Subjects
-                    </button>
+                  <h4>
+                    Subject-wise Attendance
+                  </h4>
+                  <div className="subject-attendance-table-wrapper">
+                    <table className="subject-attendance-table">
+                      <thead>
+                        <tr>
+                          <th>Subject</th>
+                          <th>Classes Attended</th>
+                          <th>Classes Conducted</th>
+                          <th>Attendance</th>
+                        </tr>
+                      </thead>
 
+                      <tbody>
+                        {subjectWiseAttendance.map((subject) => {
+                          const conducted =
+                            Number(subject.conductedSessions) || 0;
+
+                          const present =
+                            Number(subject.presentSessions) || 0;
+
+                          const percentage =
+                            conducted > 0
+                              ? (present / conducted) * 100
+                              : 0;
+
+                          return (
+                            <tr
+                              key={
+                                subject.subjectId ||
+                                subject.subjectName
+                              }
+                            >
+                              <td className="subject-short-name">
+                                {getSubjectShortName(subject.subjectName)}
+                              </td>
+
+                              <td>{present}</td>
+
+                              <td>{conducted}</td>
+
+                              <td className="subject-attendance-percentage">
+                                {percentage.toFixed(2)}%
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
 
-                  {subjectWiseAttendance.length === 0 ? (
 
-                    <p className="subject-wise-empty">
-                      No subject attendance records available for this
-                      student.
-                    </p>
 
-                  ) : (
 
-                    <div className="subject-wise-list">
-
-                      {subjectWiseAttendance.map((subject) => {
-
-                        const conducted =
-                          Number(subject.conductedSessions) || 0;
-
-                        const present =
-                          Number(subject.presentSessions) || 0;
-
-                        // ==================================
-                        // SUBJECT ATTENDANCE PERCENTAGE
-                        //
-                        // (present / conducted) * 100
-                        //
-                        // Growth hours are excluded by the
-                        // helper. Subject percentages are never
-                        // averaged into the overall attendance.
-                        // ==================================
-
-                        const percentage =
-                          conducted > 0
-                            ? (present / conducted) * 100
-                            : 0;
-
-                        const status =
-                          getSubjectAttendanceStatus(
-                            conducted,
-                            percentage
-                          );
-
-                        return (
-                          <div
-                            className="subject-wise-item"
-                            key={
-                              subject.subjectId ||
-                              subject.subjectName
-                            }
-                          >
-
-                            <div className="subject-wise-item-top">
-
-                              <strong className="subject-wise-name">
-                                {subject.subjectName}
-                              </strong>
-
-                              <span
-                                className={`subject-wise-status ${status
-                                  .toLowerCase()
-                                  .replace(/\s+/g, "-")}`}
-                              >
-                                {status}
-                              </span>
-
-                            </div>
-
-                            <div className="subject-wise-item-body">
-
-                              <span>
-                                {present} Present /{" "}
-                                {conducted} Conducted
-                              </span>
-
-                              <strong className="subject-wise-value">
-                                {percentage.toFixed(2)}%
-                              </strong>
-
-                            </div>
-
-                          </div>
-                        );
-                      })}
-
-                    </div>
-
-                  )}
 
                 </div>
 
@@ -2294,41 +2144,6 @@ AESA`
 
               <div className="modal-actions">
 
-                <button
-                  className="edit-profile-btn"
-                  type="button"
-                  onClick={() => {
-                    setDetailsStudent(selectedStudent);
-                    setParentEmail(selectedStudent.parent_email || "");
-                    setParentPhone(selectedStudent.parent_phone || "");
-                    setShowDetailsModal(true);
-                  }}
-                >
-                  {selectedStudent.parent_email ? "Edit Details" : "Add Details"}
-                </button>
-
-                <button
-                  className="edit-profile-btn"
-                  type="button"
-                  onClick={() => {
-                    const worksheet = XLSX.utils.json_to_sheet([
-                      mapStudentDownloadRow(selectedStudent),
-                    ]);
-                    const workbook = XLSX.utils.book_new();
-
-                    XLSX.utils.book_append_sheet(
-                      workbook,
-                      worksheet,
-                      "Student"
-                    );
-                    XLSX.writeFile(
-                      workbook,
-                      `AESA_Student_${selectedStudent.id || "profile"}_${new Date().toISOString().split("T")[0]}.xlsx`
-                    );
-                  }}
-                >
-                  Download
-                </button>
 
               </div>
 
