@@ -293,7 +293,7 @@ function Dashboard() {
         ))}
       </div>
 
-      {lastImport && (
+      {/* {lastImport && (
         <article className="last-import-panel">
           <div className="last-import-heading">
             <div className="section-kicker">LATEST IMPORT</div>
@@ -318,7 +318,7 @@ function Dashboard() {
             </span>
           </div>
         </article>
-      )}
+      )} */}
 
       {error && <div className="dashboard-error">{error}</div>}
 
