@@ -2436,3 +2436,64 @@
   font-weight: 600;
   color: #64748b;
 }
+
+.subject-attendance-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #d9dee7;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.subject-attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
+
+.subject-attendance-table thead {
+  background: #f5f6f8;
+}
+
+.subject-attendance-table th {
+  padding: 14px 16px;
+  border-bottom: 1px solid #d9dee7;
+  color: #6b778c;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.subject-attendance-table td {
+  padding: 16px;
+  border-bottom: 1px solid #edf0f3;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.subject-attendance-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.subject-attendance-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.subject-short-name {
+  font-weight: 600;
+}
+
+.subject-attendance-table th:nth-child(2),
+.subject-attendance-table th:nth-child(3),
+.subject-attendance-table th:nth-child(4),
+.subject-attendance-table td:nth-child(2),
+.subject-attendance-table td:nth-child(3),
+.subject-attendance-table td:nth-child(4) {
+  text-align: center;
+}
+
+.subject-attendance-percentage {
+  font-weight: 600;
+  color: #111827;
+}
