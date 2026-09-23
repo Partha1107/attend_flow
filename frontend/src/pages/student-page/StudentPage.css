@@ -2292,3 +2292,147 @@
     min-width: 1100px;
   }
 }
+
+.custom-attendance-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 0 12px;
+
+  border: 1px solid #d5dce5;
+  border-radius: 8px;
+  background: #ffffff;
+
+  white-space: nowrap;
+}
+
+.custom-attendance-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.custom-attendance-download input {
+  width: 70px;
+  height: 32px;
+
+  padding: 0 8px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  text-align: center;
+  outline: none;
+}
+
+.custom-attendance-download input:focus {
+  border-color: #ef3340;
+  box-shadow: 0 0 0 2px rgba(239, 51, 64, 0.12);
+}
+
+.custom-percent-symbol {
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.attendance-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.attendance-dropdown-trigger {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #d9dee7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.attendance-dropdown-trigger:hover {
+  border-color: #b8c0cc;
+}
+
+.attendance-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid #d9dee7;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  z-index: 100;
+}
+
+.attendance-dropdown-option {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 11px 12px;
+  border-radius: 7px;
+  text-align: left;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.attendance-dropdown-option:hover {
+  background: #f1f5f9;
+}
+
+.attendance-custom-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 7px;
+}
+
+.attendance-custom-option:hover {
+  background: #f8fafc;
+}
+
+.attendance-custom-label {
+  min-width: 58px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.attendance-custom-option input {
+  width: 70px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+
+.attendance-custom-option input:focus {
+  border-color: #94a3b8;
+}
+
+.attendance-custom-percent {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}

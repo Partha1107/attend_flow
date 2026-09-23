@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
+  ChevronDown,
   Download,
   Mail,
   MailWarning,
@@ -244,13 +245,12 @@ AESA`
   // ===========================================================
   // CUSTOM DOWNLOAD STATE
   // ===========================================================
+  const [customDownloadThreshold, setCustomDownloadThreshold] =
+    useState("");
 
-  const [customDownload, setCustomDownload] = useState({
-    type: "below",
-    threshold: "",
-  });
-  const [showCustomDownloadModal, setShowCustomDownloadModal] =
+  const [attendanceDropdownOpen, setAttendanceDropdownOpen] =
     useState(false);
+
 
   const [detailsStudent, setDetailsStudent] = useState(null);
 
@@ -734,10 +734,17 @@ AESA`
         String(squad).trim();
 
       const attendance = Number(student.attendance) || 0;
+      const customThreshold = Number(customDownloadThreshold);
+
       const matchesAttendance =
         attendanceFilter === "all" ||
         (attendanceFilter === "below75" && attendance < 75) ||
-        (attendanceFilter === "above75" && attendance >= 75);
+        (attendanceFilter === "above75" && attendance >= 75) ||
+        (
+          attendanceFilter === "custom" &&
+          customDownloadThreshold !== "" &&
+          attendance < customThreshold
+        );
 
       return (
         matchesSearch &&
@@ -750,22 +757,8 @@ AESA`
   const studentsMatchingCurrentAttendanceFilter =
     filteredStudents;
 
-  const customThreshold =
-    Number(customDownload.threshold);
 
-  const studentsMatchingCustomDownload = useMemo(() => {
-    if (!(customThreshold >= 0 && customThreshold <= 100)) {
-      return [];
-    }
 
-    return filteredStudents.filter((student) => {
-      const attendance = Number(student.attendance) || 0;
-      if (customDownload.type === "below") {
-        return attendance < customThreshold;
-      }
-      return attendance >= customThreshold;
-    });
-  }, [filteredStudents, customDownload.type, customThreshold]);
 
   const baseFilteredStudents = useMemo(
     () =>
@@ -1016,52 +1009,110 @@ AESA`
   };
 
   const handleDownloadBelow75 = () => {
-    if (below75Students.length === 0) {
+    const studentsToDownload = baseFilteredStudents.filter(
+      (student) => Number(student.attendance) < 75
+    );
+
+    if (studentsToDownload.length === 0) {
       alert("No students below 75% to download.");
       return;
     }
 
-    const worksheetData = below75Students.map(mapStudentDownloadRow);
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-
-
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Below 75");
-    XLSX.writeFile(
-      workbook,
+    downloadExcel(
+      studentsToDownload.map(mapStudentDownloadRow),
+      "Below 75",
       buildFilename("Below_75_Percent_Attendance")
+    );
+  };
+  const handleDownloadAbove75 = () => {
+    const studentsToDownload = baseFilteredStudents.filter(
+      (student) => Number(student.attendance) >= 75
+    );
+
+    if (studentsToDownload.length === 0) {
+      alert("No students at or above 75% to download.");
+      return;
+    }
+
+    downloadExcel(
+      studentsToDownload.map(mapStudentDownloadRow),
+      "75 and Above",
+      buildFilename("75_Percent_And_Above_Attendance")
     );
   };
 
   // ===========================================================
   // DYNAMIC DOWNLOAD HELPER
   // ===========================================================
-
   const handleDynamicDownload = () => {
     if (attendanceFilter === "all") {
       handleDownloadStudents();
-    } else if (attendanceFilter === "below75") {
+      return;
+    }
+
+    if (attendanceFilter === "below75") {
       handleDownloadBelow75();
-    } else if (attendanceFilter === "above75") {
+      return;
+    }
+
+    if (attendanceFilter === "above75") {
       handleDownloadAbove75();
+      return;
+    }
+
+    if (attendanceFilter === "custom") {
+      const threshold = Number(customDownloadThreshold);
+
+      if (
+        customDownloadThreshold === "" ||
+        Number.isNaN(threshold) ||
+        threshold < 0 ||
+        threshold > 100
+      ) {
+        alert("Please enter a custom attendance percentage between 0 and 100.");
+        return;
+      }
+
+      const studentsToDownload = baseFilteredStudents.filter(
+        (student) => Number(student.attendance) < threshold
+      );
+
+      if (studentsToDownload.length === 0) {
+        alert(`No students below ${threshold}%.`);
+        return;
+      }
+
+      downloadExcel(
+        studentsToDownload.map(mapStudentDownloadRow),
+        `Below ${threshold}%`,
+        buildFilename(`Below_${threshold}_Percent_Attendance`)
+      );
     }
   };
 
   // ===========================================================
   // DYNAMIC DOWNLOAD BUTTON LABEL
   // ===========================================================
-
   const downloadButtonLabel = (() => {
     if (attendanceFilter === "all") {
       return "Download All Students";
     }
+
     if (attendanceFilter === "below75") {
       return "Download Below 75%";
     }
+
     if (attendanceFilter === "above75") {
       return "Download 75% and Above";
     }
+
+    if (
+      attendanceFilter === "custom" &&
+      customDownloadThreshold !== ""
+    ) {
+      return `Download Below ${customDownloadThreshold}%`;
+    }
+
     return "Download";
   })();
 
@@ -1069,46 +1120,20 @@ AESA`
   // CUSTOM DOWNLOAD VALIDATION HELPER
   // ===========================================================
 
-  const customDownloadThresholdValid =
-    customThreshold >= 0 && customThreshold <= 100;
 
-  const clearFilters = () => {
-    setSearch("");
-    setAttendanceFilter("all");
-    if (jobRole === "campus_manager") setSquad("");
-    resetToFirstPage();
-  };
+const clearFilters = () => {
+  setSearch("");
+  setAttendanceFilter("all");
+  setCustomDownloadThreshold("");
+  setAttendanceDropdownOpen(false);
 
-  const handleCustomDownload = () => {
-    if (!(customThreshold >= 0 && customThreshold <= 100)) {
-      alert(
-        "Please enter a valid threshold between 0 and 100."
-      );
-      return;
-    }
+  if (jobRole === "campus_manager") {
+    setSquad("");
+  }
 
-    const matchingStudents =
-      studentsMatchingCustomDownload;
+  resetToFirstPage();
+};
 
-    if (matchingStudents.length === 0) {
-      alert(
-        "No students match the selected attendance range."
-      );
-      return;
-    }
-
-    downloadExcel(
-      matchingStudents.map(mapStudentDownloadRow),
-      customDownload.type === "below"
-        ? "Below Threshold"
-        : "At or Above Threshold",
-      buildFilename(
-        customDownload.type === "below"
-          ? `Below_${customThreshold}_Percent_Attendance`
-          : `${customThreshold}_Percent_And_Above_Attendance`
-      )
-    );
-  };
 
   return (
     <div className="student-page">
@@ -1122,7 +1147,7 @@ AESA`
         <div>
 
           <h1>
-            Students & Email Automation
+            Students
           </h1>
 
 
@@ -1188,15 +1213,6 @@ AESA`
             </span>
           </div>
 
-          <button
-            className="import-student-btn"
-            type="button"
-            onClick={handleDownloadBelow75}
-            disabled={loading}
-          >
-            <Download size={18} />
-            Below 75% Excel
-          </button>
 
         </div>
 
@@ -1411,7 +1427,14 @@ AESA`
               placeholder="Search students by name, email or student ID..."
               value={search}
               onChange={(e) => {
-                setSearch(e.target.value);
+                const value = e.target.value;
+
+                setAttendanceFilter(value);
+
+                if (value !== "all") {
+                  setCustomDownloadThreshold("");
+                }
+
                 resetToFirstPage();
               }}
             />
@@ -1445,19 +1468,127 @@ AESA`
               )}
           </select>
 
-          <select
-            value={attendanceFilter}
-            onChange={(e) => {
-              setAttendanceFilter(e.target.value);
-              resetToFirstPage();
-            }}
-            aria-label="Attendance filter"
-          >
-            <option value="all">All Students</option>
-            <option value="below75">Below 75%</option>
-            <option value="above75">75% and Above</option>
-          </select>
+          <div className="attendance-dropdown">
+            <button
+              type="button"
+              className="attendance-dropdown-trigger"
+              onClick={() =>
+                setAttendanceDropdownOpen((previous) => !previous)
+              }
+              aria-expanded={attendanceDropdownOpen}
+              aria-haspopup="listbox"
+            >
+              <span>
+                {attendanceFilter === "all" && "All Students"}
 
+                {attendanceFilter === "below75" && "Below 75%"}
+
+                {attendanceFilter === "above75" && "75% and Above"}
+
+                {attendanceFilter === "custom" &&
+                  customDownloadThreshold !== "" &&
+                  `Below ${customDownloadThreshold}%`}
+
+                {attendanceFilter === "custom" &&
+                  customDownloadThreshold === "" &&
+                  "Custom Attendance"}
+              </span>
+
+              <ChevronDown size={18} />
+            </button>
+
+            {attendanceDropdownOpen && (
+              <div className="attendance-dropdown-menu">
+
+                <button
+                  type="button"
+                  className="attendance-dropdown-option"
+                  onClick={() => {
+                    setAttendanceFilter("all");
+                    setCustomDownloadThreshold("");
+                    setAttendanceDropdownOpen(false);
+                    resetToFirstPage();
+                  }}
+                >
+                  All Students
+                </button>
+
+                <button
+                  type="button"
+                  className="attendance-dropdown-option"
+                  onClick={() => {
+                    setAttendanceFilter("below75");
+                    setCustomDownloadThreshold("");
+                    setAttendanceDropdownOpen(false);
+                    resetToFirstPage();
+                  }}
+                >
+                  Below 75%
+                </button>
+
+                <button
+                  type="button"
+                  className="attendance-dropdown-option"
+                  onClick={() => {
+                    setAttendanceFilter("above75");
+                    setCustomDownloadThreshold("");
+                    setAttendanceDropdownOpen(false);
+                    resetToFirstPage();
+                  }}
+                >
+                  75% and Above
+                </button>
+
+                <div
+                  className="attendance-custom-option"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  <span className="attendance-custom-label">
+                    Custom
+                  </span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={customDownloadThreshold}
+                    placeholder="60"
+                    onChange={(event) => {
+                      const value = event.target.value;
+
+                      if (value === "") {
+                        setCustomDownloadThreshold("");
+                        setAttendanceFilter("custom");
+                        resetToFirstPage();
+                        return;
+                      }
+
+                      const numberValue = Number(value);
+
+                      if (numberValue >= 0 && numberValue <= 100) {
+                        setCustomDownloadThreshold(value);
+                        setAttendanceFilter("custom");
+                        resetToFirstPage();
+                      }
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                    aria-label="Custom attendance percentage"
+                  />
+
+                  <span className="attendance-custom-percent">
+                    %
+                  </span>
+                </div>
+
+              </div>
+            )}
+          </div>
+         
         </div>
 
         <div className="filter-row filter-row-actions">
@@ -1492,17 +1623,7 @@ AESA`
             {downloadButtonLabel}
           </button>
 
-          <button
-            className="import-student-btn filter-btn"
-            type="button"
-            onClick={() =>
-              setShowCustomDownloadModal(true)
-            }
-            disabled={loading}
-          >
-            <Download size={16} />
-            Custom Download
-          </button>
+
 
           {/* ----------------------------------------------------
             CLEAR FILTERS
@@ -1562,7 +1683,7 @@ AESA`
                     <th>Student Email</th>
                     <th>Squad</th>
                     <th>Attendance %</th>
-                    <th>Status</th>
+                    {/* <th>Status</th> */}
                     <th>Parent Email</th>
                     <th>Actions</th>
                   </tr>
@@ -1611,8 +1732,8 @@ AESA`
                         <td>
                           <span
                             className={`attendance-badge ${attendance < 75
-                                ? "attendance-below"
-                                : "attendance-good"
+                              ? "attendance-below"
+                              : "attendance-good"
                               }`}
                           >
                             {attendance.toFixed(2)}%
@@ -1620,7 +1741,7 @@ AESA`
                         </td>
 
                         {/* STATUS */}
-                        <td>
+                        {/* <td>
                           <span
                             className={`status-badge status-${status
                               .toLowerCase()
@@ -1628,7 +1749,7 @@ AESA`
                           >
                             {status}
                           </span>
-                        </td>
+                        </td> */}
 
                         {/* PARENT EMAIL */}
                         <td className="parent-email-cell">
@@ -1728,6 +1849,7 @@ AESA`
                     <option value={30}>30</option>
                     <option value={50}>50</option>
                   </select>
+
                 </label>
                 <div className="pagination-buttons">
                   <button
