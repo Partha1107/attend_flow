@@ -117,16 +117,259 @@ const applyTemplateVariables = (text, student, mentorName, mentorEmail) =>
     .replaceAll("{{mentorName}}", mentorName || "")
     .replaceAll("{{mentorEmail}}", mentorEmail || "");
 
-const mapStudentDownloadRow = (student) => ({
-  "Student Name": student.name || "",
-  "Student Email": resolveEmails(student).studentEmail || "",
-  Squad: student.squad || "",
-  "Attendance Percentage": Number(student.attendance) || 0,
-  "Attendance Status": getAttendanceStatus(student.attendance),
-  "Parent Name": student.parent_name || "",
-  "Parent Email": resolveEmails(student).parentEmail || "",
-  "Parent Phone": student.parent_phone || "",
-});
+const getAttendanceRecordSubjectName = (record) =>
+  String(
+    record?.subject_name ??
+    record?.subjectName ??
+    record?.subject?.name ??
+    ""
+  ).trim();
+
+const getAttendanceRecordSubjectId = (record) =>
+  String(
+    record?.subject_id ??
+    record?.subjectId ??
+    record?.subject?.id ??
+    ""
+  ).trim();
+
+const isGrowthHourRecord = (record) => {
+  const attendanceType = String(
+    record?.attendance_type ?? ""
+  ).toLowerCase();
+
+  const subjectName =
+    getAttendanceRecordSubjectName(record).toLowerCase();
+
+  return (
+    attendanceType.includes("growth") ||
+    subjectName.includes("growth hour") ||
+    subjectName.includes("growth_hour")
+  );
+};
+
+const getExportSubjectCatalog = (records = []) => {
+  const subjectMap = new Map();
+
+  records.forEach((record) => {
+    if (isGrowthHourRecord(record)) {
+      return;
+    }
+
+    const subjectId =
+      getAttendanceRecordSubjectId(record);
+
+    const subjectName =
+      getAttendanceRecordSubjectName(record);
+
+    if (!subjectId && !subjectName) {
+      return;
+    }
+
+    const key =
+      subjectId || subjectName.toLowerCase();
+
+    if (!subjectMap.has(key)) {
+      subjectMap.set(key, {
+        id: subjectId,
+        name: subjectName,
+      });
+    }
+  });
+
+  return [...subjectMap.values()];
+};
+
+const getGrowthHourRecord = (records = []) =>
+  records.find((record) =>
+    isGrowthHourRecord(record)
+  );
+
+const mapStudentDownloadRow = (
+  student,
+  records = [],
+  exportSubjects = []
+) => {
+  const studentRecords = records.filter(
+    (record) =>
+      String(record?.student_id ?? "") ===
+      String(student?.id ?? "")
+  );
+
+  const row = {
+    email:
+      resolveEmails(student).studentEmail || "",
+    Name: student?.name || "",
+    Squad: student?.squad || "",
+  };
+
+  exportSubjects.forEach((subject, index) => {
+    const subjectNumber = index + 1;
+
+    const subjectRecord =
+      studentRecords.find((record) => {
+        const recordSubjectId =
+          getAttendanceRecordSubjectId(record);
+
+        const recordSubjectName =
+          getAttendanceRecordSubjectName(
+            record
+          ).toLowerCase();
+
+        return (
+          (subject.id &&
+            recordSubjectId === subject.id) ||
+          (!subject.id &&
+            recordSubjectName ===
+            String(subject.name).toLowerCase())
+        );
+      });
+
+    const conducted =
+      Number(
+        subjectRecord?.sessions_conducted
+      ) || 0;
+
+    const attended =
+      Number(
+        subjectRecord?.sessions_attended
+      ) || 0;
+
+    const absent =
+      Number.isFinite(
+        Number(subjectRecord?.sessions_absent)
+      )
+        ? Number(subjectRecord.sessions_absent)
+        : Math.max(
+          conducted - attended,
+          0
+        );
+
+    const percentage =
+      conducted > 0
+        ? Number(
+          (
+            (attended / conducted) *
+            100
+          ).toFixed(2)
+        )
+        : 0;
+
+    row[`Subject ${subjectNumber} Name`] =
+      subject.name || "";
+
+    row[`Subject ${subjectNumber} ID`] =
+      subject.id || "";
+
+    row[
+      `Subject ${subjectNumber} Sessions Conducted`
+    ] = conducted;
+
+    row[
+      `Subject ${subjectNumber} Sessions Attended`
+    ] = attended;
+
+    row[
+      `Subject ${subjectNumber} Sessions Absent`
+    ] = absent;
+
+    row[
+      `Subject ${subjectNumber} Attendance %`
+    ] = `${percentage.toFixed(2)}%`;
+
+    row[
+      `Subject ${subjectNumber} Sessions Marked OD`
+    ] =
+      Number(
+        subjectRecord?.sessions_marked_od
+      ) || 0;
+
+    row[
+      `Subject ${subjectNumber} Sessions on Approved Medical Leave (ML)`
+    ] =
+      Number(
+        subjectRecord?.sessions_medical_leave
+      ) || 0;
+
+    row[
+      `Subject ${subjectNumber} Sessions Applied Leave`
+    ] =
+      Number(
+        subjectRecord?.sessions_applied_leave
+      ) || 0;
+  });
+
+  const growthHour =
+    getGrowthHourRecord(studentRecords);
+
+  if (growthHour) {
+    const conducted =
+      Number(
+        growthHour?.sessions_conducted
+      ) || 0;
+
+    const attended =
+      Number(
+        growthHour?.sessions_attended
+      ) || 0;
+
+    const absent =
+      Number.isFinite(
+        Number(growthHour?.sessions_absent)
+      )
+        ? Number(growthHour.sessions_absent)
+        : Math.max(
+          conducted - attended,
+          0
+        );
+
+    const percentage =
+      conducted > 0
+        ? Number(
+          (
+            (attended / conducted) *
+            100
+          ).toFixed(2)
+        )
+        : 0;
+
+    row["Growth Hour Name"] =
+      getAttendanceRecordSubjectName(
+        growthHour
+      ) || "Growth Hour";
+
+    row["Growth Hour Sessions Conducted"] =
+      conducted;
+
+    row["Growth Hour Sessions Attended"] =
+      attended;
+
+    row["Growth Hour Sessions Absent"] =
+      absent;
+
+    row["Growth Hour Attendance %"] =
+      `${percentage.toFixed(2)}%`;
+
+    row["Growth Hour Sessions Marked OD"] =
+      Number(
+        growthHour?.sessions_marked_od
+      ) || 0;
+
+    row[
+      "Growth Hour Sessions on Approved Medical Leave (ML)"
+    ] =
+      Number(
+        growthHour?.sessions_medical_leave
+      ) || 0;
+
+    row["Growth Hour Sessions Applied Leave"] =
+      Number(
+        growthHour?.sessions_applied_leave
+      ) || 0;
+  }
+
+  return row;
+};
 
 // ===========================================================
 // EXCEL DOWNLOAD HELPERS
@@ -820,6 +1063,11 @@ AESA`
     [students]
   );
 
+  const exportSubjects = useMemo(
+    () => getExportSubjectCatalog(attendanceRecords),
+    [attendanceRecords]
+  );
+
   const totalPages = Math.max(
     1,
     Math.ceil(filteredStudents.length / studentsPerPage)
@@ -1021,99 +1269,170 @@ AESA`
       alert("No students to download.");
       return;
     }
+    const worksheetData = filteredStudents.map(
+      (student) =>
+        mapStudentDownloadRow(
+          student,
+          attendanceRecords,
+          exportSubjects
+        )
+    );
 
-    const worksheetData = filteredStudents.map(mapStudentDownloadRow);
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
+    const worksheet =
+      XLSX.utils.json_to_sheet(
+        worksheetData
+      );
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Students"
+    );
+
     XLSX.writeFile(
       workbook,
       buildFilename("All_Students")
     );
   };
 
-  const handleDownloadBelow75 = () => {
-    const studentsToDownload = baseFilteredStudents.filter(
-      (student) => Number(student.attendance) < 75
+
+
+const handleDownloadBelow75 = () => {
+  const studentsToDownload =
+    baseFilteredStudents.filter(
+      (student) =>
+        Number(student.attendance) < 75
     );
 
-    if (studentsToDownload.length === 0) {
-      alert("No students below 75% to download.");
-      return;
-    }
+  if (studentsToDownload.length === 0) {
+    alert("No students below 75% to download.");
+    return;
+  }
 
-    downloadExcel(
-      studentsToDownload.map(mapStudentDownloadRow),
-      "Below 75",
-      buildFilename("Below_75_Percent_Attendance")
+  const worksheetData =
+    studentsToDownload.map(
+      (student) =>
+        mapStudentDownloadRow(
+          student,
+          attendanceRecords,
+          exportSubjects
+        )
     );
-  };
-  const handleDownloadAbove75 = () => {
-    const studentsToDownload = baseFilteredStudents.filter(
-      (student) => Number(student.attendance) >= 75
+
+  downloadExcel(
+    worksheetData,
+    "Below 75",
+    buildFilename(
+      "Below_75_Percent_Attendance"
+    )
+  );
+};
+
+const handleDownloadAbove75 = () => {
+  const studentsToDownload =
+    baseFilteredStudents.filter(
+      (student) =>
+        Number(student.attendance) >= 75
     );
 
-    if (studentsToDownload.length === 0) {
-      alert("No students at or above 75% to download.");
-      return;
-    }
-
-    downloadExcel(
-      studentsToDownload.map(mapStudentDownloadRow),
-      "75 and Above",
-      buildFilename("75_Percent_And_Above_Attendance")
+  if (studentsToDownload.length === 0) {
+    alert(
+      "No students at or above 75% to download."
     );
-  };
+    return;
+  }
 
-  // ===========================================================
-  // DYNAMIC DOWNLOAD HELPER
-  // ===========================================================
-  const handleDynamicDownload = () => {
-    if (attendanceFilter === "all") {
-      handleDownloadStudents();
+  const worksheetData =
+    studentsToDownload.map(
+      (student) =>
+        mapStudentDownloadRow(
+          student,
+          attendanceRecords,
+          exportSubjects
+        )
+    );
+
+  downloadExcel(
+    worksheetData,
+    "75 and Above",
+    buildFilename(
+      "75_Percent_And_Above_Attendance"
+    )
+  );
+};
+
+// ===========================================================
+// DYNAMIC DOWNLOAD HELPER
+// ===========================================================
+
+const handleDynamicDownload = () => {
+  if (attendanceFilter === "all") {
+    handleDownloadStudents();
+    return;
+  }
+
+  if (attendanceFilter === "below75") {
+    handleDownloadBelow75();
+    return;
+  }
+
+  if (attendanceFilter === "above75") {
+    handleDownloadAbove75();
+    return;
+  }
+
+  if (attendanceFilter === "custom") {
+    const threshold =
+      Number(customDownloadThreshold);
+
+    if (
+      customDownloadThreshold === "" ||
+      Number.isNaN(threshold) ||
+      threshold < 0 ||
+      threshold > 100
+    ) {
+      alert(
+        "Please enter a custom attendance percentage between 0 and 100."
+      );
       return;
     }
 
-    if (attendanceFilter === "below75") {
-      handleDownloadBelow75();
-      return;
-    }
-
-    if (attendanceFilter === "above75") {
-      handleDownloadAbove75();
-      return;
-    }
-
-    if (attendanceFilter === "custom") {
-      const threshold = Number(customDownloadThreshold);
-
-      if (
-        customDownloadThreshold === "" ||
-        Number.isNaN(threshold) ||
-        threshold < 0 ||
-        threshold > 100
-      ) {
-        alert("Please enter a custom attendance percentage between 0 and 100.");
-        return;
-      }
-
-      const studentsToDownload = baseFilteredStudents.filter(
-        (student) => Number(student.attendance) < threshold
+    const studentsToDownload =
+      baseFilteredStudents.filter(
+        (student) =>
+          Number(student.attendance) < threshold
       );
 
-      if (studentsToDownload.length === 0) {
-        alert(`No students below ${threshold}%.`);
-        return;
-      }
-
-      downloadExcel(
-        studentsToDownload.map(mapStudentDownloadRow),
-        `Below ${threshold}%`,
-        buildFilename(`Below_${threshold}_Percent_Attendance`)
+    if (studentsToDownload.length === 0) {
+      alert(
+        `No students below ${threshold}%.`
       );
+      return;
     }
-  };
+
+    const worksheetData =
+      studentsToDownload.map(
+        (student) =>
+          mapStudentDownloadRow(
+            student,
+            attendanceRecords,
+            exportSubjects
+          )
+      );
+
+    downloadExcel(
+      worksheetData,
+      `Below ${threshold}%`,
+      buildFilename(
+        `Below_${threshold}_Percent_Attendance`
+      )
+    );
+  }
+};
+
 
   // ===========================================================
   // DYNAMIC DOWNLOAD BUTTON LABEL
@@ -1197,9 +1516,8 @@ AESA`
           {jobRole === "campus_manager" && (
             <p>
               <strong>
-                Campus Manager
+                Campus Manager  :
               </strong>
-              {" Â· "}
               {squad
                 ? `Viewing Squad ${squad}`
                 : "Viewing all squads"}
@@ -1217,25 +1535,10 @@ AESA`
             DATE + USER META + ACTIONS
         ---------------------------------------------------- */}
 
-        <div className="student-header-actions">
+      <div className="student-header-actions">
 
           <div className="student-header-meta">
-            <span className="student-meta-item">
-              <CalendarDays size={15} />
-              {emailDate}
-            </span>
-            <span className="student-meta-item student-mentor-item">
-              <UserRound size={15} />
-              <span className="mentor-text">
-                {mentorName}
-                {mentorEmail ? ` Â· ${mentorEmail}` : ""}
-                {jobRole === "mentor" && assignedSquad
-                  ? ` Â· Squad ${assignedSquad}`
-                  : jobRole === "campus_manager"
-                    ? " Â· Campus Manager"
-                    : ""}
-              </span>
-            </span>
+
           </div>
 
 
