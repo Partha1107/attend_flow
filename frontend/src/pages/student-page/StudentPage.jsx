@@ -1121,18 +1121,18 @@ AESA`
   // ===========================================================
 
 
-const clearFilters = () => {
-  setSearch("");
-  setAttendanceFilter("all");
-  setCustomDownloadThreshold("");
-  setAttendanceDropdownOpen(false);
+  const clearFilters = () => {
+    setSearch("");
+    setAttendanceFilter("all");
+    setCustomDownloadThreshold("");
+    setAttendanceDropdownOpen(false);
 
-  if (jobRole === "campus_manager") {
-    setSquad("");
-  }
+    if (jobRole === "campus_manager") {
+      setSquad("");
+    }
 
-  resetToFirstPage();
-};
+    resetToFirstPage();
+  };
 
 
   return (
@@ -1427,14 +1427,7 @@ const clearFilters = () => {
               placeholder="Search students by name, email or student ID..."
               value={search}
               onChange={(e) => {
-                const value = e.target.value;
-
-                setAttendanceFilter(value);
-
-                if (value !== "all") {
-                  setCustomDownloadThreshold("");
-                }
-
+                setSearch(e.target.value);
                 resetToFirstPage();
               }}
             />
@@ -1588,7 +1581,7 @@ const clearFilters = () => {
               </div>
             )}
           </div>
-        
+
         </div>
 
         <div className="filter-row filter-row-actions">
