@@ -601,6 +601,236 @@
   line-height: 1.5;
   font-size: 14px;
 }
+
+/* =========================================================
+   PARENT CONTACT SKELETON
+   ========================================================= */
+
+/*
+ * The skeleton must occupy exactly the same width as the
+ * real contacts table.
+ */
+
+.parent-email-skeleton-wrapper {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* =========================================================
+   SKELETON TABLE
+   ========================================================= */
+
+.parent-email-skeleton-wrapper .skeleton-table {
+  width: 100%;
+  min-width: 1050px;
+  max-width: none;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 0;
+
+  background: #ffffff;
+}
+
+/* =========================================================
+   SKELETON HEADER
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.contacts-skeleton-header {
+  width: 100%;
+  min-width: 1050px;
+
+  min-height: 48px;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  grid-template-columns:
+    19%
+    23%
+    17%
+    23%
+    18%;
+
+  column-gap: 0;
+
+  align-items: center;
+
+  background: #fafafa;
+
+  border-bottom: 1px solid #dedede;
+}
+
+/* =========================================================
+   SKELETON ROW
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.contacts-skeleton-row {
+  width: 100%;
+  min-width: 1050px;
+
+  min-height: 66px;
+
+  padding: 8px 14px;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  grid-template-columns:
+    19%
+    23%
+    17%
+    23%
+    18%;
+
+  column-gap: 0;
+
+  align-items: center;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #eeeeee;
+}
+
+.parent-email-skeleton-wrapper
+.contacts-skeleton-row:last-child {
+  border-bottom: none;
+}
+
+/* =========================================================
+   HEADER SKELETON SIZES
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.contacts-header-name {
+  width: 90px;
+}
+
+.parent-email-skeleton-wrapper
+.contacts-header-email {
+  width: 100px;
+}
+
+.parent-email-skeleton-wrapper
+.contacts-header-phone {
+  width: 50px;
+}
+
+.parent-email-skeleton-wrapper
+.contacts-header-parent-email {
+  width: 90px;
+}
+
+.parent-email-skeleton-wrapper
+.contacts-header-parent-phone {
+  width: 90px;
+}
+
+/* =========================================================
+   STUDENT NAME
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.contacts-student-name {
+  width: 65%;
+  height: 14px;
+}
+
+/* =========================================================
+   STUDENT EMAIL
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.contacts-student-email {
+  width: 85%;
+  height: 14px;
+}
+
+/* =========================================================
+   INPUT SKELETON
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.contacts-input {
+  width: calc(100% - 14px);
+  height: 38px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #e0e4e8;
+  border-radius: 7px;
+
+  background: #f5f6f8;
+}
+
+/* =========================================================
+   SHIMMER
+   ========================================================= */
+
+.parent-email-skeleton-wrapper
+.skeleton-block {
+  position: relative;
+
+  overflow: hidden;
+
+  background: #edf0f3;
+}
+
+.parent-email-skeleton-wrapper
+.skeleton-block::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  transform: translateX(-100%);
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    transparent 100%
+  );
+
+  animation: parent-contact-skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes parent-contact-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .parent-email-skeleton-wrapper {
+    overflow-x: auto;
+  }
+
+  .parent-email-skeleton-wrapper
+  .skeleton-table {
+    min-width: 1050px;
+  }
+}
 /* =========================================================
    FULL WIDTH OVERRIDES
    ========================================================= */

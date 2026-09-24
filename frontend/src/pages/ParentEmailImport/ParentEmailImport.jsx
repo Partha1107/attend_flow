@@ -5,6 +5,7 @@ import {
   Upload,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import SkeletonLoading from "../../components/SkeletonLoading";
 
 import {
   getMentorStudents,
@@ -59,10 +60,10 @@ const isValidEmail = (value) =>
   EMAIL_PATTERN.test(
     String(value).trim()
   );
-  
 
-  const isValidPhone = (value) =>
-    !value ||
+
+const isValidPhone = (value) =>
+  !value ||
   PHONE_PATTERN.test(
     String(value).trim()
   );
@@ -73,7 +74,7 @@ const isValidEmail = (value) =>
 // =====================================================
 
 function ParentEmailImport() {
-    const fileInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [students, setStudents] =
     useState([]);
@@ -591,7 +592,7 @@ function ParentEmailImport() {
         "Student Contacts"
       );
 
-    
+
 
       XLSX.writeFile(
         workbook,
@@ -791,7 +792,7 @@ function ParentEmailImport() {
 
             <p>
               {loading
-                ? "Loading students..."
+                ? "loadStudent...."
                 : `${students.length} students in your assigned squad`}
             </p>
 
@@ -829,9 +830,11 @@ function ParentEmailImport() {
             ================================================= */}
 
         {loading ? (
-
-          <div className="parent-email-loading">
-            Loading your squad students...
+          <div className="parent-email-skeleton-wrapper">
+            <SkeletonLoading
+              type="contacts"
+              rows={8}
+            />
           </div>
 
         ) : students.length === 0 ? (
