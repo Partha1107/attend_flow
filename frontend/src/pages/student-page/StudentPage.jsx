@@ -1,24 +1,21 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  CalendarDays,
   ChevronDown,
   Download,
   Mail,
   MailWarning,
   PencilLine,
-
   Send,
-  UserRound,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
+import SkeletonLoading from "../../components/SkeletonLoading";
 
 import {
   getMentorStudents,
   getMentorEmailAlerts,
   getMentorAttendanceRecords,
   getAvailableSquads,
-  updateStudentContact,
 } from "../../api/mentor";
 
 import {
@@ -67,6 +64,36 @@ const getSubjectShortName = (subjectName = "") => {
     .toUpperCase()
     .slice(0, 5);
 };
+
+// ============================================================
+// STUDENT PAGE CACHE
+// Keeps data alive when React Router unmounts/remounts the page.
+// ============================================================
+
+let studentPageCache = {
+  students: null,
+  attendanceRecords: [],
+  jobRole: "",
+  assignedSquad: "",
+  mentorName: "Mentor",
+  mentorEmail: "",
+  emailDate: "",
+};
+
+const hasStudentPageCache = () =>
+  Array.isArray(studentPageCache.students);
+
+const clearStudentPageCache = () => {
+  studentPageCache = {
+    students: null,
+    attendanceRecords: [],
+    jobRole: "",
+    assignedSquad: "",
+    mentorName: "Mentor",
+    mentorEmail: "",
+    emailDate: "",
+  };
+};
 // ============================================================
 // SUBJECT ATTENDANCE STATUS
 //
@@ -75,11 +102,6 @@ const getSubjectShortName = (subjectName = "") => {
 // to judge, so it is reported as "No Data".
 // ============================================================
 
-const getSubjectAttendanceStatus = (conductedSessions, percentage) => {
-  if (Number(conductedSessions) <= 0) return "No Data";
-
-  return getAttendanceStatus(percentage);
-};
 
 const resolveEmails = (student = {}) => ({
   parentEmail:
@@ -412,9 +434,13 @@ function StudentPage() {
   // STUDENT DATA
   // ============================================================
 
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState(
+  () => studentPageCache.students || []
+);
 
+const [loading, setLoading] = useState(
+  () => !hasStudentPageCache()
+);
   // ============================================================
   // ROLE / SQUAD
   // ============================================================
@@ -510,7 +536,9 @@ AESA`
 
   // Existing attendance rows (subjects + growth hour) used
   // only to count present / conducted sessions in the popup.
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState(
+  () => studentPageCache.attendanceRecords || []
+);
 
   const [showAddStudent, setShowAddStudent] = useState(false);
 
@@ -582,327 +610,350 @@ AESA`
   // SAVE STUDENT CONTACT DETAILS
   // ============================================================
 
-  const saveStudentDetails = async (e) => {
-    e.preventDefault();
-
-    if (!detailsStudent) {
-      return;
-    }
-
-    try {
-      setError("");
-
-      const result = await updateStudentContact(
-        detailsStudent.id,
-        {
-          parent_email: parentEmail.trim(),
-          parent_phone: parentPhone.trim(),
-        }
-      );
-
-      if (!result.success) {
-        throw new Error(
-          result.message || "Failed to save student details."
-        );
-      }
-
-      // ----------------------------------------------------------
-      // UPDATE STUDENT IN TABLE
-      // ----------------------------------------------------------
-
-      setStudents((currentStudents) =>
-        currentStudents.map((student) =>
-          student.id === detailsStudent.id
-            ? {
-              ...student,
-              ...result.student,
-            }
-            : student
-        )
-      );
-
-      // ----------------------------------------------------------
-      // UPDATE SELECTED STUDENT
-      // ----------------------------------------------------------
-
-      setSelectedStudent((currentStudent) => {
-        if (!currentStudent) {
-          return currentStudent;
-        }
-
-        if (currentStudent.id !== detailsStudent.id) {
-          return currentStudent;
-        }
-
-        return {
-          ...currentStudent,
-          ...result.student,
-        };
-      });
-
-      // ----------------------------------------------------------
-      // CLOSE MODAL
-      // ----------------------------------------------------------
-
-      setShowDetailsModal(false);
-      setDetailsStudent(null);
-
-      alert("Student details saved successfully.");
-    } catch (error) {
-      console.error(
-        "Save student details error:",
-        error
-      );
-
-      alert(
-        error.message ||
-        "Failed to save student details."
-      );
-    }
-  };
 
   // ============================================================
   // FETCH STUDENTS
   // ============================================================
 
-  const fetchStudents = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      /*
-       * IMPORTANT:
-       *
-       * The backend decides which students this user
-       * is allowed to see.
-       *
-       * Mentor:
-       *   -> only assigned squad
-       *
-       * Campus Manager:
-       *   -> all students
-       */
-
-      const result = await getMentorStudents();
-
-      let alertLookup = new Map();
+  const fetchStudents = useCallback(
+    async ({ silent = false } = {}) => {
       try {
-        const alertResult = await getMentorEmailAlerts();
-        const alertStudents = alertResult?.students || [];
-        alertLookup = new Map(
-          alertStudents.map((item) => [String(item.id), item])
-        );
-        if (alertResult?.mentorName) setMentorName(alertResult.mentorName);
-        if (alertResult?.mentorEmail) setMentorEmail(alertResult.mentorEmail);
-        if (alertResult?.attendanceDate) setEmailDate(alertResult.attendanceDate);
-      } catch (alertError) {
-        console.warn("Email alert metadata unavailable:", alertError);
-      }
+        // ----------------------------------------------------------
+        // Only show the skeleton when this is NOT a silent refresh.
+        //
+        // Navigation back to Students:
+        //   silent = true
+        //   -> keep existing students visible
+        //
+        // First load / import refresh:
+        //   silent = false
+        //   -> show skeleton
+        // ----------------------------------------------------------
 
-      // ----------------------------------------------------------
-      // ATTENDANCE RECORDS
-      //
-      // Existing attendance rows for the students this user can
-      // see. Used ONLY by the Student Profile popup to count
-      // present / conducted sessions across all subjects.
-      //
-      // This does not change import, database or email logic.
-      // ----------------------------------------------------------
-
-      try {
-        const attendanceResult = await getMentorAttendanceRecords();
-
-        setAttendanceRecords(attendanceResult?.records || []);
-      } catch (attendanceError) {
-        console.warn("Attendance records unavailable:", attendanceError);
-
-        setAttendanceRecords([]);
-      }
-
-      // ----------------------------------------------------------
-      // FORMAT STUDENTS
-      // ----------------------------------------------------------
-
-      const fetchedStudents = (result.students || []).map(
-        (student) => {
-          const attendanceValue =
-            student.attendance ??
-            calculateOverallAttendance(student);
-
-          const alertMatch = alertLookup.get(String(student.id));
-          const emails = resolveEmails({
-            ...student,
-            parent_email:
-              student.parent_email || alertMatch?.parentEmail || "",
-            email: student.email || alertMatch?.email || "",
-          });
-          const initialCopy = getInitialEmailCopy({
-            ...student,
-            attendance: Number(attendanceValue) || 0,
-          });
-
-          return {
-            ...student,
-
-            attendance:
-              Number(attendanceValue) || 0,
-            parent_email: emails.parentEmail,
-            parentEmail: emails.parentEmail,
-            email: emails.studentEmail,
-            studentEmail: emails.studentEmail,
-            emailSubject:
-              student.emailSubject || alertMatch?.subject || initialCopy.subject,
-            emailMessage:
-              student.emailMessage || alertMatch?.message || initialCopy.message,
-          };
+        if (!silent) {
+          setLoading(true);
         }
-      );
 
-      // ----------------------------------------------------------
-      // DEBUG
-      // ----------------------------------------------------------
+        setError("");
 
-
-      // ----------------------------------------------------------
-      // ROLE
-      // ----------------------------------------------------------
-
-      const returnedJobRole =
-        result.jobRole || "mentor";
-
-      setJobRole(returnedJobRole);
-
-      // ----------------------------------------------------------
-      // SQUAD
-      // ----------------------------------------------------------
-
-      const returnedSquad =
-        result.squad || "";
-
-      setAssignedSquad(returnedSquad);
-
-      if (returnedJobRole === "mentor") {
         /*
-         * Mentor squad is controlled by backend.
+         * IMPORTANT:
          *
-         * The mentor cannot switch squads.
-         */
-        setSquad(returnedSquad);
-      } else {
-        /*
+         * The backend decides which students this user
+         * is allowed to see.
+         *
+         * Mentor:
+         *   -> only assigned squad
+         *
          * Campus Manager:
-         *
-         * Empty squad means all squads.
+         *   -> all students
          */
-        setSquad("");
-      }
 
-      // ----------------------------------------------------------
-      // STUDENTS
-      // ----------------------------------------------------------
+        const result = await getMentorStudents();
 
-      setStudents(fetchedStudents);
+        // ----------------------------------------------------------
+        // EMAIL ALERT DATA
+        // ----------------------------------------------------------
 
-      // ----------------------------------------------------------
-      // OPEN STUDENT FROM URL
-      // ----------------------------------------------------------
+        let alertLookup = new Map();
 
-      const studentId =
-        searchParams.get("student");
+        try {
+          const alertResult = await getMentorEmailAlerts();
 
-      if (studentId) {
-        const matchingStudent =
-          fetchedStudents.find(
-            (student) =>
-              String(student.id) ===
-              String(studentId)
+          const alertStudents = alertResult?.students || [];
+
+          alertLookup = new Map(
+            alertStudents.map((item) => [
+              String(item.id),
+              item,
+            ])
           );
 
-        if (matchingStudent) {
-          setSelectedStudent(
-            matchingStudent
-          );
+          if (alertResult?.mentorName) {
+            setMentorName(alertResult.mentorName);
+            studentPageCache.mentorName =
+              alertResult.mentorName;
+          }
 
-          setShowOverallAttendance(true);
-          setShowSubjects(false);
+          if (alertResult?.mentorEmail) {
+            setMentorEmail(alertResult.mentorEmail);
+            studentPageCache.mentorEmail =
+              alertResult.mentorEmail;
+          }
+
+          if (alertResult?.attendanceDate) {
+            setEmailDate(alertResult.attendanceDate);
+            studentPageCache.emailDate =
+              alertResult.attendanceDate;
+          }
+        } catch (alertError) {
+          console.warn(
+            "Email alert metadata unavailable:",
+            alertError
+          );
         }
-      }
-    } catch (error) {
-      console.error(
-        "Failed to fetch students:",
-        error
-      );
 
-      setError(
-        error.message ||
-        "Failed to fetch students."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams]);
+        // ----------------------------------------------------------
+        // ATTENDANCE RECORDS
+        // ----------------------------------------------------------
+
+        try {
+          const attendanceResult =
+            await getMentorAttendanceRecords();
+
+          const records =
+            attendanceResult?.records || [];
+
+          setAttendanceRecords(records);
+
+          // Cache attendance records as well
+          studentPageCache.attendanceRecords = records;
+        } catch (attendanceError) {
+          console.warn(
+            "Attendance records unavailable:",
+            attendanceError
+          );
+
+          // Don't destroy already cached attendance data
+          if (!studentPageCache.attendanceRecords.length) {
+            setAttendanceRecords([]);
+          }
+        }
+
+        // ----------------------------------------------------------
+        // FORMAT STUDENTS
+        // ----------------------------------------------------------
+
+        const fetchedStudents =
+          (result.students || []).map((student) => {
+            const attendanceValue =
+              student.attendance ??
+              calculateOverallAttendance(student);
+
+            const alertMatch =
+              alertLookup.get(String(student.id));
+
+            const emails = resolveEmails({
+              ...student,
+
+              parent_email:
+                student.parent_email ||
+                alertMatch?.parentEmail ||
+                "",
+
+              email:
+                student.email ||
+                alertMatch?.email ||
+                "",
+            });
+
+            const initialCopy =
+              getInitialEmailCopy({
+                ...student,
+                attendance:
+                  Number(attendanceValue) || 0,
+              });
+
+            return {
+              ...student,
+
+              attendance:
+                Number(attendanceValue) || 0,
+
+              parent_email:
+                emails.parentEmail,
+
+              parentEmail:
+                emails.parentEmail,
+
+              email:
+                emails.studentEmail,
+
+              studentEmail:
+                emails.studentEmail,
+
+              emailSubject:
+                student.emailSubject ||
+                alertMatch?.subject ||
+                initialCopy.subject,
+
+              emailMessage:
+                student.emailMessage ||
+                alertMatch?.message ||
+                initialCopy.message,
+            };
+          });
+
+        // ----------------------------------------------------------
+        // ROLE
+        // ----------------------------------------------------------
+
+        const returnedJobRole =
+          result.jobRole || "mentor";
+
+        setJobRole(returnedJobRole);
+
+        studentPageCache.jobRole =
+          returnedJobRole;
+
+        // ----------------------------------------------------------
+        // SQUAD
+        // ----------------------------------------------------------
+
+        const returnedSquad =
+          result.squad || "";
+
+        setAssignedSquad(returnedSquad);
+
+        studentPageCache.assignedSquad =
+          returnedSquad;
+
+        if (returnedJobRole === "mentor") {
+          setSquad(returnedSquad);
+        } else {
+          setSquad("");
+        }
+
+        // ----------------------------------------------------------
+        // STUDENTS
+        // ----------------------------------------------------------
+
+        setStudents(fetchedStudents);
+
+        // IMPORTANT:
+        // Store the latest students in memory.
+        studentPageCache.students =
+          fetchedStudents;
+
+        // ----------------------------------------------------------
+        // OPEN STUDENT FROM URL
+        // ----------------------------------------------------------
+
+        const studentId =
+          searchParams.get("student");
+
+        if (studentId) {
+          const matchingStudent =
+            fetchedStudents.find(
+              (student) =>
+                String(student.id) ===
+                String(studentId)
+            );
+
+          if (matchingStudent) {
+            setSelectedStudent(
+              matchingStudent
+            );
+
+            setShowOverallAttendance(true);
+            setShowSubjects(false);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Failed to fetch students:",
+          error
+        );
+
+        setError(
+          error.message ||
+          "Failed to fetch students."
+        );
+
+        // Only show the error loading state
+        // when we don't already have cached data.
+        if (!studentPageCache.students) {
+          setStudents([]);
+        }
+      } finally {
+        // Silent refresh must NOT cause a skeleton.
+        setLoading(false);
+      }
+    },
+    [searchParams]
+  );
 
   // ============================================================
   // INITIAL LOAD + IMPORT REFRESH
   // ============================================================
 
   useEffect(() => {
-    const shouldRefreshStudents =
-      sessionStorage.getItem(
-        "refresh-students"
-      );
+  const shouldRefreshStudents =
+    sessionStorage.getItem(
+      "refresh-students"
+    );
 
-    if (shouldRefreshStudents) {
-      sessionStorage.removeItem(
-        "refresh-students"
-      );
-    }
+  if (shouldRefreshStudents) {
+    sessionStorage.removeItem(
+      "refresh-students"
+    );
 
-    const timer =
-      window.setTimeout(() => {
-        void fetchStudents();
-      }, 0);
-
+    // Import/navigation explicitly requested
+    // a refresh, so show the skeleton.
+    void fetchStudents({
+      silent: false,
+    });
+  } else {
     // ----------------------------------------------------------
-    // ATTENDANCE IMPORT COMPLETED
-    // ----------------------------------------------------------
-
-    const handleImportCompleted = () => {
-      void fetchStudents();
-    };
-
-    // ----------------------------------------------------------
-    // LISTEN FOR IMPORT EVENTS
+    // If data already exists in memory:
+    //
+    // Students → Dashboard → Students
+    //
+    // Keep the current data visible while refreshing in
+    // the background.
     // ----------------------------------------------------------
 
-    window.addEventListener(
+    const hasCache =
+      hasStudentPageCache();
+
+    void fetchStudents({
+      silent: hasCache,
+    });
+  }
+
+  // ----------------------------------------------------------
+  // ATTENDANCE IMPORT COMPLETED
+  // ----------------------------------------------------------
+
+  const handleImportCompleted = () => {
+    // Import changed the data, so intentionally
+    // show the skeleton again.
+    void fetchStudents({
+      silent: false,
+    });
+  };
+
+  // ----------------------------------------------------------
+  // LISTEN FOR IMPORT EVENTS
+  // ----------------------------------------------------------
+
+  window.addEventListener(
+    "attendanceImportCompleted",
+    handleImportCompleted
+  );
+
+  window.addEventListener(
+    "parentEmailImportCompleted",
+    handleImportCompleted
+  );
+
+  // ----------------------------------------------------------
+  // CLEANUP
+  // ----------------------------------------------------------
+
+  return () => {
+    window.removeEventListener(
       "attendanceImportCompleted",
       handleImportCompleted
     );
 
-    window.addEventListener(
+    window.removeEventListener(
       "parentEmailImportCompleted",
       handleImportCompleted
     );
+  };
+}, [fetchStudents]);
 
-    // ----------------------------------------------------------
-    // CLEANUP
-    // ----------------------------------------------------------
-
-    return () => {
-      window.clearTimeout(timer);
-
-      window.removeEventListener(
-        "attendanceImportCompleted",
-        handleImportCompleted
-      );
-
-      window.removeEventListener(
-        "parentEmailImportCompleted",
-        handleImportCompleted
-      );
-    };
-  }, [fetchStudents]);
 
   // ============================================================
   // LOAD AVAILABLE SQUADS
@@ -1022,8 +1073,6 @@ AESA`
 
     });
 
-  const studentsMatchingCurrentAttendanceFilter =
-    filteredStudents;
 
 
 
@@ -1300,115 +1349,47 @@ AESA`
 
 
 
-const handleDownloadBelow75 = () => {
-  const studentsToDownload =
-    baseFilteredStudents.filter(
-      (student) =>
-        Number(student.attendance) < 75
-    );
-
-  if (studentsToDownload.length === 0) {
-    alert("No students below 75% to download.");
-    return;
-  }
-
-  const worksheetData =
-    studentsToDownload.map(
-      (student) =>
-        mapStudentDownloadRow(
-          student,
-          attendanceRecords,
-          exportSubjects
-        )
-    );
-
-  downloadExcel(
-    worksheetData,
-    "Below 75",
-    buildFilename(
-      "Below_75_Percent_Attendance"
-    )
-  );
-};
-
-const handleDownloadAbove75 = () => {
-  const studentsToDownload =
-    baseFilteredStudents.filter(
-      (student) =>
-        Number(student.attendance) >= 75
-    );
-
-  if (studentsToDownload.length === 0) {
-    alert(
-      "No students at or above 75% to download."
-    );
-    return;
-  }
-
-  const worksheetData =
-    studentsToDownload.map(
-      (student) =>
-        mapStudentDownloadRow(
-          student,
-          attendanceRecords,
-          exportSubjects
-        )
-    );
-
-  downloadExcel(
-    worksheetData,
-    "75 and Above",
-    buildFilename(
-      "75_Percent_And_Above_Attendance"
-    )
-  );
-};
-
-// ===========================================================
-// DYNAMIC DOWNLOAD HELPER
-// ===========================================================
-
-const handleDynamicDownload = () => {
-  if (attendanceFilter === "all") {
-    handleDownloadStudents();
-    return;
-  }
-
-  if (attendanceFilter === "below75") {
-    handleDownloadBelow75();
-    return;
-  }
-
-  if (attendanceFilter === "above75") {
-    handleDownloadAbove75();
-    return;
-  }
-
-  if (attendanceFilter === "custom") {
-    const threshold =
-      Number(customDownloadThreshold);
-
-    if (
-      customDownloadThreshold === "" ||
-      Number.isNaN(threshold) ||
-      threshold < 0 ||
-      threshold > 100
-    ) {
-      alert(
-        "Please enter a custom attendance percentage between 0 and 100."
-      );
-      return;
-    }
-
+  const handleDownloadBelow75 = () => {
     const studentsToDownload =
       baseFilteredStudents.filter(
         (student) =>
-          Number(student.attendance) < threshold
+          Number(student.attendance) < 75
+      );
+
+    if (studentsToDownload.length === 0) {
+      alert("No students below 75% to download.");
+      return;
+    }
+
+    const worksheetData =
+      studentsToDownload.map(
+        (student) =>
+          mapStudentDownloadRow(
+            student,
+            attendanceRecords,
+            exportSubjects
+          )
+      );
+
+    downloadExcel(
+      worksheetData,
+      "Below 75",
+      buildFilename(
+        "Below_75_Percent_Attendance"
+      )
+    );
+  };
+
+  const handleDownloadAbove75 = () => {
+    const studentsToDownload =
+      baseFilteredStudents.filter(
+        (student) =>
+          Number(student.attendance) >= 75
       );
 
     if (studentsToDownload.length === 0) {
       alert(
-        `No students below ${threshold}%.`
+        "No students at or above 75% to download."
       );
       return;
     }
@@ -1425,13 +1406,81 @@ const handleDynamicDownload = () => {
 
     downloadExcel(
       worksheetData,
-      `Below ${threshold}%`,
+      "75 and Above",
       buildFilename(
-        `Below_${threshold}_Percent_Attendance`
+        "75_Percent_And_Above_Attendance"
       )
     );
-  }
-};
+  };
+
+  // ===========================================================
+  // DYNAMIC DOWNLOAD HELPER
+  // ===========================================================
+
+  const handleDynamicDownload = () => {
+    if (attendanceFilter === "all") {
+      handleDownloadStudents();
+      return;
+    }
+
+    if (attendanceFilter === "below75") {
+      handleDownloadBelow75();
+      return;
+    }
+
+    if (attendanceFilter === "above75") {
+      handleDownloadAbove75();
+      return;
+    }
+
+    if (attendanceFilter === "custom") {
+      const threshold =
+        Number(customDownloadThreshold);
+
+      if (
+        customDownloadThreshold === "" ||
+        Number.isNaN(threshold) ||
+        threshold < 0 ||
+        threshold > 100
+      ) {
+        alert(
+          "Please enter a custom attendance percentage between 0 and 100."
+        );
+        return;
+      }
+
+      const studentsToDownload =
+        baseFilteredStudents.filter(
+          (student) =>
+            Number(student.attendance) < threshold
+        );
+
+      if (studentsToDownload.length === 0) {
+        alert(
+          `No students below ${threshold}%.`
+        );
+        return;
+      }
+
+      const worksheetData =
+        studentsToDownload.map(
+          (student) =>
+            mapStudentDownloadRow(
+              student,
+              attendanceRecords,
+              exportSubjects
+            )
+        );
+
+      downloadExcel(
+        worksheetData,
+        `Below ${threshold}%`,
+        buildFilename(
+          `Below_${threshold}_Percent_Attendance`
+        )
+      );
+    }
+  };
 
 
   // ===========================================================
@@ -1535,7 +1584,7 @@ const handleDynamicDownload = () => {
             DATE + USER META + ACTIONS
         ---------------------------------------------------- */}
 
-      <div className="student-header-actions">
+        <div className="student-header-actions">
 
           <div className="student-header-meta">
 
@@ -1855,13 +1904,7 @@ const handleDynamicDownload = () => {
 
         {loading ? (
 
-          <div className="empty-state">
-
-            <h3>
-              Loading students...
-            </h3>
-
-          </div>
+          <SkeletonLoading type="students" rows={7} />
 
         ) : filteredStudents.length > 0 ? (
           <>
@@ -1887,7 +1930,6 @@ const handleDynamicDownload = () => {
                     const emails = resolveEmails(student);
                     const attendance = Number(student.attendance) || 0;
                     const isSending = sendingIds.includes(student.id);
-                    const status = getAttendanceStatus(attendance);
 
                     return (
                       <tr

@@ -1,0 +1,321 @@
+/* ============================================================
+   BASE
+   ============================================================ */
+
+.skeleton-table {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #e3e7ed;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.skeleton-table-header,
+.skeleton-row {
+    display: grid;
+    align-items: center;
+}
+
+.skeleton-table-header {
+    min-height: 42px;
+    padding: 0 16px;
+    background: #f8f9fb;
+    border-bottom: 1px solid #e3e7ed;
+}
+
+.skeleton-row {
+    min-height: 70px;
+    padding: 0 16px;
+    border-bottom: 1px solid #edf0f3;
+}
+
+.skeleton-row:last-child {
+    border-bottom: none;
+}
+
+/* ============================================================
+   ANIMATION
+   ============================================================ */
+
+.skeleton-block {
+    position: relative;
+    overflow: hidden;
+
+    height: 14px;
+
+    border-radius: 5px;
+
+    background: #edf0f3;
+}
+
+.skeleton-block::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    transform: translateX(-100%);
+
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.75),
+            transparent);
+
+    animation: skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes skeleton-shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ============================================================
+   STUDENTS PAGE
+   ============================================================ */
+
+.students-header,
+.students-skeleton .skeleton-row {
+    grid-template-columns:
+        1.35fr 1.65fr 0.55fr 0.7fr 1.2fr 1.9fr;
+
+    gap: 18px;
+}
+
+/* Header */
+
+.students-header .header-student {
+    width: 55px;
+}
+
+.students-header .header-email {
+    width: 90px;
+}
+
+.students-header .header-squad {
+    width: 40px;
+}
+
+.students-header .header-attendance {
+    width: 75px;
+}
+
+.students-header .header-parent {
+    width: 80px;
+}
+
+.students-header .header-actions {
+    width: 55px;
+}
+
+/* Student */
+
+.student-skeleton-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.student-avatar {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 8px;
+}
+
+.student-name-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 100%;
+}
+
+.student-name {
+    width: 75%;
+}
+
+.student-name-small {
+    width: 45%;
+    height: 10px;
+}
+
+.student-email-value {
+    width: 90%;
+}
+
+.student-squad-value {
+    width: 42px;
+}
+
+.student-attendance-value {
+    width: 65px;
+    height: 28px;
+    border-radius: 7px;
+}
+
+.student-parent-value {
+    width: 85%;
+}
+
+.student-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.action-button {
+    width: 55px;
+    height: 36px;
+    border-radius: 7px;
+}
+
+.action-button-wide {
+    width: 75px;
+}
+
+.action-send {
+    width: 85px;
+}
+
+/* ============================================================
+   PARENT CONTACTS
+   ============================================================ */
+
+.contacts-header,
+.contacts-skeleton .skeleton-row {
+    grid-template-columns:
+        1.15fr 1.45fr 1fr 1.4fr 1fr;
+
+    gap: 24px;
+}
+
+/* Header */
+
+.contacts-header .skeleton-block:nth-child(1) {
+    width: 90px;
+}
+
+.contacts-header .skeleton-block:nth-child(2) {
+    width: 100px;
+}
+
+.contacts-header .skeleton-block:nth-child(3) {
+    width: 50px;
+}
+
+.contacts-header .skeleton-block:nth-child(4) {
+    width: 90px;
+}
+
+.contacts-header .skeleton-block:nth-child(5) {
+    width: 90px;
+}
+
+/* Contact rows */
+
+.contact-name {
+    width: 65%;
+}
+
+.contact-email {
+    width: 85%;
+}
+
+.contact-input {
+    width: 95%;
+    height: 34px;
+    border: 1px solid #e0e4e8;
+    border-radius: 7px;
+    background: #f5f6f8;
+}
+
+.contact-parent-email {
+    width: 95%;
+}
+
+/* ============================================================
+   DASHBOARD ATTENTION
+   ============================================================ */
+
+.attention-header,
+.attention-skeleton .skeleton-row {
+    grid-template-columns:
+        1.4fr 0.65fr 1.15fr 0.8fr 1fr;
+
+    gap: 24px;
+}
+
+.attention-header .skeleton-block:nth-child(1) {
+    width: 55px;
+}
+
+.attention-header .skeleton-block:nth-child(2) {
+    width: 40px;
+}
+
+.attention-header .skeleton-block:nth-child(3) {
+    width: 110px;
+}
+
+.attention-header .skeleton-block:nth-child(4) {
+    width: 45px;
+}
+
+.attention-header .skeleton-block:nth-child(5) {
+    width: 80px;
+}
+
+.attention-student {
+    width: 70%;
+}
+
+.attention-squad {
+    width: 45px;
+}
+
+.attention-attendance {
+    width: 75px;
+    height: 28px;
+    border-radius: 7px;
+}
+
+.attention-status {
+    width: 80px;
+    height: 28px;
+    border-radius: 14px;
+}
+
+.attention-date {
+    width: 80%;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1200px) {
+
+    .students-header,
+    .students-skeleton .skeleton-row {
+        grid-template-columns:
+            1.2fr 1.4fr 0.5fr 0.7fr 1fr 1.5fr;
+
+        gap: 12px;
+    }
+
+    .student-actions {
+        gap: 4px;
+    }
+
+    .action-button {
+        width: 45px;
+    }
+
+    .action-button-wide {
+        width: 60px;
+    }
+
+    .action-send {
+        width: 65px;
+    }
+}
