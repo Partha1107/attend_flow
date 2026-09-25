@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   Eye,
@@ -6,6 +6,7 @@ import {
   MailWarning,
   MoreHorizontal,
   Pencil,
+  PencilLine,
   Search,
   Send,
   X,
@@ -538,13 +539,16 @@ AESA`
     const value = search.trim().toLowerCase();
 
     return students.filter((student) => {
+      const emails = resolveEmails(student);
       const matchesSearch =
         !value ||
-        student.name?.trim().toLowerCase().startsWith(value);
+        student.name?.toLowerCase().includes(value) ||
+        emails.studentEmail?.toLowerCase().includes(value) ||
+        emails.parentEmail?.toLowerCase().includes(value) ||
+        String(student.id).toLowerCase().includes(value);
 
       const matchesSquad =
-        !squad ||
-        String(student.squad).trim() === String(squad).trim();
+        !squad || String(student.squad).trim() === String(squad).trim();
 
       return matchesSearch && matchesSquad;
     });
@@ -566,6 +570,14 @@ AESA`
     [baseFilteredStudents, rangeLo, rangeHi]
   );
 
+  const summary = useMemo(() => {
+    const total = baseFilteredStudents.length;
+    const below = baseFilteredStudents.filter(
+      (student) => Number(student.attendance) < 75
+    ).length;
+
+    return { total, below, above: total - below };
+  }, [baseFilteredStudents]);
 
   const below75Students = useMemo(
     () => students.filter((student) => Number(student.attendance) < 75),
@@ -917,7 +929,28 @@ AESA`
     resetPage();
   };
 
+  const applyRangePreset = (min, max) => {
+    setAttendanceMin(min);
+    setAttendanceMax(max);
+    setRangeMenuOpen(false);
+    resetPage();
+  };
 
+  const handleRangeInput = (setter) => (event) => {
+    const value = event.target.value;
+
+    if (value === "") {
+      setter("");
+      resetPage();
+      return;
+    }
+
+    const number = Number(value);
+    if (Number.isFinite(number) && number >= 0 && number <= 100) {
+      setter(value);
+      resetPage();
+    }
+  };
 
   const openRowMenu = (event, student) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -948,19 +981,19 @@ AESA`
 
   const bulkEligibleCount = bulkConfirm
     ? bulkConfirm.list.filter((student) => getRecipients(student).length > 0)
-      .length
+        .length
     : 0;
 
   const previewRecipients = selectedEmail
     ? (() => {
-      const emails = resolveEmails(selectedEmail);
-      const parts = [];
-      if (sendTo !== "parent")
-        parts.push(`Student: ${emails.studentEmail || "missing"}`);
-      if (sendTo !== "student")
-        parts.push(`Parent: ${emails.parentEmail || "missing"}`);
-      return parts;
-    })()
+        const emails = resolveEmails(selectedEmail);
+        const parts = [];
+        if (sendTo !== "parent")
+          parts.push(`Student: ${emails.studentEmail || "missing"}`);
+        if (sendTo !== "student")
+          parts.push(`Parent: ${emails.parentEmail || "missing"}`);
+        return parts;
+      })()
     : [];
 
   /* ---------------- Render ---------------- */
@@ -1022,9 +1055,9 @@ AESA`
           jobRole === "mentor" && assignedSquad
             ? [{ value: assignedSquad, label: `Squad ${assignedSquad}` }]
             : squads.map((availableSquad) => ({
-              value: String(availableSquad),
-              label: `Squad ${availableSquad}`,
-            }))
+                value: String(availableSquad),
+                label: `Squad ${availableSquad}`,
+              }))
         }
         onSquadChange={(value) => {
           setSquad(value);
@@ -1476,12 +1509,13 @@ AESA`
                               <td>{conducted}</td>
                               <td>
                                 <span
-                                  className={`sp-subject-pct ${percentage >= 75
+                                  className={`sp-subject-pct ${
+                                    percentage >= 75
                                       ? "good"
                                       : percentage >= 65
                                         ? "warning"
                                         : "critical"
-                                    }`}
+                                  }`}
                                 >
                                   {percentage.toFixed(2)}%
                                 </span>
