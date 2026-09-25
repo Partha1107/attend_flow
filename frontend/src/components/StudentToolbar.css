@@ -1,0 +1,1309 @@
+/* =========================================================
+   STUDENT TOOLBAR
+   ========================================================= */
+
+.student-toolbar {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  margin: 0 0 24px;
+  padding: 26px 30px;
+
+  border: 1px solid #ececf1;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.student-toolbar .search-box {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: 56px;
+  min-height: 56px;
+
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+
+  background: transparent;
+  border: 0;
+}
+
+
+.student-toolbar .search-box input {
+  display: block;
+
+  width: 100%;
+  height: 56px;
+  min-height: 56px;
+
+  box-sizing: border-box;
+
+  margin: 0;
+  padding: 0 18px 0 48px;
+
+  border: 1px solid #e1e4ea;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #202534;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+
+  line-height: normal;
+
+  outline: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+
+/* Search placeholder */
+
+.student-toolbar .search-box input::placeholder {
+  color: #9ca3b4;
+  opacity: 1;
+}
+
+
+/* Search hover */
+
+.student-toolbar .search-box input:hover:not(:focus) {
+  border-color: #cfd4dd;
+}
+
+
+/* Search focus */
+
+.student-toolbar .search-box input:focus {
+  border-color: #aeb5c1;
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* Keyboard focus */
+
+.student-toolbar .search-box input:focus-visible {
+  border-color: #9aa3b2;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: 2px;
+
+  box-shadow: none;
+}
+
+
+/* Search icon */
+
+.student-toolbar .search-box .search-icon {
+  position: absolute;
+
+  left: 18px;
+  top: 50%;
+
+  z-index: 2;
+
+  width: 17px;
+  height: 17px;
+
+  margin: 0;
+  padding: 0;
+
+  color: #8f96a6;
+
+  pointer-events: none;
+
+  transform: translateY(-50%);
+}
+
+
+/* Remove browser search decorations */
+
+.student-toolbar .search-box input::-webkit-search-decoration,
+.student-toolbar .search-box input::-webkit-search-cancel-button,
+.student-toolbar .search-box input::-webkit-search-results-button,
+.student-toolbar .search-box input::-webkit-search-results-decoration {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+
+/* =========================================================
+   FILTER ROW
+   ========================================================= */
+
+.filter-row {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 24px;
+}
+
+
+.filter-field {
+  position: relative;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+}
+
+
+/* Make open dropdown appear above nearby fields */
+
+.filter-field.dropdown-open {
+  z-index: 100;
+}
+
+
+/* =========================================================
+   FILTER LABEL
+   ========================================================= */
+
+.filter-label {
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  color: #555b6f;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.2;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* =========================================================
+   CUSTOM SELECT
+   Squad + Send To
+   ========================================================= */
+
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+
+/* Trigger */
+
+.custom-select-trigger {
+  position: relative;
+  z-index: 81;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px 0 16px;
+
+  border: 1px solid #e1e4eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #4b5060;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  line-height: 1;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+
+/* Trigger hover */
+
+.custom-select-trigger:hover:not(:disabled):not(:focus) {
+  border-color: #cfd4de;
+}
+
+
+/* Trigger open */
+
+.custom-select-trigger.is-open {
+  border-color: #cbd2dc;
+}
+
+
+/* Trigger focus */
+
+.custom-select-trigger:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* Keyboard focus */
+
+.custom-select-trigger:focus-visible {
+  border-color: #9aa3b2;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: 2px;
+
+  box-shadow: none;
+}
+
+
+/* Disabled */
+
+.custom-select-trigger:disabled {
+  background: #f8fafc;
+  color: #9aa0ad;
+  cursor: not-allowed;
+}
+
+
+/* Chevron */
+
+.custom-select-trigger svg {
+  flex-shrink: 0;
+
+  color: #9aa3b2;
+
+  transition: transform 0.18s ease;
+}
+
+
+.custom-select-trigger .chevron-rotated {
+  transform: rotate(180deg);
+}
+
+
+/* =========================================================
+   CUSTOM SELECT DROPDOWN
+   ========================================================= */
+
+.custom-select-menu {
+  position: absolute;
+
+  z-index: 200;
+
+  top: calc(100% + 7px);
+  left: 0;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 8px;
+
+  border: 1px solid #e2e5eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.10),
+    0 3px 8px rgba(15, 23, 42, 0.04);
+}
+
+
+/* Dropdown options */
+
+.custom-select-menu > button {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 42px;
+
+  box-sizing: border-box;
+
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #353945;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  line-height: 1;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+
+/* Dropdown hover */
+
+.custom-select-menu > button:hover {
+  background: #f5f7fa;
+}
+
+
+/* Dropdown focus */
+
+.custom-select-menu > button:focus {
+  outline: none;
+}
+
+
+/* Dropdown keyboard focus */
+
+.custom-select-menu > button:focus-visible {
+  background: #f1f5f9;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: -2px;
+}
+
+
+/* Selected option */
+
+.custom-select-menu > button.is-selected {
+  background: #f8fafc;
+
+  color: #303541;
+
+  font-weight: 600;
+}
+
+
+/* Selected option hover */
+
+.custom-select-menu > button.is-selected:hover {
+  background: #f1f3f6;
+}
+
+
+/* =========================================================
+   ATTENDANCE TRIGGER
+   ========================================================= */
+
+.attendance-trigger {
+  position: relative;
+  z-index: 81;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px 0 16px;
+
+  border: 1px solid #e1e4eb;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #4b5060;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+
+/* Attendance hover */
+
+.attendance-trigger:hover:not(:focus) {
+  border-color: #cfd4de;
+}
+
+
+/* Attendance open */
+
+.attendance-trigger.is-open {
+  border-color: #cbd2dc;
+}
+
+
+/* Attendance focus */
+
+.attendance-trigger:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* Attendance keyboard focus */
+
+.attendance-trigger:focus-visible {
+  border-color: #9aa3b2;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: 2px;
+
+  box-shadow: none;
+}
+
+
+/* Invalid */
+
+.attendance-trigger.is-invalid {
+  border-color: #dc2626;
+}
+
+
+/* Attendance chevron */
+
+.attendance-trigger svg {
+  flex-shrink: 0;
+
+  color: #9aa0ad;
+
+  transition: transform 0.18s ease;
+}
+
+
+.chevron-rotated {
+  transform: rotate(180deg);
+}
+
+
+/* =========================================================
+   ATTENDANCE DROPDOWN
+   ========================================================= */
+
+.attendance-menu {
+  position: absolute;
+
+  z-index: 200;
+
+  top: calc(100% + 7px);
+  left: 0;
+
+  width: 100%;
+  min-width: 250px;
+
+  box-sizing: border-box;
+
+  padding: 8px;
+
+  border: 1px solid #e2e5eb;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.10),
+    0 3px 8px rgba(15, 23, 42, 0.04);
+}
+
+
+/* Attendance options */
+
+.attendance-menu > button {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 42px;
+
+  box-sizing: border-box;
+
+  padding: 0 10px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #353945;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+
+/* Attendance hover */
+
+.attendance-menu > button:hover {
+  background: #f5f7fa;
+}
+
+
+/* Attendance focus */
+
+.attendance-menu > button:focus {
+  outline: none;
+}
+
+
+/* Attendance keyboard focus */
+
+.attendance-menu > button:focus-visible {
+  background: #f1f5f9;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: -2px;
+}
+
+
+/* Attendance selected option */
+
+.attendance-menu > button.is-selected {
+  background: #f8fafc;
+
+  color: #303541;
+
+  font-weight: 600;
+}
+
+
+/* Attendance selected hover */
+
+.attendance-menu > button.is-selected:hover {
+  background: #f1f3f6;
+}
+
+
+/* =========================================================
+   CUSTOM ATTENDANCE RANGE
+   ========================================================= */
+
+.custom-range {
+  margin-top: 4px;
+
+  padding: 10px 11px 8px;
+
+  border-top: 1px solid #ececf1;
+}
+
+
+.custom-range > span {
+  display: block;
+
+  margin: 0 0 8px;
+
+  color: #33333d;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  line-height: 1.2;
+}
+
+
+.custom-range-inputs {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+.custom-range-inputs input {
+  display: block;
+
+  width: 64px;
+  height: 34px;
+
+  box-sizing: border-box;
+
+  padding: 0 8px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #33333d;
+
+  text-align: center;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+/* Number input focus */
+
+.custom-range-inputs input:focus {
+  border-color: #9aa3b2;
+
+  outline: none;
+
+  box-shadow: none;
+}
+
+
+.custom-range-inputs input:focus-visible {
+  border-color: #9aa3b2;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: 1px;
+}
+
+
+/* "to" and "%" */
+
+.custom-range-inputs em {
+  color: #8a8aa0;
+
+  font-size: 12px;
+
+  font-style: normal;
+}
+
+
+/* Error */
+
+.custom-range-error {
+  margin: 8px 0 0;
+
+  color: #dc2626;
+
+  font-size: 11px;
+
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.action-row {
+  display: flex;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 14px;
+}
+
+
+.toolbar-btn {
+  min-height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  box-sizing: border-box;
+
+  padding: 0 22px;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease,
+    transform 0.1s ease;
+}
+
+
+/* Disabled */
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+}
+
+
+/* Button focus */
+
+.toolbar-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* Keyboard focus */
+
+.toolbar-btn:focus-visible {
+  outline: 2px solid #b8bec9;
+  outline-offset: 2px;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   SEND SELECTED
+   ========================================================= */
+
+.btn-send-selected {
+  background: #f2544b;
+
+  border-color: #f2544b;
+
+  color: #ffffff;
+}
+
+
+.btn-send-selected:hover:not(:disabled) {
+  background: #e14a41;
+
+  border-color: #e14a41;
+}
+
+
+.btn-send-selected:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   SEND BELOW 75%
+   ========================================================= */
+
+.btn-send-below {
+  background: #fdeeea;
+
+  border-color: #fdeeea;
+
+  color: #e05a2b;
+}
+
+
+.btn-send-below:hover:not(:disabled) {
+  background: #fce2da;
+
+  border-color: #f8cfc2;
+}
+
+
+.btn-send-below:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   OUTLINE BUTTONS
+   ========================================================= */
+
+.btn-outline {
+  background: #ffffff;
+
+  border-color: #e4e4e9;
+
+  color: #4a4a5a;
+}
+
+
+.btn-outline:hover:not(:disabled) {
+  background: #f8fafc;
+
+  border-color: #c9c9d4;
+}
+
+
+.btn-outline:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.toolbar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+
+.students-count {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 9px;
+
+  color: #8a8aa0;
+
+  font-size: 14px;
+
+  line-height: 1.4;
+}
+
+
+.students-count svg {
+  flex-shrink: 0;
+
+  color: #9a9aa5;
+}
+
+
+/* =========================================================
+   CLEAR FILTERS
+   ========================================================= */
+
+.clear-filters-btn {
+  display: inline-block;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #8a8aa0;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+
+  line-height: 1.4;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+
+
+.clear-filters-btn:hover {
+  color: #f2544b;
+
+  text-decoration: underline;
+
+  text-underline-offset: 3px;
+}
+
+
+.clear-filters-btn:focus {
+  outline: none;
+}
+
+
+.clear-filters-btn:focus-visible {
+  color: #1d4ed8;
+
+  outline: 2px solid #b8bec9;
+  outline-offset: 3px;
+
+  border-radius: 4px;
+
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+
+/* =========================================================
+   GENERAL FORM RESET
+   ========================================================= */
+
+.student-toolbar input,
+.student-toolbar select,
+.student-toolbar button {
+  font-family: inherit;
+}
+
+
+/* Prevent browser default button appearance */
+
+.student-toolbar button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .student-toolbar *,
+  .student-toolbar *::before,
+  .student-toolbar *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .student-toolbar {
+    padding: 18px;
+
+    gap: 16px;
+  }
+
+
+  .filter-row {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+
+  .action-row {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+  }
+
+
+  .toolbar-btn {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .student-toolbar {
+    padding: 16px;
+
+    border-radius: 12px;
+  }
+
+
+  .student-toolbar .search-box {
+    height: 50px;
+    min-height: 50px;
+  }
+
+
+  .student-toolbar .search-box input {
+    height: 50px;
+    min-height: 50px;
+
+    padding-left: 44px;
+  }
+
+
+  .student-toolbar .search-box .search-icon {
+    left: 15px;
+  }
+
+
+  .toolbar-btn {
+    min-height: 42px;
+
+    padding: 0 16px;
+  }
+
+
+  .toolbar-footer {
+    align-items: flex-start;
+  }
+
+
+  .custom-select-menu,
+  .attendance-menu {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   FINAL STUDENT TOOLBAR OVERRIDES
+   Prevent global styles from stretching the toolbar
+   ========================================================= */
+
+.student-toolbar {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  align-content: flex-start !important;
+
+  gap: 22px !important;
+
+  margin: 0 0 24px !important;
+  padding: 26px 30px !important;
+
+  box-sizing: border-box !important;
+
+  border: 1px solid #ececf1 !important;
+  border-radius: 16px !important;
+
+  background: #ffffff !important;
+
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04) !important;
+}
+
+
+/* Search wrapper */
+.student-toolbar > .search-box {
+  position: relative !important;
+
+  width: 100% !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+
+  flex: 0 0 56px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  box-sizing: border-box !important;
+}
+
+
+/* Search input */
+.student-toolbar > .search-box > input {
+  width: 100% !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+
+  flex: none !important;
+
+  margin: 0 !important;
+
+  box-sizing: border-box !important;
+}
+
+
+/* Filters */
+.student-toolbar > .filter-row {
+  width: 100% !important;
+
+  display: grid !important;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+  gap: 24px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  flex: none !important;
+}
+
+
+/* Action buttons */
+.student-toolbar > .action-row {
+  width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  gap: 14px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  flex: none !important;
+}
+
+
+/* Footer */
+.student-toolbar > .toolbar-footer {
+  width: 100% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  gap: 12px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  flex: none !important;
+}
+
+
+/* Prevent global rules from adding spacing */
+.student-toolbar > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+
+/* Prevent global form rules from stretching controls */
+.student-toolbar input,
+.student-toolbar select,
+.student-toolbar button {
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   IMPORTANT: REMOVE GLOBAL HEIGHT / FLEX STRETCH
+   ========================================================= */
+
+.student-toolbar,
+.student-toolbar > .search-box,
+.student-toolbar > .filter-row,
+.student-toolbar > .action-row,
+.student-toolbar > .toolbar-footer {
+  align-self: stretch !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .student-toolbar {
+    height: auto !important;
+    min-height: 0 !important;
+    gap: 16px !important;
+  }
+
+  .student-toolbar > .filter-row {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .student-toolbar > .action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .student-toolbar .toolbar-btn {
+    width: 100% !important;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .student-toolbar {
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+
+  .student-toolbar > .search-box,
+  .student-toolbar > .search-box > input {
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+  }
+}
