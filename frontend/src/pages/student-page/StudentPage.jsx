@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   Eye,
@@ -43,29 +43,56 @@ const getAttendanceStatus = (attendance) => {
   return "Critical";
 };
 
-const getSubjectShortName = (subjectName = "") => {
-  const normalized = String(subjectName).trim().toLowerCase();
-  const map = {
-    "computer organisation and architecture": "COA",
-    "computer organization and architecture": "COA",
-    "discrete mathematics": "DM",
-    "environmental sciences": "ES",
-    "innovation and design thinking": "IDT",
-    "introduction to artificial intelligence": "AI",
-    "operating systems": "OS",
-    "ui and ux design for computer science engineering": "UI/UX",
-    "growth hour": "GH",
-  };
+const getSubjectShortName = (subjectOrName = "", maybeSubjectId = "") => {
+  const isObj = typeof subjectOrName === "object" && subjectOrName !== null;
+  const id = String(
+    (isObj ? subjectOrName.subjectId || subjectOrName.id : maybeSubjectId) || ""
+  ).trim();
+  const name = String(
+    (isObj ? subjectOrName.subjectName || subjectOrName.name : subjectOrName) || ""
+  ).trim();
 
-  if (map[normalized]) return map[normalized];
+  // If subject ID / course code is available and distinct, use it directly
+  if (id && id.toLowerCase() !== name.toLowerCase()) {
+    return id.toUpperCase();
+  }
 
-  return normalized
-    .split(/\s+/)
+  // Dynamic abbreviation fallback (without hardcoded subject dictionary)
+  const target = id || name;
+  if (!target) return "";
+
+  const stopWords = new Set([
+    "and",
+    "or",
+    "of",
+    "in",
+    "to",
+    "for",
+    "the",
+    "on",
+    "at",
+    "by",
+    "with",
+  ]);
+
+  const words = target
+    .split(/[\s_-]+/)
     .filter(Boolean)
+    .filter((word) => !stopWords.has(word.toLowerCase()));
+
+  if (words.length === 0) {
+    return target.slice(0, 4).toUpperCase();
+  }
+
+  if (words.length === 1) {
+    return words[0].slice(0, 4).toUpperCase();
+  }
+
+  return words
     .map((word) => word[0])
     .join("")
     .toUpperCase()
-    .slice(0, 5);
+    .slice(0, 6);
 };
 
 const resolveEmails = (student = {}) => ({
@@ -1468,7 +1495,7 @@ AESA`
                             <tr key={subject.subjectId || subject.subjectName}>
                               <td>
                                 <strong>
-                                  {getSubjectShortName(subject.subjectName)}
+                                  {getSubjectShortName(subject)}
                                 </strong>
                                 <span>{subject.subjectName}</span>
                               </td>
