@@ -51,7 +51,6 @@ const saveCommunicationHistory = async (record) => {
       updated_at: now,
     };
 
-    // console.log("Saving communication history:", dbRecord);
 
     const { data, error } = await supabase
       .from("email_automation")
