@@ -51,7 +51,7 @@ const saveCommunicationHistory = async (record) => {
       updated_at: now,
     };
 
-    console.log("Saving communication history:", dbRecord);
+    // console.log("Saving communication history:", dbRecord);
 
     const { data, error } = await supabase
       .from("email_automation")
@@ -68,7 +68,7 @@ const saveCommunicationHistory = async (record) => {
       };
     }
 
-    console.log("Communication history saved successfully:", data);
+    // console.log("Communication history saved successfully:", data);
 
     return {
       saved: true,
@@ -87,11 +87,18 @@ const saveCommunicationHistory = async (record) => {
 
 const sendEmailForStudent = async ({
   student,
+  recipientEmail,
+  recipientName,
   mentorName,
   mentorEmail,
   subject,
   message,
 }) => {
+  // Use passed-in recipient, fallback to parentEmail for backwards compat
+  const toEmail = recipientEmail || student.parentEmail;
+  const toName = recipientName || "parent";
+
+
   const result = await brevo.transactionalEmails.sendTransacEmail({
     sender: {
       email: process.env.BREVO_SENDER_EMAIL,
@@ -99,8 +106,8 @@ const sendEmailForStudent = async ({
     },
     to: [
       {
-        email: student.parentEmail,
-        name: "parent",
+        email: toEmail,
+        name: toName,
       },
     ],
     subject: subject || "Attendance Warning - Low Attendance",
@@ -119,12 +126,13 @@ const sendEmailForStudent = async ({
     `,
   });
 
+
   const sentAt = new Date().toISOString();
   const historyRecord = {
     student_id: student.id || null,
     student_name: student.name,
     student_email: student.email || null,
-    parent_email: student.parentEmail,
+    parent_email: student.parentEmail || null,
     attendance_percentage: student.attendancePercentage,
     subject: subject || "Attendance Warning - Low Attendance",
     message: message || "Please improve your attendance.",
@@ -247,6 +255,7 @@ const sendAttendanceEmail = async (req, res) => {
       subject,
       message,
       sendType = "automatic",
+      sendTo,
     } = req.body;
 
     if (!mentorName || requestedStudentIds.length === 0) {
@@ -327,28 +336,76 @@ const sendAttendanceEmail = async (req, res) => {
 
     const studentsToSend = selectedWithAttendance.map((student) => ({
       ...student,
+      email: student.email || studentEmail,
       parentEmail: student.parent_email || parentEmail,
     }));
-    const invalidParentEmailStudent = studentsToSend.find(
-      (student) => !isValidEmail(student.parentEmail)
-    );
 
-    if (invalidParentEmailStudent) {
-      return res.status(400).json({
-        success: false,
-        message: `A valid parent email is required for ${invalidParentEmailStudent.name}.`,
-      });
+    // Resolve target from sendTo (StudentPage setting: "student" | "parent" | "both")
+    // Falls back to "parent" for legacy/automatic sends
+    const targetSendType =
+      sendTo || (["student", "parent", "both"].includes(sendType) ? sendType : "parent");
+
+    // console.log("[AESA] Preparing recipients:", {
+    //   sendType,
+    //   sendTo,
+    //   targetSendType,
+    //   studentsCount: studentsToSend.length,
+    // });
+
+    // Validate emails based on who we're sending to
+    if (targetSendType === "parent" || targetSendType === "both") {
+      const invalidParent = studentsToSend.find(
+        (student) => !isValidEmail(student.parentEmail)
+      );
+      if (invalidParent) {
+        return res.status(400).json({
+          success: false,
+          message: `A valid parent email is required for ${invalidParent.name}.`,
+        });
+      }
+    }
+
+    if (targetSendType === "student" || targetSendType === "both") {
+      const invalidStudent = studentsToSend.find(
+        (student) => !isValidEmail(student.email)
+      );
+      if (invalidStudent) {
+        return res.status(400).json({
+          success: false,
+          message: `A valid student email is required for ${invalidStudent.name}.`,
+        });
+      }
     }
 
     const sentRecords = [];
     for (const student of studentsToSend) {
-      sentRecords.push(await sendEmailForStudent({
-        student,
-        mentorName,
-        mentorEmail,
-        subject,
-        message,
-      }));
+      const recipients = [];
+
+      if (targetSendType === "parent") {
+        recipients.push({ email: student.parentEmail, name: "parent" });
+      } else if (targetSendType === "student") {
+        recipients.push({ email: student.email, name: student.name });
+      } else if (targetSendType === "both") {
+        if (isValidEmail(student.email)) {
+          recipients.push({ email: student.email, name: student.name });
+        }
+        if (isValidEmail(student.parentEmail)) {
+          recipients.push({ email: student.parentEmail, name: "parent" });
+        }
+      }
+
+      for (const recipient of recipients) {
+        const record = await sendEmailForStudent({
+          student,
+          recipientEmail: recipient.email,
+          recipientName: recipient.name,
+          mentorName,
+          mentorEmail,
+          subject,
+          message,
+        });
+        sentRecords.push(record);
+      }
     }
 
     return res.status(200).json({
