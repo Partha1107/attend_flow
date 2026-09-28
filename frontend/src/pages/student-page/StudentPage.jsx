@@ -704,8 +704,8 @@ AESA`
   const getRecipients = (student) => {
     const emails = resolveEmails(student);
     const recipients = [];
-    if (sendTo !== "parent" && emails.studentEmail) recipients.push("student");
-    if (sendTo !== "student" && emails.parentEmail) recipients.push("parent");
+    if ((sendTo === "student" || sendTo === "both") && emails.studentEmail) recipients.push("student");
+    if ((sendTo === "parent" || sendTo === "both") && emails.parentEmail) recipients.push("parent");
     return recipients;
   };
 
@@ -751,6 +751,12 @@ AESA`
     const result = await response.json();
 
     if (!response.ok || !result.success) {
+      console.error("[AESA] Send failed:", {
+        status: response.status,
+        message: result?.message,
+        ineligibleStudents: result?.ineligibleStudents,
+        result,
+      });
       throw new Error(result.message || "Failed to send email.");
     }
 
@@ -769,7 +775,7 @@ AESA`
       setEmailFeedback(`Email sent to ${who} of ${target.name}.`);
       closeEmailModal();
     } catch (sendError) {
-      setEmailFeedback(sendError.message);
+      setEmailFeedback(`Failed to send email to ${student.name}: ${sendError.message}`);
     } finally {
       setSendingIds((prev) => prev.filter((id) => id !== student.id));
     }
@@ -793,13 +799,23 @@ AESA`
   const handleConfirmBulk = async () => {
     if (!bulkConfirm) return;
 
-    const eligible = bulkConfirm.list.filter(
-      (student) => getRecipients(student).length > 0
-    );
-    const skipped = bulkConfirm.list.length - eligible.length;
+    const eligible = [];
+    const skippedNames = [];
+
+    for (const student of bulkConfirm.list) {
+      if (getRecipients(student).length > 0) {
+        eligible.push(student);
+      } else {
+        skippedNames.push(student.name);
+      }
+    }
 
     if (eligible.length === 0) {
-      setEmailFeedback("None of these students have the required email.");
+      const lines = [
+        `Skipped (missing email) - (${skippedNames.length})`,
+        ...skippedNames.map((name, index) => `${index + 1}. ${name}`),
+      ];
+      setEmailFeedback(lines.join("\n"));
       setBulkConfirm(null);
       return;
     }
@@ -808,24 +824,42 @@ AESA`
     setEmailFeedback("");
 
     let sent = 0;
-    let failed = 0;
+    const failedList = [];
 
     for (const student of eligible) {
       try {
-        await sendOne(student, "automatic");
+        const sendType = bulkConfirm.kind === "selected" ? "individual" : "automatic";
+        await sendOne(student, sendType);
         sent += 1;
-      } catch {
-        failed += 1;
+      } catch (err) {
+        console.error(`[AESA] Failed to send email to ${student.name}:`, err);
+        failedList.push({
+          name: student.name,
+          reason: err?.message || "Failed to send",
+        });
       }
     }
 
     setSendingIds([]);
     setBulkConfirm(null);
 
-    const parts = [`Sent ${sent}`];
-    if (failed) parts.push(`failed ${failed}`);
-    if (skipped) parts.push(`skipped ${skipped} (email missing)`);
-    setEmailFeedback(`${parts.join(", ")}.`);
+    const lines = [`Sent - ${sent}`];
+
+    if (failedList.length > 0) {
+      lines.push(`Failed - (${failedList.length})`);
+      failedList.forEach((item, index) => {
+        lines.push(`${index + 1}. ${item.name}${item.reason ? ` (${item.reason})` : ""}`);
+      });
+    }
+
+    if (skippedNames.length > 0) {
+      lines.push(`Skipped (missing email) - (${skippedNames.length})`);
+      skippedNames.forEach((name, index) => {
+        lines.push(`${index + 1}. ${name}`);
+      });
+    }
+
+    setEmailFeedback(lines.join("\n"));
   };
 
   /* ---------------- Email modals ---------------- */
@@ -982,9 +1016,9 @@ AESA`
     ? (() => {
       const emails = resolveEmails(selectedEmail);
       const parts = [];
-      if (sendTo !== "parent")
+      if (sendTo === "student" || sendTo === "both")
         parts.push(`Student: ${emails.studentEmail || "missing"}`);
-      if (sendTo !== "student")
+      if (sendTo === "parent" || sendTo === "both")
         parts.push(`Parent: ${emails.parentEmail || "missing"}`);
       return parts;
     })()
@@ -1023,9 +1057,17 @@ AESA`
       )}
 
       {emailFeedback && (
-        <div className="sp-alert sp-alert-info" role="status">
-          <Mail size={16} />
-          <span>{emailFeedback}</span>
+        <div
+          className={`sp-alert ${
+            emailFeedback.includes("Failed -") ? "sp-alert-error" : "sp-alert-info"
+          }`}
+          role="status"
+          style={{ alignItems: "flex-start" }}
+        >
+          <Mail size={16} style={{ marginTop: "2px", flexShrink: 0 }} />
+          <div style={{ whiteSpace: "pre-line", lineHeight: "1.6", flex: 1 }}>
+            {emailFeedback}
+          </div>
           <button
             type="button"
             className="sp-alert-dismiss"
