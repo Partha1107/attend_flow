@@ -366,13 +366,6 @@ function CommunicationHistory() {
                 value={`${selectedMessage.date} • ${selectedMessage.time}`}
               />
 
-              <DetailItem
-                label="Message ID"
-                value={selectedMessage.id}
-              />
-
-             
-
             </div>
 
           </div>
