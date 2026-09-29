@@ -286,12 +286,16 @@ return (
 
         {filteredData.length === 0 && (
           <div className="empty-state">
-            <Mail size={40} />
+            {activeTab === "SMS" ? (
+              <MessageSquare size={40} />
+            ) : (
+              <Mail size={40} />
+            )}
 
             <h3>No communication history</h3>
 
             <p>
-              There are no email or SMS notifications
+              There are no {activeTab === "SMS" ? "SMS" : activeTab === "Email" ? "email" : "email or SMS"} notifications
               matching your selected filters.
             </p>
           </div>

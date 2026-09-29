@@ -149,7 +149,7 @@ function Dashboard() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [lastImport, setLastImport] = useState(() => {
+  const [, setLastImport] = useState(() => {
     try {
       return JSON.parse(
         localStorage.getItem("lastAttendanceImport") || "null"
