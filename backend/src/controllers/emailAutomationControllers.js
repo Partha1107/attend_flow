@@ -84,6 +84,17 @@ const saveCommunicationHistory = async (record) => {
   }
 };
 
+const extractNameFromEmail = (email) => {
+  if (!email) return "";
+  const local = email.split("@")[0] || "";
+  const clean = local.replace(/[._-]\d+$/, "").replace(/[._]/g, " ");
+  return clean
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+};
+
 const sendEmailForStudent = async ({
   student,
   recipientEmail,
@@ -96,12 +107,15 @@ const sendEmailForStudent = async ({
   // Use passed-in recipient, fallback to parentEmail for backwards compat
   const toEmail = recipientEmail || student.parentEmail;
   const toName = recipientName || "parent";
-
+  const displayMentorName =
+    mentorName && mentorName !== "Mentor"
+      ? mentorName
+      : extractNameFromEmail(mentorEmail) || mentorName || "Mentor";
 
   const result = await brevo.transactionalEmails.sendTransacEmail({
     sender: {
       email: process.env.BREVO_SENDER_EMAIL,
-      name: mentorName,
+      name: displayMentorName,
     },
     to: [
       {
@@ -119,7 +133,7 @@ const sendEmailForStudent = async ({
           <p>The required attendance percentage is <strong>75%</strong>.</p>
           <p>${message || "Please improve your attendance."}</p>
           <br>
-          <p>Regards,<br><strong>${mentorName}</strong><br>AESA</p>
+          <p>Regards,<br><strong>${displayMentorName}</strong><br>AESA</p>
         </body>
       </html>
     `,
