@@ -184,6 +184,37 @@
   overflow-x: auto;
 }
 
+.empty-state {
+  min-height: 180px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  color: #6B7280;
+  text-align: center;
+}
+
+.empty-state svg {
+  color: #9CA3AF;
+}
+
+.empty-state h3,
+.empty-state p {
+  margin: 0;
+}
+
+.empty-state h3 {
+  color: #111111;
+  font-size: 16px;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
 .history-table {
   width: 100%;
   border-collapse: collapse;
@@ -353,7 +384,9 @@
   }
 
   .search-box {
-    max-width: none;
+    flex: 0 0 100%;
+    min-width: 0;
+    max-width: 100%;
     width: 100%;
   }
 }
@@ -379,6 +412,14 @@
   .history-filters select,
   .clear-button {
     width: 100%;
+  }
+
+  .search-box {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    box-sizing: border-box;
   }
 
   .details-drawer {
