@@ -322,7 +322,7 @@ function StudentPage() {
   const [search, setSearch] = useState("");
   const [attendanceMin, setAttendanceMin] = useState("");
   const [attendanceMax, setAttendanceMax] = useState("");
-  const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
+  const [, setRangeMenuOpen] = useState(false);
   const [sendTo, setSendTo] = useState("both");
 
   /* Pagination */
@@ -500,13 +500,14 @@ AESA`
 
   useEffect(() => {
     const refreshRequested = sessionStorage.getItem("refresh-students");
-
-    if (refreshRequested) {
-      sessionStorage.removeItem("refresh-students");
-      void fetchStudents({ silent: false });
-    } else {
-      void fetchStudents({ silent: hasCache() });
-    }
+    const initialLoadTimer = setTimeout(() => {
+      if (refreshRequested) {
+        sessionStorage.removeItem("refresh-students");
+        void fetchStudents({ silent: false });
+      } else {
+        void fetchStudents({ silent: hasCache() });
+      }
+    }, 0);
 
     const handleImportCompleted = () => {
       void fetchStudents({ silent: false });
@@ -519,6 +520,7 @@ AESA`
     );
 
     return () => {
+      clearTimeout(initialLoadTimer);
       window.removeEventListener(
         "attendanceImportCompleted",
         handleImportCompleted
@@ -1799,5 +1801,16 @@ AESA`
     </main>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 
 export default StudentPage;

@@ -304,9 +304,12 @@ function CommunicationHistory() {
 
           </table>
 
-          {filteredData.length === 0 && (
-            <div className="empty-state">
-              <Mail size={40} />
+            <p>
+              There are no {activeTab === "SMS" ? "SMS" : activeTab === "Email" ? "email" : "email or SMS"} notifications
+              matching your selected filters.
+            </p>
+          </div>
+        )}
 
               <h3>No communication history</h3>
 
