@@ -101,11 +101,6 @@ function ParentEmailImport() {
   // LOAD ASSIGNED SQUAD STUDENTS
   // =====================================================
 
-  useEffect(() => {
-    loadStudents();
-  }, []);
-
-
   const loadStudents = async () => {
     setLoading(true);
     setError("");
@@ -321,16 +316,6 @@ function ParentEmailImport() {
         const headers =
           Object.keys(
             excelRows[0]
-          );
-
-
-        const nameColumn =
-          getColumn(
-            headers,
-            [
-              "studentname",
-              "name",
-            ]
           );
 
 
