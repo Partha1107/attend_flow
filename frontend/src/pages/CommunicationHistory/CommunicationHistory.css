@@ -419,7 +419,16 @@
   background: #f5f5f5;
 }
 
+.email-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  word-break: break-word;
+}
 
+.email-link:hover {
+  text-decoration: underline;
+}
 
 
 

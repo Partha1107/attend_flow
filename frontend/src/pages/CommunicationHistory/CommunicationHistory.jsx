@@ -28,16 +28,20 @@ function CommunicationHistory() {
         return {
           ...record,
           date: sentDate?.toLocaleDateString() || "Unknown date",
-          time: sentDate?.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) || "",
+          time:
+            sentDate?.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }) || "",
           type: record.communication_type || "Email",
-            recipient: record.parent_email || "-",
-            name: record.student_name || "-",
-            subject: record.subject || "-",
-            message: record.message || "-",
-            status: record.status || "-",
+
+          studentEmail: record.student_email || "-",
+          recipient: record.parent_email || "-",
+
+          name: record.student_name || "-",
+          subject: record.subject || "Attendance Warning",
+          message: record.message || "-",
+          status: record.status || "-",
         };
       });
 
@@ -79,27 +83,29 @@ function CommunicationHistory() {
   const [selectedMessage, setSelectedMessage] = useState(null);
 
   const filteredData = history.filter((item) => {
-      const matchesTab =
-        activeTab === "All" || item.type === activeTab;
+    const matchesTab =
+      activeTab === "All" || item.type === activeTab;
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        item.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "All" ||
+      item.status === statusFilter;
 
-      const searchText = search.toLowerCase();
+    const searchText = search.toLowerCase();
 
-      const matchesSearch =
-        item.recipient.toLowerCase().includes(searchText) ||
-        item.name.toLowerCase().includes(searchText) ||
-        item.message.toLowerCase().includes(searchText) ||
-        String(item.id || "").toLowerCase().includes(searchText);
+    const matchesSearch =
+      item.studentEmail.toLowerCase().includes(searchText) ||
+      item.recipient.toLowerCase().includes(searchText) ||
+      item.name.toLowerCase().includes(searchText) ||
+      item.message.toLowerCase().includes(searchText) ||
+      item.subject.toLowerCase().includes(searchText) ||
+      String(item.id || "").toLowerCase().includes(searchText);
 
-      return (
-        matchesTab &&
-        matchesStatus &&
-        matchesSearch
-      );
-    });
+    return (
+      matchesTab &&
+      matchesStatus &&
+      matchesSearch
+    );
+  });
 
   const sentCount = history.filter((item) => item.status === "Sent").length;
   const failedCount = history.filter((item) => item.status === "Failed").length;
@@ -108,258 +114,274 @@ function CommunicationHistory() {
   if (error) {
     console.error(error);
   }
-return (
-  <div className="communication-history">
+  return (
+    <div className="communication-history">
 
-    {/* Page Header */}
-    <div className="communication-header">
-      <h1>Communication History</h1>
+      {/* Page Header */}
+      <div className="communication-header">
+        <h1>Communication History</h1>
 
-      {error && <p className="records-error">{error}</p>}
+        {error && <p className="records-error">{error}</p>}
 
-      <p>
-        Track and monitor all email and SMS notifications
-        sent through Attend Flow.
-      </p>
-    </div>
-
-    {/* Summary Cards */}
-    <div className="communication-stats">
-
-      <StatCard
-        title="Total Sent"
-        value={sentCount}
-        subtitle="Successful emails"
-        icon={<Send size={20} />}
-      />
-
-      <StatCard
-        title="Delivered"
-        value={sentCount}
-        subtitle="Confirmed by Brevo"
-        icon={<CheckCircle size={20} />}
-        type="success"
-      />
-
-      <StatCard
-        title="Failed"
-        value={failedCount}
-        subtitle="Not sent"
-        icon={<AlertCircle size={20} />}
-        type="error"
-      />
-
-      <StatCard
-        title="Pending"
-        value={pendingCount}
-        subtitle="Awaiting action"
-        icon={<Clock size={20} />}
-        type="warning"
-      />
-
-    </div>
-
-    {/* Main History Container */}
-    <div className="history-container">
-
-      {/* Tabs */}
-      <div className="history-tabs">
-        {["All", "Email", "SMS"].map((tab) => (
-          <button
-            key={tab}
-            className={activeTab === tab ? "active" : ""}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
+        <p>
+          Track and monitor all email and SMS notifications
+          sent through Attend Flow.
+        </p>
       </div>
 
-      {/* Filters */}
-      <div className="history-filters">
+      {/* Summary Cards */}
+      <div className="communication-stats">
 
-        <div className="search-box">
-          <Search size={18} />
+        <StatCard
+          title="Total Sent"
+          value={sentCount}
+          subtitle="Successful emails"
+          icon={<Send size={20} />}
+        />
 
-          <input
-            type="text"
-            placeholder="Search guardian email, message, or ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <StatCard
+          title="Delivered"
+          value={sentCount}
+          subtitle="Confirmed by Brevo"
+          icon={<CheckCircle size={20} />}
+          type="success"
+        />
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="All">Status: All</option>
-          <option value="Sent">Sent</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Pending">Pending</option>
-          <option value="Failed">Failed</option>
-          <option value="Bounced">Bounced</option>
-        </select>
+        <StatCard
+          title="Failed"
+          value={failedCount}
+          subtitle="Not sent"
+          icon={<AlertCircle size={20} />}
+          type="error"
+        />
 
-        <button
-          className="clear-button"
-          onClick={() => {
-            setSearch("");
-            setStatusFilter("All");
-            setActiveTab("All");
-          }}
-        >
-          Clear Filters
-        </button>
+        <StatCard
+          title="Pending"
+          value={pendingCount}
+          subtitle="Awaiting action"
+          icon={<Clock size={20} />}
+          type="warning"
+        />
 
       </div>
 
-      {/* Table */}
-      <div className="history-table-wrapper">
+      {/* Main History Container */}
+      <div className="history-container">
 
-        <table className="history-table">
-
-          <thead>
-            <tr>
-              <th>Date & Time</th>
-              <th>Type</th>
-              <th>Guardian Email</th>
-              <th>Message Details</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {filteredData.map((item, index) => (
-              <tr key={item.id ?? `${item.recipient}-${item.sent_at}-${index}`}>
-
-                <td>
-                  {item.date}
-                  <span>{item.time}</span>
-                </td>
-
-                <td>
-                  <div className="communication-type">
-                    {item.type === "Email" ? (
-                      <Mail size={17} />
-                    ) : (
-                      <MessageSquare size={17} />
-                    )}
-
-                    {item.type}
-                  </div>
-                </td>
-
-                <td>
-                  <strong>{item.recipient}</strong>
-                  <span>{item.name}</span>
-                </td>
-
-                <td className="message-cell">
-                  <strong>{item.subject}</strong>
-                  <span>{item.message}</span>
-                </td>
-
-                <td>
-                  <StatusBadge status={item.status} />
-                </td>
-
-                <td>
-                  <button
-                    className="view-button"
-                    onClick={() =>
-                      setSelectedMessage(item)
-                    }
-                  >
-                    View
-                  </button>
-                </td>
-
-              </tr>
-            ))}
-
-          </tbody>
-
-        </table>
-
-        {filteredData.length === 0 && (
-          <div className="empty-state">
-            <Mail size={40} />
-
-            <h3>No communication history</h3>
-
-            <p>
-              There are no email or SMS notifications
-              matching your selected filters.
-            </p>
-          </div>
-        )}
-
-      </div>
-
-    </div>
-
-    {/* Details Drawer */}
-    {selectedMessage && (
-      <div className="drawer-backdrop">
-
-        <div className="details-drawer">
-
-          <div className="drawer-header">
-
-            <h2>Communication Details</h2>
-
+        {/* Tabs */}
+        <div className="history-tabs">
+          {["All", "Email", "SMS"].map((tab) => (
             <button
-              onClick={() => setSelectedMessage(null)}
+              key={tab}
+              className={activeTab === tab ? "active" : ""}
+              onClick={() => setActiveTab(tab)}
             >
-              <X size={20} />
+              {tab}
             </button>
+          ))}
+        </div>
 
+        {/* Filters */}
+        <div className="history-filters">
+
+          <div className="search-box">
+            <Search size={18} />
+
+            <input
+              type="text"
+              placeholder="Search student email, guardian email, message, or ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          <div className="drawer-content">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="All">Status: All</option>
+            <option value="Sent">Sent</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Pending">Pending</option>
+            <option value="Failed">Failed</option>
+            <option value="Bounced">Bounced</option>
+          </select>
 
-            <DetailItem
-              label="Channel"
-              value={selectedMessage.type}
-            />
+          <button
+            className="clear-button"
+            onClick={() => {
+              setSearch("");
+              setStatusFilter("All");
+              setActiveTab("All");
+            }}
+          >
+            Clear Filters
+          </button>
 
-            <DetailItem
-              label="Guardian Email"
-              value={selectedMessage.recipient}
-            />
+        </div>
 
-            <DetailItem
-              label="Message"
-              value={selectedMessage.message}
-            />
+        {/* Table */}
+        <div className="history-table-wrapper">
 
-            <DetailItem
-              label="Status"
-              value={selectedMessage.status}
-            />
+          <table className="history-table">
 
-            <DetailItem
-              label="Sent At"
-              value={`${selectedMessage.date} • ${selectedMessage.time}`}
-            />
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Student Email</th>
+                <th>Guardian Email</th>
+                <th>Message Details</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
 
-            <DetailItem
-              label="Message ID"
-              value={selectedMessage.id}
-            />
+            <tbody>
 
-          </div>
+              {filteredData.map((item, index) => (
+                <tr key={item.id ?? `${item.recipient}-${item.sent_at}-${index}`}>
+
+                  <td>
+                    <strong>{item.date}</strong>
+                    <span>{item.time}</span>
+                  </td>
+
+                  <td>
+                    <span>{item.type}</span>
+                  </td>
+
+                  <td>
+                    {item.studentEmail !== "-" ? (
+                      <a
+                        href={`mailto:${item.studentEmail}`}
+                        className="email-link"
+                      >
+                        {item.studentEmail}
+                      </a>
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </td>
+
+                  <td>
+                    {item.recipient !== "-" ? (
+                      <a
+                        href={`mailto:${item.recipient}`}
+                        className="email-link"
+                      >
+                        {item.recipient}
+                      </a>
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </td>
+
+                  <td>
+                    <strong>{item.subject}</strong>
+                  </td>
+
+                  <td>
+                    <span className={`status-badge ${item.status.toLowerCase()}`}>
+                      {item.status}
+                    </span>
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      className="view-btn"
+                      onClick={() => setSelectedMessage(item)}
+                    >
+                      View
+                    </button>
+                  </td>
+
+                </tr>
+              ))}
+
+            </tbody>
+
+          </table>
+
+          {filteredData.length === 0 && (
+            <div className="empty-state">
+              <Mail size={40} />
+
+              <h3>No communication history</h3>
+
+              <p>
+                There are no email or SMS notifications
+                matching your selected filters.
+              </p>
+            </div>
+          )}
 
         </div>
 
       </div>
-    )}
 
-  </div>
-);
+      {/* Details Drawer */}
+      {selectedMessage && (
+        <div className="drawer-backdrop">
+
+          <div className="details-drawer">
+
+            <div className="drawer-header">
+
+              <h2>Communication Details</h2>
+
+              <button
+                onClick={() => setSelectedMessage(null)}
+              >
+                <X size={20} />
+              </button>
+
+            </div>
+
+            <div className="drawer-content">
+
+              <DetailItem
+                label="Channel"
+                value={selectedMessage.type}
+              />
+
+              <DetailItem
+                label="Guardian Email"
+                value={selectedMessage.recipient}
+              />
+
+              <DetailItem
+                label="Message"
+                value={selectedMessage.message}
+              />
+
+              <DetailItem
+                label="Status"
+                value={selectedMessage.status}
+              />
+
+              <DetailItem
+                label="Sent At"
+                value={`${selectedMessage.date} • ${selectedMessage.time}`}
+              />
+
+              <DetailItem
+                label="Message ID"
+                value={selectedMessage.id}
+              />
+
+             
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
 }
 
 function StatCard({
