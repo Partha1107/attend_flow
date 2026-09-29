@@ -304,12 +304,9 @@ function CommunicationHistory() {
 
           </table>
 
-            <p>
-              There are no {activeTab === "SMS" ? "SMS" : activeTab === "Email" ? "email" : "email or SMS"} notifications
-              matching your selected filters.
-            </p>
-          </div>
-        )}
+          {filteredData.length === 0 && (
+            <div className="empty-state">
+              <Mail size={40} />
 
               <h3>No communication history</h3>
 
@@ -368,6 +365,7 @@ function CommunicationHistory() {
                 label="Sent At"
                 value={`${selectedMessage.date} • ${selectedMessage.time}`}
               />
+             
 
             </div>
 
