@@ -1835,6 +1835,17 @@ const getStudents = async (
 // GET EMAIL ALERTS
 // ============================================================
 
+const extractNameFromEmail = (email) => {
+    if (!email) return "";
+    const local = email.split("@")[0] || "";
+    const clean = local.replace(/[._-]\d+$/, "").replace(/[._]/g, " ");
+    return clean
+        .split(" ")
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+};
+
 const getEmailAlerts = async (req, res) => {
     try {
         const {
@@ -1842,7 +1853,7 @@ const getEmailAlerts = async (req, res) => {
             error: profileError,
         } = await supabase
             .from("mentor_profiles")
-            .select("squad, job_role")
+            .select("email, squad, job_role")
             .eq("user_id", req.user.id)
             .maybeSingle();
 
@@ -1862,8 +1873,20 @@ const getEmailAlerts = async (req, res) => {
         const jobRole = mentorProfile.job_role || "mentor";
         const assignedSquad = mentorProfile.squad || "";
 
+        const mentorName =
+            req.user?.user_metadata?.full_name ||
+            req.user?.user_metadata?.name ||
+            req.user?.user_metadata?.display_name ||
+            extractNameFromEmail(req.user?.email || mentorProfile?.email) ||
+            "Mentor";
+
+        const mentorEmail =
+            mentorProfile?.email ||
+            req.user?.email ||
+            "";
+
         console.log(
-            `[AESA] Email Alerts | Role: ${jobRole} | Squad: ${assignedSquad}`
+            `[AESA] Email Alerts | Mentor: ${mentorName} | Email: ${mentorEmail} | Role: ${jobRole} | Squad: ${assignedSquad}`
         );
 
         // ========================================================
@@ -1979,6 +2002,9 @@ const getEmailAlerts = async (req, res) => {
 
         return res.status(200).json({
             success: true,
+
+            mentorName,
+            mentorEmail,
 
             // For mentor -> assigned squad
             // For campus manager -> all
