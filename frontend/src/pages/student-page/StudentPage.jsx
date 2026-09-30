@@ -332,6 +332,8 @@ function StudentPage() {
   /* Selection */
   const [selectedIds, setSelectedIds] = useState(() => new Set());
 
+
+
   /* Email */
   const [mentorName, setMentorName] = useState(
     studentPageCache.mentorName || "Mentor"
@@ -354,6 +356,7 @@ function StudentPage() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showOverallAttendance, setShowOverallAttendance] = useState(true);
   const [showSubjects, setShowSubjects] = useState(false);
+  const [attendanceView, setAttendanceView] = useState("overall");
 
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [emailModalMode, setEmailModalMode] = useState(null);
@@ -605,6 +608,48 @@ AESA`
     () => getExportSubjects(attendanceRecords),
     [attendanceRecords]
   );
+
+  const getAttendanceForStudent = (student) => {
+    // Overall attendance
+    if (attendanceView === "overall") {
+      return Number(student.attendance) || 0;
+    }
+
+    const studentRecords = attendanceRecords.filter(
+      (record) =>
+        String(record?.student_id ?? "") ===
+        String(student?.id ?? "")
+    );
+
+    const subjectWise = calculateSubjectWiseAttendance(
+      studentRecords
+    );
+
+    const selectedSubject = subjectWise.find((subject) => {
+      const key =
+        subject.subjectId ||
+        subject.id ||
+        subject.subjectName ||
+        subject.name ||
+        "";
+
+      return String(key) === String(attendanceView);
+    });
+
+    if (!selectedSubject) {
+      return null;
+    }
+
+    const conducted =
+      Number(selectedSubject.conductedSessions) || 0;
+
+    const present =
+      Number(selectedSubject.presentSessions) || 0;
+
+    return conducted > 0
+      ? (present / conducted) * 100
+      : 0;
+  };
 
   const totalPages = Math.max(
     1,
@@ -1060,9 +1105,8 @@ AESA`
 
       {emailFeedback && (
         <div
-          className={`sp-alert ${
-            emailFeedback.includes("Failed -") ? "sp-alert-error" : "sp-alert-info"
-          }`}
+          className={`sp-alert ${emailFeedback.includes("Failed -") ? "sp-alert-error" : "sp-alert-info"
+            }`}
           role="status"
           style={{ alignItems: "flex-start" }}
         >
@@ -1191,7 +1235,37 @@ AESA`
                       <th>Student</th>
                       <th>Student email</th>
                       <th>Squad</th>
-                      <th>Attendance</th>
+                      <th>
+                        <div className="sp-attendance-header">
+                          <span>Attendance</span>
+
+                          <select
+                            value={attendanceView}
+                            onChange={(event) =>
+                              setAttendanceView(event.target.value)
+                            }
+                            className="sp-attendance-select"
+                          >
+                            <option value="overall">
+                              Overall
+                            </option>
+
+                            {exportSubjects.map((subject) => {
+                              const subjectKey =
+                                subject.id || subject.name;
+
+                              return (
+                                <option
+                                  key={subjectKey}
+                                  value={subjectKey}
+                                >
+                                  {subject.name}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      </th>
                       <th>Parent email</th>
                       <th className="sp-col-actions">Actions</th>
                     </tr>
@@ -1200,7 +1274,7 @@ AESA`
                   <tbody>
                     {paginatedStudents.map((student) => {
                       const emails = resolveEmails(student);
-                      const attendance = Number(student.attendance) || 0;
+                      const attendance = getAttendanceForStudent(student);
                       const isSending = sendingIds.includes(student.id);
                       const status = getAttendanceStatus(attendance);
                       const isChecked = selectedIds.has(String(student.id));
@@ -1244,16 +1318,22 @@ AESA`
                               {student.squad || "—"}
                             </span>
                           </td>
-
                           <td>
                             <div className="sp-att">
-                              <span
-                                className={`sp-att-badge sp-att-${status.toLowerCase()}`}
-                              >
-                                {attendance.toFixed(2)}%
-                              </span>
+                              {attendance === null ? (
+                                <span className="sp-att-empty">
+                                  —
+                                </span>
+                              ) : (
+                                <span
+                                  className={`sp-att-badge sp-att-${status.toLowerCase()}`}
+                                >
+                                  {attendance.toFixed(2)}%
+                                </span>
+                              )}
                             </div>
                           </td>
+
 
                           <td className="sp-email">
                             {emails.parentEmail || (
@@ -1548,10 +1628,10 @@ AESA`
                               <td>
                                 <span
                                   className={`sp-subject-pct ${percentage >= 75
-                                      ? "good"
-                                      : percentage >= 65
-                                        ? "warning"
-                                        : "critical"
+                                    ? "good"
+                                    : percentage >= 65
+                                      ? "warning"
+                                      : "critical"
                                     }`}
                                 >
                                   {percentage.toFixed(2)}%

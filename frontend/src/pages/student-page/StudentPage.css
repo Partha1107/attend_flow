@@ -1915,3 +1915,27 @@
     animation-duration: 0.01ms !important;
   }
 }
+.sp-attendance-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sp-attendance-select {
+  min-width: 130px;
+  padding: 5px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sp-attendance-select:focus {
+  outline: none;
+}
+
+.sp-att-empty {
+  color: #9ca3af;
+  font-weight: 600;
+}
