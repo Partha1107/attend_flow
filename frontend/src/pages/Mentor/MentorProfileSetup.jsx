@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
 import {
   saveMentorProfile,
+  getMentorProfile,
   getAvailableSquads,
 } from "../../api/mentor";
 
@@ -18,6 +20,8 @@ const MentorProfileSetup = () => {
 
   const [mentorName, setMentorName] = useState("");
   const [mentorEmail, setMentorEmail] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
 
   // ============================================================
   // PROFILE DETAILS
@@ -42,13 +46,13 @@ const MentorProfileSetup = () => {
   const [error, setError] = useState("");
 
   // ============================================================
-  // LOAD USER + AVAILABLE SQUADS
+  // LOAD USER + AVAILABLE SQUADS + EXISTING PROFILE
   // ============================================================
 
   useEffect(() => {
     let mounted = true;
 
-    const loadUser = async () => {
+    const loadUserAndProfile = async () => {
       if (!supabase) {
         if (mounted) {
           setError("Supabase is not configured.");
@@ -73,6 +77,8 @@ const MentorProfileSetup = () => {
           return;
         }
 
+        setIsLoggedIn(true);
+
         // Get mentor name
         setMentorName(
           user.user_metadata?.full_name ||
@@ -83,6 +89,20 @@ const MentorProfileSetup = () => {
 
         // Get mentor email
         setMentorEmail(user.email || "");
+
+        // Load existing profile if it exists
+        try {
+          const profileResult = await getMentorProfile();
+          if (profileResult?.profile && mounted) {
+            const profile = profileResult.profile;
+            setHasProfile(true);
+            if (profile.college_name) setCollegeName(profile.college_name);
+            if (profile.job_role) setJobRole(profile.job_role);
+            if (profile.squad) setSquad(profile.squad);
+          }
+        } catch {
+          // Profile may not exist yet on initial setup, which is expected
+        }
 
         setLoading(false);
       } catch (userError) {
@@ -113,7 +133,7 @@ const MentorProfileSetup = () => {
       }
     };
 
-    void loadUser();
+    void loadUserAndProfile();
     void loadSquads();
 
     return () => {
@@ -232,6 +252,23 @@ const MentorProfileSetup = () => {
       <div className="mentor-setup-card">
 
         {/* ======================================================
+            TOP NAVIGATION (WHEN LOGGED IN)
+        ====================================================== */}
+
+        {isLoggedIn && (
+          <div className="mentor-setup-top-nav">
+            <button
+              type="button"
+              className="mentor-setup-back-link"
+              onClick={() => navigate("/dashboard")}
+            >
+              <ArrowLeft size={16} />
+              Go to Dashboard
+            </button>
+          </div>
+        )}
+
+        {/* ======================================================
             HEADER
         ====================================================== */}
 
@@ -241,7 +278,7 @@ const MentorProfileSetup = () => {
           </div>
 
           <div>
-            <h1>Complete your profile</h1>
+            <h1>{hasProfile ? "Mentor Profile" : "Complete your profile"}</h1>
 
             <p>
               Welcome, {mentorName}
@@ -365,17 +402,22 @@ const MentorProfileSetup = () => {
           )}
 
           {/* ====================================================
-              SUBMIT
+              ACTIONS
           ==================================================== */}
 
-          <button
-            type="submit"
-            disabled={saving}
-          >
-            {saving
-              ? "Saving..."
-              : "Continue"}
-          </button>
+          <div className="mentor-setup-actions">
+            <button
+              type="submit"
+              className="mentor-setup-submit-btn"
+              disabled={saving}
+            >
+              {saving
+                ? "Saving..."
+                : hasProfile
+                  ? "Save Changes"
+                  : "Continue"}
+            </button>
+          </div>
 
         </form>
       </div>

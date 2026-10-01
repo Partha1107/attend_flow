@@ -100,7 +100,38 @@
   font-size: 14px;
 }
 
-.mentor-setup-card button {
+.mentor-setup-top-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mentor-setup-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mentor-setup-back-link:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+.mentor-setup-actions {
+  margin-top: 10px;
+}
+
+.mentor-setup-submit-btn {
   width: 100%;
   padding: 14px;
   border: none;
@@ -110,13 +141,14 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.mentor-setup-card button:hover {
+.mentor-setup-submit-btn:hover {
   background: #C90000;
 }
 
-.mentor-setup-card button:disabled {
+.mentor-setup-submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
