@@ -609,6 +609,48 @@ AESA`
     [attendanceRecords]
   );
 
+  const attendanceSubjects = useMemo(() => {
+    const subjectMap = new Map();
+
+    students.forEach((student) => {
+      const studentRecords = attendanceRecords.filter(
+        (record) =>
+          String(record?.student_id ?? "") ===
+          String(student?.id ?? "")
+      );
+
+      const subjects =
+        calculateSubjectWiseAttendance(studentRecords);
+
+      subjects.forEach((subject) => {
+        const id = String(
+          subject.subjectId ||
+          subject.id ||
+          ""
+        ).trim();
+
+        const name = String(
+          subject.subjectName ||
+          subject.name ||
+          ""
+        ).trim();
+
+        if (!id && !name) return;
+
+        const key = id || name.toLowerCase();
+
+        if (!subjectMap.has(key)) {
+          subjectMap.set(key, {
+            id,
+            name,
+          });
+        }
+      });
+    });
+
+    return Array.from(subjectMap.values());
+  }, [students, attendanceRecords]);
+
   const getAttendanceForStudent = (student) => {
     // Overall attendance
     if (attendanceView === "overall") {
@@ -693,6 +735,7 @@ AESA`
     [selectedAttendanceRecords]
   );
 
+
   const pageButtons = useMemo(() => {
     if (totalPages <= 7) {
       return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -710,6 +753,8 @@ AESA`
       .filter((page) => page >= 1 && page <= totalPages)
       .sort((a, b) => a - b);
   }, [safeCurrentPage, totalPages]);
+
+
 
   /* ---------------- Selection ---------------- */
 
@@ -1250,7 +1295,7 @@ AESA`
                               Overall
                             </option>
 
-                            {exportSubjects.map((subject) => {
+                           {attendanceSubjects.map((subject) => {
                               const subjectKey =
                                 subject.id || subject.name;
 
@@ -1274,9 +1319,56 @@ AESA`
                   <tbody>
                     {paginatedStudents.map((student) => {
                       const emails = resolveEmails(student);
-                      const attendance = getAttendanceForStudent(student);
+                      const attendance = (() => {
+                        if (attendanceView === "overall") {
+                          return Number(student.attendance) || 0;
+                        }
+
+                        const studentRecords = attendanceRecords.filter(
+                          (record) =>
+                            String(record?.student_id ?? "") ===
+                            String(student?.id ?? "")
+                        );
+
+                        const subjects =
+                          calculateSubjectWiseAttendance(studentRecords);
+
+                        const selectedSubject = subjects.find((subject) => {
+                          const id = String(
+                            subject.subjectId || subject.id || ""
+                          ).trim();
+
+                          const name = String(
+                            subject.subjectName || subject.name || ""
+                          ).trim();
+
+                          return (
+                            id === String(attendanceView).trim() ||
+                            name === String(attendanceView).trim()
+                          );
+                        });
+
+                        if (!selectedSubject) {
+                          return null;
+                        }
+
+                        const conducted =
+                          Number(selectedSubject.conductedSessions) || 0;
+
+                        const present =
+                          Number(selectedSubject.presentSessions) || 0;
+
+                        return conducted > 0
+                          ? (present / conducted) * 100
+                          : null;
+                      })();
+
                       const isSending = sendingIds.includes(student.id);
-                      const status = getAttendanceStatus(attendance);
+
+                      const status =
+                        attendance === null
+                          ? ""
+                          : getAttendanceStatus(attendance);
                       const isChecked = selectedIds.has(String(student.id));
 
                       const rowClass = [
@@ -1321,9 +1413,7 @@ AESA`
                           <td>
                             <div className="sp-att">
                               {attendance === null ? (
-                                <span className="sp-att-empty">
-                                  —
-                                </span>
+                                <span className="sp-att-empty">—</span>
                               ) : (
                                 <span
                                   className={`sp-att-badge sp-att-${status.toLowerCase()}`}
@@ -1333,7 +1423,6 @@ AESA`
                               )}
                             </div>
                           </td>
-
 
                           <td className="sp-email">
                             {emails.parentEmail || (
@@ -1604,7 +1693,31 @@ AESA`
                           <th>Subject</th>
                           <th>Attended</th>
                           <th>Conducted</th>
-                          <th>Attendance</th>
+                          <th>
+                            <div className="sp-attendance-header">
+                              <span>Attendance</span>
+
+                              <select
+                                className="sp-attendance-select"
+                                value={attendanceView}
+                                onChange={(event) =>
+                                  setAttendanceView(event.target.value)
+                                }
+                              >
+                                <option value="overall">Overall</option>
+
+                                {exportSubjects.map((subject) => {
+                                  const value = subject.id || subject.name;
+
+                                  return (
+                                    <option key={value} value={value}>
+                                      {subject.name}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
