@@ -358,6 +358,10 @@ function StudentPage() {
   const [showSubjects, setShowSubjects] = useState(false);
   const [attendanceView, setAttendanceView] = useState("overall");
 
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloadType, setDownloadType] = useState("below");
+  const [downloadThreshold, setDownloadThreshold] = useState(75);
+
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [emailModalMode, setEmailModalMode] = useState(null);
   const [editSubject, setEditSubject] = useState("");
@@ -1028,34 +1032,159 @@ AESA`
     setShowTemplateModal(false);
     setEmailFeedback("Template applied to all loaded students.");
   };
-
   /* ---------------- Download ---------------- */
 
   const handleDownload = () => {
     const useSelection = selectedStudents.length > 0;
-    const list = useSelection ? selectedStudents : filteredStudents;
 
-    if (list.length === 0) {
+    const sourceStudents = useSelection
+      ? selectedStudents
+      : baseFilteredStudents;
+
+    if (sourceStudents.length === 0) {
       alert("No students to download.");
       return;
     }
 
-    if (rangeInvalid && !useSelection) {
+    if (!useSelection && rangeInvalid) {
       alert("Minimum attendance is higher than maximum attendance.");
       return;
     }
 
-    const rows = list.map((student) =>
-      mapStudentDownloadRow(student, attendanceRecords, exportSubjects)
+    const matchingStudents = sourceStudents.filter((student) => {
+      const attendance = getAttendanceForStudent(student);
+
+      if (
+        attendance === null ||
+        !Number.isFinite(Number(attendance))
+      ) {
+        return false;
+      }
+
+      return (
+        Number(attendance) >= rangeLo &&
+        Number(attendance) <= rangeHi
+      );
+    });
+
+    if (matchingStudents.length === 0) {
+      alert("No students match the selected attendance range.");
+      return;
+    }
+
+    const rows = matchingStudents.map((student) => {
+      const emails = resolveEmails(student);
+
+      // Overall attendance
+      if (attendanceView === "overall") {
+        const attendance = Number(student.attendance) || 0;
+
+        return {
+          "Student Name": student.name || "",
+          "Student Email": emails.studentEmail || "",
+          Squad: student.squad || "",
+          Subject: "Overall",
+          "Attendance %": Number(attendance.toFixed(2)),
+          "Attendance Status": getAttendanceStatus(attendance),
+          "Parent Email": emails.parentEmail || "",
+          "Parent Phone":
+            student.parent_phone ||
+            student.parentPhone ||
+            "",
+        };
+      }
+
+      // Selected subject attendance
+      const studentRecords = attendanceRecords.filter(
+        (record) =>
+          String(record?.student_id ?? "") ===
+          String(student?.id ?? "")
+      );
+
+      const subjects =
+        calculateSubjectWiseAttendance(studentRecords);
+
+      const selectedSubject = subjects.find((subject) => {
+        const id = String(
+          subject.subjectId ||
+          subject.id ||
+          ""
+        ).trim();
+
+        const name = String(
+          subject.subjectName ||
+          subject.name ||
+          ""
+        ).trim();
+
+        return (
+          id === String(attendanceView).trim() ||
+          name === String(attendanceView).trim()
+        );
+      });
+
+      if (!selectedSubject) {
+        return null;
+      }
+
+      const conducted =
+        Number(selectedSubject.conductedSessions) || 0;
+
+      const attended =
+        Number(selectedSubject.presentSessions) || 0;
+
+      const absent = Math.max(
+        conducted - attended,
+        0
+      );
+
+      const attendance =
+        conducted > 0
+          ? (attended / conducted) * 100
+          : 0;
+
+      return {
+        "Student Name": student.name || "",
+        "Student Email": emails.studentEmail || "",
+        Squad: student.squad || "",
+        Subject:
+          selectedSubject.subjectName ||
+          selectedSubject.name ||
+          "",
+        "Sessions Conducted": conducted,
+        "Sessions Attended": attended,
+        "Sessions Absent": absent,
+        "Attendance %":
+          Number(attendance.toFixed(2)),
+        "Attendance Status":
+          getAttendanceStatus(attendance),
+        "Parent Email":
+          emails.parentEmail || "",
+        "Parent Phone":
+          student.parent_phone ||
+          student.parentPhone ||
+          "",
+      };
+    }).filter(Boolean);
+
+    const selectedSubject =
+      attendanceView === "overall"
+        ? "Overall"
+        : exportSubjects.find(
+          (subject) =>
+            String(subject.id || subject.name) ===
+            String(attendanceView)
+        )?.name || "Subject";
+
+    const fileName = useSelection
+      ? `Selected_${selectedSubject}`
+      : `Attendance_${selectedSubject}_${rangeLo}-${rangeHi}`;
+
+    downloadExcel(
+      rows,
+      "Students",
+      buildFilename(fileName)
     );
-
-    const name = useSelection
-      ? "Selected_Students"
-      : rangeIsDefault
-        ? "All_Students"
-        : `Attendance_${rangeLabel(attendanceMin, attendanceMax)}`;
-
-    downloadExcel(rows, "Students", buildFilename(name));
   };
 
   /* ---------------- Filters ---------------- */
@@ -1295,7 +1424,7 @@ AESA`
                               Overall
                             </option>
 
-                           {attendanceSubjects.map((subject) => {
+                            {attendanceSubjects.map((subject) => {
                               const subjectKey =
                                 subject.id || subject.name;
 
@@ -1986,6 +2115,126 @@ AESA`
               >
                 <MailWarning size={15} />
                 {sendingIds.length > 0 ? "Sending…" : "Confirm send"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {/* Download options modal */}
+      {downloadModalOpen && (
+        <div
+          className="sp-overlay"
+          onClick={() => setDownloadModalOpen(false)}
+        >
+          <section
+            className="sp-modal sp-email-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Download student attendance"
+          >
+            <div className="sp-modal-header">
+              <div>
+                <span className="sp-kicker">
+                  Download report
+                </span>
+
+                <h2>
+                  Download student attendance
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="sp-modal-close"
+                onClick={() => setDownloadModalOpen(false)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="sp-form">
+              <label>
+                Attendance subject
+              </label>
+
+              <div className="sp-download-selected">
+                {attendanceView === "overall"
+                  ? "Overall attendance"
+                  : exportSubjects.find(
+                    (subject) =>
+                      String(subject.id || subject.name) ===
+                      String(attendanceView)
+                  )?.name || "Selected subject"}
+              </div>
+
+              <label htmlFor="sp-download-type">
+                Download students
+              </label>
+
+              <select
+                id="sp-download-type"
+                className="sp-input"
+                value={downloadType}
+                onChange={(event) =>
+                  setDownloadType(event.target.value)
+                }
+              >
+                <option value="below">
+                  Below threshold
+                </option>
+
+                <option value="above">
+                  At or above threshold
+                </option>
+              </select>
+
+              <label htmlFor="sp-download-threshold">
+                Attendance threshold (%)
+              </label>
+
+              <input
+                id="sp-download-threshold"
+                className="sp-input"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={downloadThreshold}
+                onChange={(event) =>
+                  setDownloadThreshold(event.target.value)
+                }
+              />
+
+              <div className="sp-download-preview">
+                <strong>
+                  Current selection
+                </strong>
+
+                <span>
+                  {downloadType === "below"
+                    ? `Students below ${downloadThreshold}%`
+                    : `Students at or above ${downloadThreshold}%`}
+                </span>
+              </div>
+            </div>
+
+            <div className="sp-modal-actions">
+              <button
+                type="button"
+                className="sp-cancel"
+                onClick={() => setDownloadModalOpen(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="sp-confirm"
+                onClick={handleDownloadExcel}
+              >
+                Download Excel
               </button>
             </div>
           </section>
