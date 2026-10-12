@@ -1187,6 +1187,51 @@ AESA`
     );
   };
 
+  const handleDownloadExcel = () => {
+    const useSelection = selectedStudents.length > 0;
+    const sourceStudents = useSelection ? selectedStudents : baseFilteredStudents;
+
+    if (sourceStudents.length === 0) {
+      alert("No students to download.");
+      return;
+    }
+
+    const threshold = Number(downloadThreshold) || 0;
+    const rows = sourceStudents
+      .filter((student) => {
+        const attendance = getAttendanceForStudent(student);
+
+        if (attendance === null || !Number.isFinite(Number(attendance))) {
+          return false;
+        }
+
+        const value = Number(attendance);
+        return downloadType === "below" ? value < threshold : value >= threshold;
+      })
+      .map((student) => mapStudentDownloadRow(student, attendanceRecords, exportSubjects));
+
+    if (rows.length === 0) {
+      alert(
+        downloadType === "below"
+          ? `No students below ${threshold}%.`
+          : `No students at or above ${threshold}%.`
+      );
+      return;
+    }
+
+    const subjectLabel =
+      attendanceView === "overall"
+        ? "Overall"
+        : exportSubjects.find(
+            (subject) => String(subject.id || subject.name) === String(attendanceView)
+          )?.name || "Subject";
+
+    const fileName = `${subjectLabel}_${downloadType === "below" ? "Below" : "At_Or_Above"}_${threshold}`;
+
+    downloadExcel(rows, "Students", buildFilename(fileName));
+    setDownloadModalOpen(false);
+  };
+
   /* ---------------- Filters ---------------- */
 
   const clearFilters = () => {

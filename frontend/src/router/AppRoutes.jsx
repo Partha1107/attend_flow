@@ -19,7 +19,7 @@ import EmailAutomation from "../pages/EmailAutomation/EmailAutomation";
 import NotFound from "../pages/NotFound page/NotFound";
 import MentorProfileSetup from "../pages/Mentor/MentorProfileSetup";
 import ParentEmailImport from "../pages/ParentEmailImport/ParentEmailImport";
-
+import Studentpage from "../pages/Studentpage/Student-page";
 function AppRoutes() {
   return (
     <Routes>
@@ -37,7 +37,10 @@ function AppRoutes() {
       {/* ================= PROTECTED ================= */}
 
       <Route element={<ProtectedRoute />}>
-
+        <Route
+            path="studentpage"
+            element={<Studentpage />}
+          />
         <Route
           path="/mentor/setup"
           element={<MentorProfileSetup />}
@@ -73,6 +76,7 @@ function AppRoutes() {
             path="email-automation"
             element={<EmailAutomation />}
           />
+          
 
           {/* Legacy alias: Email Automation is now merged into Students. */}
 
