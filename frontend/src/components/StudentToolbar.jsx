@@ -46,31 +46,31 @@ const rangeLabel = (min, max) => {
 
 function StudentToolbar({
   searchValue = "",
-  onSearchChange = () => {},
+  onSearchChange = () => { },
 
   squadValue = "",
   squadOptions = [],
-  onSquadChange = () => {},
+  onSquadChange = () => { },
   squadDisabled = false,
 
   attendanceMin = "",
   attendanceMax = "",
-  onAttendanceChange = () => {},
+  onAttendanceChange = () => { },
 
   sendToValue = "both",
   sendToOptions = [],
-  onSendToChange = () => {},
+  onSendToChange = () => { },
 
   selectedCount = 0,
   below75Count = 0,
   totalCount = 0,
   loading = false,
 
-  onSendSelected = () => {},
-  onSendBelow75 = () => {},
-  onOpenTemplate = () => {},
-  onDownload = () => {},
-  onClearFilters = () => {},
+  onSendSelected = () => { },
+  onSendBelow75 = () => { },
+  onOpenTemplate = () => { },
+  onDownload = () => { },
+  onClearFilters = () => { },
 
   downloadLabel = "Download students",
 }) {
@@ -216,18 +216,16 @@ function StudentToolbar({
             =================================================== */}
 
         <div
-          className={`filter-field ${
-            squadMenuOpen ? "dropdown-open" : ""
-          }`}
+          className={`filter-field ${squadMenuOpen ? "dropdown-open" : ""
+            }`}
         >
           <span className="filter-label">SQUAD</span>
 
           <div className="custom-select-wrapper">
             <button
               type="button"
-              className={`custom-select-trigger ${
-                squadMenuOpen ? "is-open" : ""
-              }`}
+              className={`custom-select-trigger ${squadMenuOpen ? "is-open" : ""
+                }`}
               disabled={squadDisabled}
               onClick={() => toggleDropdown("squad")}
               aria-expanded={squadMenuOpen}
@@ -300,17 +298,15 @@ function StudentToolbar({
             =================================================== */}
 
         <div
-          className={`filter-field ${
-            rangeMenuOpen ? "dropdown-open" : ""
-          }`}
+          className={`filter-field ${rangeMenuOpen ? "dropdown-open" : ""
+            }`}
         >
           <span className="filter-label">ATTENDANCE</span>
 
           <button
             type="button"
-            className={`attendance-trigger ${
-              rangeInvalid ? "is-invalid" : ""
-            } ${rangeMenuOpen ? "is-open" : ""}`}
+            className={`attendance-trigger ${rangeInvalid ? "is-invalid" : ""
+              } ${rangeMenuOpen ? "is-open" : ""}`}
             onClick={() => toggleDropdown("attendance")}
             aria-expanded={rangeMenuOpen}
             aria-haspopup="menu"
@@ -343,7 +339,7 @@ function StudentToolbar({
                 role="menuitem"
                 className={
                   attendanceMin === "" &&
-                  attendanceMax === ""
+                    attendanceMax === ""
                     ? "is-selected"
                     : ""
                 }
@@ -359,7 +355,7 @@ function StudentToolbar({
                 role="menuitem"
                 className={
                   attendanceMin === "0" &&
-                  attendanceMax ===
+                    attendanceMax ===
                     String(BELOW_75_MAX)
                     ? "is-selected"
                     : ""
@@ -379,7 +375,7 @@ function StudentToolbar({
                 role="menuitem"
                 className={
                   attendanceMin === "75" &&
-                  attendanceMax === "100"
+                    attendanceMax === "100"
                     ? "is-selected"
                     : ""
                 }
@@ -447,18 +443,16 @@ function StudentToolbar({
             =================================================== */}
 
         <div
-          className={`filter-field ${
-            sendToMenuOpen ? "dropdown-open" : ""
-          }`}
+          className={`filter-field ${sendToMenuOpen ? "dropdown-open" : ""
+            }`}
         >
           <span className="filter-label">SEND TO</span>
 
           <div className="custom-select-wrapper">
             <button
               type="button"
-              className={`custom-select-trigger ${
-                sendToMenuOpen ? "is-open" : ""
-              }`}
+              className={`custom-select-trigger ${sendToMenuOpen ? "is-open" : ""
+                }`}
               onClick={() =>
                 toggleDropdown("sendTo")
               }
@@ -582,9 +576,8 @@ function StudentToolbar({
 
           {loading
             ? "Loading students..."
-            : `${totalCount} student${
-                totalCount === 1 ? "" : "s"
-              } found`}
+            : `${totalCount} student${totalCount === 1 ? "" : "s"
+            } found`}
         </span>
 
         <button

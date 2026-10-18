@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
-import { useState , useEffect} from "react";
+import { useState, useEffect } from "react";
 import { getMentorRole } from "../api/mentor";
 
 import "./Sidebar.css";

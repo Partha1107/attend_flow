@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
+import { AvailableSquadSelector } from "../../components/AvailableOptionSelector";
 import { supabase } from "../../lib/supabase";
 import {
   saveMentorProfile,
@@ -359,32 +360,18 @@ const MentorProfileSetup = () => {
 
           {jobRole === "mentor" && (
             <div className="form-group">
-              <label htmlFor="squad">
-                Squad
-              </label>
-
-              <select
-                id="squad"
+              <AvailableSquadSelector
+                options={availableSquads.map((value) => ({
+                  value: String(value),
+                  label: `Squad ${value}`,
+                }))}
                 value={squad}
-                onChange={(event) => {
-                  setSquad(event.target.value);
+                onChange={(nextValue) => {
+                  setSquad(nextValue);
                   setError("");
                 }}
                 disabled={saving}
-              >
-                <option value="">
-                  Select your squad
-                </option>
-
-                {availableSquads.map((value) => (
-                  <option
-                    key={value}
-                    value={value}
-                  >
-                    Squad {value}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           )}
 
