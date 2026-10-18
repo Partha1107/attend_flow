@@ -355,7 +355,7 @@
 
 /* Dropdown options */
 
-.custom-select-menu > button {
+.custom-select-menu>button {
   display: flex;
   align-items: center;
 
@@ -393,21 +393,21 @@
 
 /* Dropdown hover */
 
-.custom-select-menu > button:hover {
+.custom-select-menu>button:hover {
   background: #f5f7fa;
 }
 
 
 /* Dropdown focus */
 
-.custom-select-menu > button:focus {
+.custom-select-menu>button:focus {
   outline: none;
 }
 
 
 /* Dropdown keyboard focus */
 
-.custom-select-menu > button:focus-visible {
+.custom-select-menu>button:focus-visible {
   background: #f1f5f9;
 
   outline: 2px solid #b8bec9;
@@ -417,7 +417,7 @@
 
 /* Selected option */
 
-.custom-select-menu > button.is-selected {
+.custom-select-menu>button.is-selected {
   background: #f8fafc;
 
   color: #303541;
@@ -428,7 +428,7 @@
 
 /* Selected option hover */
 
-.custom-select-menu > button.is-selected:hover {
+.custom-select-menu>button.is-selected:hover {
   background: #f1f3f6;
 }
 
@@ -567,7 +567,7 @@
 
 /* Attendance options */
 
-.attendance-menu > button {
+.attendance-menu>button {
   display: flex;
   align-items: center;
 
@@ -605,21 +605,21 @@
 
 /* Attendance hover */
 
-.attendance-menu > button:hover {
+.attendance-menu>button:hover {
   background: #f5f7fa;
 }
 
 
 /* Attendance focus */
 
-.attendance-menu > button:focus {
+.attendance-menu>button:focus {
   outline: none;
 }
 
 
 /* Attendance keyboard focus */
 
-.attendance-menu > button:focus-visible {
+.attendance-menu>button:focus-visible {
   background: #f1f5f9;
 
   outline: 2px solid #b8bec9;
@@ -629,7 +629,7 @@
 
 /* Attendance selected option */
 
-.attendance-menu > button.is-selected {
+.attendance-menu>button.is-selected {
   background: #f8fafc;
 
   color: #303541;
@@ -640,7 +640,7 @@
 
 /* Attendance selected hover */
 
-.attendance-menu > button.is-selected:hover {
+.attendance-menu>button.is-selected:hover {
   background: #f1f3f6;
 }
 
@@ -658,7 +658,7 @@
 }
 
 
-.custom-range > span {
+.custom-range>span {
   display: block;
 
   margin: 0 0 8px;
@@ -1025,6 +1025,7 @@
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
+
   .student-toolbar *,
   .student-toolbar *::before,
   .student-toolbar *::after {
@@ -1152,7 +1153,7 @@
 
 
 /* Search wrapper */
-.student-toolbar > .search-box {
+.student-toolbar>.search-box {
   position: relative !important;
 
   width: 100% !important;
@@ -1173,7 +1174,7 @@
 
 
 /* Search input */
-.student-toolbar > .search-box > input {
+.student-toolbar>.search-box>input {
   width: 100% !important;
   height: 56px !important;
   min-height: 56px !important;
@@ -1188,7 +1189,7 @@
 
 
 /* Filters */
-.student-toolbar > .filter-row {
+.student-toolbar>.filter-row {
   width: 100% !important;
 
   display: grid !important;
@@ -1205,7 +1206,7 @@
 
 
 /* Action buttons */
-.student-toolbar > .action-row {
+.student-toolbar>.action-row {
   width: 100% !important;
 
   display: flex !important;
@@ -1222,7 +1223,7 @@
 
 
 /* Footer */
-.student-toolbar > .toolbar-footer {
+.student-toolbar>.toolbar-footer {
   width: 100% !important;
 
   display: flex !important;
@@ -1239,7 +1240,7 @@
 
 
 /* Prevent global rules from adding spacing */
-.student-toolbar > * {
+.student-toolbar>* {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
@@ -1258,10 +1259,10 @@
    ========================================================= */
 
 .student-toolbar,
-.student-toolbar > .search-box,
-.student-toolbar > .filter-row,
-.student-toolbar > .action-row,
-.student-toolbar > .toolbar-footer {
+.student-toolbar>.search-box,
+.student-toolbar>.filter-row,
+.student-toolbar>.action-row,
+.student-toolbar>.toolbar-footer {
   align-self: stretch !important;
 }
 
@@ -1277,12 +1278,12 @@
     gap: 16px !important;
   }
 
-  .student-toolbar > .filter-row {
+  .student-toolbar>.filter-row {
     grid-template-columns: 1fr !important;
     gap: 14px !important;
   }
 
-  .student-toolbar > .action-row {
+  .student-toolbar>.action-row {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
@@ -1300,8 +1301,8 @@
     gap: 16px !important;
   }
 
-  .student-toolbar > .search-box,
-  .student-toolbar > .search-box > input {
+  .student-toolbar>.search-box,
+  .student-toolbar>.search-box>input {
     height: 50px !important;
     min-height: 50px !important;
     max-height: 50px !important;
