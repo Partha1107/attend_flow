@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import logo from "../../assets/web-favicon.png";
 import "./Student-page.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -86,6 +87,64 @@ function MiniStat({ label, value, tone = "" }) {
     );
 }
 
+function SemesterDropdown({ semesters, value, onChange }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handlePointerDown = (event) => {
+            if (!dropdownRef.current?.contains(event.target)) setIsOpen(false);
+        };
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") setIsOpen(false);
+        };
+
+        document.addEventListener("pointerdown", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    return (
+        <div className={`semester-dropdown ${isOpen ? "is-open" : ""}`} ref={dropdownRef}>
+            <span className="semester-dropdown-label">Semester</span>
+            <button
+                type="button"
+                className="semester-dropdown-trigger"
+                aria-label="Select semester"
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen((open) => !open)}
+                disabled={!semesters.length}
+            >
+                <span>{value === null ? "Select semester" : `Semester ${value}`}</span>
+                <span className="semester-dropdown-chevron" aria-hidden="true" />
+            </button>
+            {isOpen && (
+                <div className="semester-dropdown-menu" role="listbox" aria-label="Semesters">
+                    {semesters.map((semesterOption) => (
+                        <button
+                            type="button"
+                            role="option"
+                            aria-selected={semesterOption === value}
+                            className={`semester-dropdown-option ${semesterOption === value ? "is-selected" : ""}`}
+                            key={semesterOption}
+                            onClick={() => {
+                                onChange(semesterOption);
+                                setIsOpen(false);
+                            }}
+                        >
+                            Semester {semesterOption}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function SubjectCard({ subject }) {
     const tone = subject.status.toLowerCase();
 
@@ -133,6 +192,8 @@ export default function AttendFlow({ onReport, onLogout }) {
     const [liveSubjects, setLiveSubjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState("");
+    const [sidebarExpanded, setSidebarExpanded] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
 
     useEffect(() => {
         const loadStudentData = async () => {
@@ -168,12 +229,15 @@ export default function AttendFlow({ onReport, onLogout }) {
                         return String(record.student_id || record.students?.id) === String(currentStudent.id);
                     })
                     .forEach((record) => {
-                        const subjectName =
-                            record?.subjects?.name ||
-                            record?.subject_name;
+                        const isGrowthHour = record?.attendance_type === "growth_hour";
 
-                        const subjectCode =
-                            record?.subject_code ||
+                        const subjectName = isGrowthHour
+                            ? "Growth Hour"
+                            : record?.subjects?.name || record?.subject_name;
+
+                        const subjectCode = isGrowthHour
+                            ? "growth_hour"
+                            : record?.subject_code ||
                             record?.subject_id ||
                             record?.subjectId ||
                             subjectName;
@@ -288,25 +352,45 @@ export default function AttendFlow({ onReport, onLogout }) {
     if (loading || loadError || !student) {
         return (
             <div className="attendflow">
-                <div className="dashboard">
-                    <header className="top-nav">
-                        <a className="brand" href="#" aria-label="AttendFlow home">
-                            <span className="brand-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="m3 9 9-5 9 5-9 5-9-5Zm4 3v5c3 3 7 3 10 0v-5M21 9v7"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
+                <aside className={`student-sidebar ${sidebarExpanded ? "is-expanded" : ""}`}>
+                    <button className="sidebar-logo" aria-label="Expand navigation"
+                        onClick={() => setSidebarExpanded((value) => !value)}>
+                        <img src={logo} alt="AttendFlow logo" className="sidebar-logo-mark" />
+                        <span className="sidebar-wordmark">AttendFlow</span>
+                    </button>
+                    <div className="sidebar-spacer" />
+                    <div className="sidebar-profile-wrap">
+                        <button className="sidebar-profile" onClick={() => {
+                            setSidebarExpanded(true);
+                            setProfileOpen((value) => !value);
+                        }} aria-expanded={profileOpen}>
+                            <span className="sidebar-avatar">AR</span>
+                            <span className="sidebar-profile-copy">
+                                <strong>{student?.name || "Student"}</strong>
+                                <small>{student?.email || "Student Portal"}</small>
                             </span>
-                            <span className="brand-copy">
-                                <strong>AttendFlow</strong>
-                                <span className="portal-label">Student Portal</span>
-                            </span>
-                        </a>
+                            <span className="sidebar-chevron">›</span>
+                        </button>
+                        {profileOpen && (
+                            <div className="sidebar-profile-menu">
+                                <div className="profile-menu-details">
+                                    <strong>{student?.name || "Student"}</strong>
+                                    <span>{student?.email || ""}</span>
+                                    {student?.squad && <small>Squad {student.squad}</small>}
+                                </div>
+                                <button className="profile-logout" onClick={onLogout} disabled={!onLogout}>
+                                    <span>↪</span> Log out
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </aside>
+                <div className="dashboard dashboard-with-sidebar">
+                    <header className="student-topbar">
+                        <div className="student-brand-lockup">
+                            <img src={logo} alt="" className="student-brand-mark" />
+                            <div className="student-brand-title">AttendFlow</div>
+                        </div>
                     </header>
                     <main className="main-content">
                         <div className="card empty-state" role="status">
@@ -320,74 +404,70 @@ export default function AttendFlow({ onReport, onLogout }) {
 
     return (
         <div className="attendflow">
-            <div className="dashboard">
-                <header className="top-nav">
-                    <a className="brand" href="#" aria-label="AttendFlow home">
-                        <span className="brand-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="m3 9 9-5 9 5-9 5-9-5Zm4 3v5c3 3 7 3 10 0v-5M21 9v7"
-                                    stroke="currentColor"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
+            <aside className={`student-sidebar ${sidebarExpanded ? "is-expanded" : ""}`}>
+                <button className="sidebar-logo" aria-label="Expand navigation"
+                    onClick={() => setSidebarExpanded((value) => !value)}>
+                    <img src={logo} alt="AttendFlow logo" className="sidebar-logo-mark" />
+                    <span className="sidebar-wordmark">AttendFlow</span>
+                </button>
+                <div className="sidebar-spacer" />
+                <div className="sidebar-profile-wrap">
+                    <button className="sidebar-profile" onClick={() => {
+                        setSidebarExpanded(true);
+                        setProfileOpen((value) => !value);
+                    }} aria-expanded={profileOpen}>
+                        <span className="sidebar-avatar">{(student?.name || "Student").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span>
+                        <span className="sidebar-profile-copy">
+                            <strong>{student?.name || "Student"}</strong>
+                            <small>{student?.email || ""}</small>
                         </span>
-                        <span className="brand-copy">
-                            <strong>AttendFlow</strong>
-                            <span className="portal-label">Student Portal</span>
-                        </span>
-                    </a>
-
-                    <div className="profile">
-                        <Badge tone="good">{student.squad}</Badge>
-                        <div className="profile-pill">
-                            <span className="avatar">
-                                {student.name
-                                    .split(" ")
-                                    .map((part) => part[0])
-                                    .slice(0, 2)
-                                    .join("")
-                                    .toUpperCase()}
-                            </span>
-                            <div className="profile-copy">
-                                <strong>{student.name}</strong>
-                                <span>{student.email}</span>
+                        <span className="sidebar-chevron">›</span>
+                    </button>
+                    {profileOpen && (
+                        <div className="sidebar-profile-menu">
+                            <div className="profile-menu-details">
+                                <strong>{student?.name || "Student"}</strong>
+                                <span>{student?.email || ""}</span>
+                                {student?.squad && <small>Squad {student.squad}</small>}
                             </div>
-                            <button
-                                className="logout-button"
-                                aria-label="Log out"
-                                onClick={onLogout}
-                                disabled={!onLogout}
-                            >
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path
-                                        d="M10 5H5v14h5m5-11 4 4-4 4m-6-4h10"
-                                        stroke="currentColor"
-                                        strokeWidth="1.8"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
+                            <button className="profile-logout" onClick={onLogout} disabled={!onLogout}>
+                                <span>↪</span> Log out
                             </button>
                         </div>
+                    )}
+                </div>
+            </aside>
+            <div className="dashboard dashboard-with-sidebar">
+                <header className="student-topbar">
+                    <div className="student-brand-lockup">
+                    
+                        <div className="student-brand-title">AttendFlow</div>
                     </div>
                 </header>
                 <main className="main-content">
-                    <section className="hero">
-                        <div className="hero-copy">
-                            <h1>Welcome back, {student.name.split(" ")[0]} 👋</h1>
-                            <p>
-                                Track your attendance progress and keep your records above
-                                the 75% criteria.
-                            </p>
-                            <div className="safe-notice">
-                                <span className="status-dot" />
-                                Overall attendance is currently {overallAttendance.toFixed(1)}% · {safeStatus === "Safe" ? "Safe zone" : "Needs attention"}
+                    <div className="dashboard-panel">
+                    <div className="dashboard-panel-header">
+                        <section className="hero">
+                            <div className="hero-copy">
+                                <h1>Welcome back, {student.name.split(" ")[0]} 👋</h1>
+                                <p>
+                                    Track your attendance progress and keep your records above
+                                    the 75% criteria.
+                                </p>
+                                <div className="safe-notice">
+                                    <span className="status-dot" />
+                                    Overall attendance is currently {overallAttendance.toFixed(1)}% · {safeStatus === "Safe" ? "Safe zone" : "Needs attention"}
+                                </div>
                             </div>
+                        </section>
+                        <div className="dashboard-panel-toolbar">
+                            <SemesterDropdown
+                                semesters={allSemesters}
+                                value={semester}
+                                onChange={setSelectedSemester}
+                            />
                         </div>
-                    </section>
+                    </div>
 
                     <section className="kpi-grid" aria-label="Attendance overview">
                         <article className="card overall-card">
@@ -451,25 +531,16 @@ export default function AttendFlow({ onReport, onLogout }) {
                                 <MiniStat label="Warning" value={breakdownCounts.Warning} tone="warning" />
                                 <MiniStat label="Critical" value={breakdownCounts.Critical} tone="critical" />
                             </div>
-                            <div className="attention-list small">
-                                <div className="row">
-                                    <span>Critical</span>
-                                    <strong className="text-critical">{breakdownCounts.Critical} subject{breakdownCounts.Critical === 1 ? "" : "s"}</strong>
-                                </div>
-                                <div className="row">
-                                    <span>Warning</span>
-                                    <strong className="text-warning">{breakdownCounts.Warning} subject{breakdownCounts.Warning === 1 ? "" : "s"}</strong>
-                                </div>
-                            </div>
+                            
                         </article>
                     </section>
 
                     <section aria-labelledby="subjects-title">
                         <div className="section-heading">
                             <div>
-                                <h2 id="subjects-title">Core Subjects</h2>
+                                <h2 id="subjects-title">Subject-wise attendance</h2>
                                 <p>
-                                    Review attendance health and required follow-up.
+                                    Your attendance by subject for the selected semester.
                                 </p>
                             </div>
 
@@ -495,7 +566,7 @@ export default function AttendFlow({ onReport, onLogout }) {
                                     onChange={(event) => {
                                         setSelectedSemester(Number(event.target.value));
                                     }}
-                                    hidden={!allSemesters.length}
+                                    hidden={true}
                                 >
                                     {allSemesters.map((value) => (
                                         <option key={value} value={value}>
@@ -523,6 +594,7 @@ export default function AttendFlow({ onReport, onLogout }) {
                             </div>
                         )}
                     </section>
+                    </div>
 
                     <aside className="card support-callout">
                         <div>
