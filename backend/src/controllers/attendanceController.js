@@ -1129,6 +1129,7 @@ const bulkUpsertSubjects = async (
 // DEDUPLICATE ATTENDANCE ROWS
 // ============================================================
 
+
 const dedupeAttendanceRows = (rows) => {
     const map = new Map();
 
@@ -1137,18 +1138,39 @@ const dedupeAttendanceRows = (rows) => {
             row.student_id,
             row.attendance_type,
             row.semester,
-            row.period_start,
-            row.period_end,
             row.attendance_type === "growth_hour"
                 ? "growth_hour"
                 : row.subject_id,
         ].join("|");
 
-        map.set(key, row);
+        const existing = map.get(key);
+
+        // Keep the record with the newest reporting period.
+        if (!existing) {
+            map.set(key, row);
+            continue;
+        }
+
+        const existingEnd = existing.period_end || "";
+        const currentEnd = row.period_end || "";
+
+        const existingStart = existing.period_start || "";
+        const currentStart = row.period_start || "";
+
+        if (
+            currentEnd > existingEnd ||
+            (
+                currentEnd === existingEnd &&
+                currentStart > existingStart
+            )
+        ) {
+            map.set(key, row);
+        }
     }
 
     return [...map.values()];
 };
+
 
 // ============================================================
 // IMPORT ATTENDANCE
