@@ -132,7 +132,11 @@ const applyTemplateVariables = (text, student, mentorName, mentorEmail) =>
 
 const subjectName = (record) =>
   String(
-    record?.subject_name ?? record?.subjectName ?? record?.subject?.name ?? ""
+    record?.subject_name ??
+      record?.subjectName ??
+      record?.subjects?.name ??
+      record?.subject?.name ??
+      ""
   ).trim();
 
 const subjectId = (record) =>
@@ -182,8 +186,8 @@ const mapStudentDownloadRow = (student, records, exportSubjects) => {
     Squad: student?.squad || "",
   };
 
-  exportSubjects.forEach((subject, index) => {
-    const n = index + 1;
+  exportSubjects.forEach((subject) => {
+    const subjectLabel = subject.name || subject.id || "Subject";
     const record = studentRecords.find((item) => {
       const recordId = subjectId(item);
       const recordName = subjectName(item).toLowerCase();
@@ -202,17 +206,16 @@ const mapStudentDownloadRow = (student, records, exportSubjects) => {
     const percentage =
       conducted > 0 ? Number(((attended / conducted) * 100).toFixed(2)) : 0;
 
-    row[`Subject ${n} Name`] = subject.name || "";
-    row[`Subject ${n} ID`] = subject.id || "";
-    row[`Subject ${n} Sessions Conducted`] = conducted;
-    row[`Subject ${n} Sessions Attended`] = attended;
-    row[`Subject ${n} Sessions Absent`] = absent;
-    row[`Subject ${n} Attendance %`] = `${percentage.toFixed(2)}%`;
-    row[`Subject ${n} Sessions Marked OD`] =
+    row[`${subjectLabel} ID`] = subject.id || "";
+    row[`${subjectLabel} Sessions Conducted`] = conducted;
+    row[`${subjectLabel} Sessions Attended`] = attended;
+    row[`${subjectLabel} Sessions Absent`] = absent;
+    row[`${subjectLabel} Attendance %`] = `${percentage.toFixed(2)}%`;
+    row[`${subjectLabel} Sessions Marked OD`] =
       Number(record?.sessions_marked_od) || 0;
-    row[`Subject ${n} Sessions on Approved Medical Leave (ML)`] =
+    row[`${subjectLabel} Sessions on Approved Medical Leave (ML)`] =
       Number(record?.sessions_medical_leave) || 0;
-    row[`Subject ${n} Sessions Applied Leave`] =
+    row[`${subjectLabel} Sessions Applied Leave`] =
       Number(record?.sessions_applied_leave) || 0;
   });
 
@@ -392,6 +395,7 @@ AESA`
     setSelectedStudent(student);
     setShowOverallAttendance(true);
     setShowSubjects(withSubjects);
+    setAttendanceView("overall");
   };
 
   const closeStudentProfile = () => {
@@ -1080,11 +1084,8 @@ AESA`
         const attendance = Number(student.attendance) || 0;
 
         return {
-          "Student Name": student.name || "",
-          "Student Email": emails.studentEmail || "",
-          Squad: student.squad || "",
-          Subject: "Overall",
-          "Attendance %": Number(attendance.toFixed(2)),
+          ...mapStudentDownloadRow(student, attendanceRecords, exportSubjects),
+          "Overall Attendance %": `${attendance.toFixed(2)}%`,
           "Attendance Status": getAttendanceStatus(attendance),
           "Parent Email": emails.parentEmail || "",
           "Parent Phone":
@@ -1545,7 +1546,31 @@ AESA`
                                 <span className="sp-att-empty">—</span>
                               ) : (
                                 <span
-                                  className={`sp-att-badge sp-att-${status.toLowerCase()}`}
+                                  className={`sp-att-badge sp-att-${status.toLowerCase()} ${attendanceView === "overall"
+                                    ? "sp-att-clickable"
+                                    : ""
+                                    }`}
+                                  role={attendanceView === "overall" ? "button" : undefined}
+                                  tabIndex={attendanceView === "overall" ? 0 : undefined}
+                                  aria-label={
+                                    attendanceView === "overall"
+                                      ? `View subject attendance for ${student.name || "student"}`
+                                      : undefined
+                                  }
+                                  onClick={() => {
+                                    if (attendanceView === "overall") {
+                                      openStudentProfile(student, true);
+                                    }
+                                  }}
+                                  onKeyDown={(event) => {
+                                    if (
+                                      attendanceView === "overall" &&
+                                      (event.key === "Enter" || event.key === " ")
+                                    ) {
+                                      event.preventDefault();
+                                      openStudentProfile(student, true);
+                                    }
+                                  }}
                                 >
                                   {attendance.toFixed(2)}%
                                 </span>
@@ -1769,7 +1794,19 @@ AESA`
               </div>
 
               {showOverallAttendance ? (
-                <div className="sp-result sp-result-main">
+                <div
+                  className="sp-result sp-result-main sp-result-clickable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="View subject-wise attendance"
+                  onClick={() => setShowSubjects(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setShowSubjects(true);
+                    }
+                  }}
+                >
                   <span>Overall attendance</span>
                   <strong>
                     {Number(selectedStudent.attendance || 0).toFixed(2)}%
@@ -2232,7 +2269,10 @@ AESA`
               <button
                 type="button"
                 className="sp-confirm"
-                onClick={handleDownloadExcel}
+                onClick={() => {
+                  handleDownload();
+                  setDownloadModalOpen(false);
+                }}
               >
                 Download Excel
               </button>
