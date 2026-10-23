@@ -815,6 +815,27 @@
   font-weight: 800;
 }
 
+.sp-att-clickable,
+.sp-result-clickable {
+  cursor: pointer;
+}
+
+.sp-att-clickable:hover,
+.sp-att-clickable:focus-visible {
+  filter: brightness(0.96);
+}
+
+.sp-result-clickable {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sp-result-clickable:hover,
+.sp-result-clickable:focus-visible {
+  border-color: var(--sp-primary);
+  box-shadow: 0 0 0 3px rgba(224, 0, 0, 0.08);
+  outline: none;
+}
+
 .sp-att-good {
   border: 1px solid #86efac;
   background: var(--sp-success-soft);
