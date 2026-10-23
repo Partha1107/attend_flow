@@ -1129,6 +1129,7 @@ const bulkUpsertSubjects = async (
 // DEDUPLICATE ATTENDANCE ROWS
 // ============================================================
 
+
 const dedupeAttendanceRows = (rows) => {
     const map = new Map();
 
@@ -1137,18 +1138,39 @@ const dedupeAttendanceRows = (rows) => {
             row.student_id,
             row.attendance_type,
             row.semester,
-            row.period_start,
-            row.period_end,
             row.attendance_type === "growth_hour"
                 ? "growth_hour"
                 : row.subject_id,
         ].join("|");
 
-        map.set(key, row);
+        const existing = map.get(key);
+
+        // Keep the record with the newest reporting period.
+        if (!existing) {
+            map.set(key, row);
+            continue;
+        }
+
+        const existingEnd = existing.period_end || "";
+        const currentEnd = row.period_end || "";
+
+        const existingStart = existing.period_start || "";
+        const currentStart = row.period_start || "";
+
+        if (
+            currentEnd > existingEnd ||
+            (
+                currentEnd === existingEnd &&
+                currentStart > existingStart
+            )
+        ) {
+            map.set(key, row);
+        }
     }
 
     return [...map.values()];
 };
+
 
 // ============================================================
 // IMPORT ATTENDANCE
@@ -1831,6 +1853,61 @@ const getStudents = async (
         });
     }
 };
+
+const getMyAttendance = async (req, res) => {
+    try {
+        const email = cleanString(req.user?.email);
+
+        if (!email) {
+            return res.status(401).json({
+                success: false,
+                message: "Authenticated account has no email address.",
+            });
+        }
+
+        const { data: student, error: studentError } = await supabase
+            .from("students")
+            .select("id, name, email, squad")
+            .eq("email", email)
+            .maybeSingle();
+
+        if (studentError) throw studentError;
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "No student profile matches the signed-in account.",
+            });
+        }
+
+        const { data: records, error: attendanceError } = await supabase
+            .from("attendance")
+            .select(`
+                *,
+                subjects (
+                    name
+                )
+            `)
+            .eq("student_id", student.id)
+            .order("updated_at", { ascending: false });
+
+        if (attendanceError) throw attendanceError;
+
+        return res.status(200).json({
+            success: true,
+            student,
+            records: records || [],
+        });
+    } catch (error) {
+        console.error("Get current student attendance error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch student attendance",
+            error: error.message,
+        });
+    }
+};
 // ============================================================
 // GET EMAIL ALERTS
 // ============================================================
@@ -2123,6 +2200,8 @@ module.exports = {
     importAttendance,
 
     getStudents,
+
+    getMyAttendance,
 
     getEmailAlerts,
 

@@ -1,0 +1,203 @@
+.available-option-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.available-option-selector__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.available-option-selector__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.available-option-selector__item {
+    border: 1px solid #dfe3e8;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #374151;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.available-option-selector__item:hover:not(:disabled) {
+    border-color: #f2383f;
+    background: #fff5f5;
+    color: #b91c1c;
+}
+
+.available-option-selector__item.is-selected {
+    border-color: #f2383f;
+    background: #fff1f2;
+    color: #b91c1c;
+    box-shadow: 0 0 0 1px rgba(242, 56, 63, 0.08);
+}
+
+.available-option-selector__item:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.available-option-selector__empty {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.86rem;
+}
+
+.available-dropdown {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    color: #384152;
+}
+
+.available-dropdown.is-open {
+    z-index: 60;
+}
+
+.available-dropdown-label {
+    display: block;
+    margin: 0 0 7px;
+    color: #5f6878;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.available-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1px solid #cbd2dd;
+    border-radius: 9px;
+    background: #fff;
+    color: #343b49;
+    font: 600 13px Inter, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.mentor-setup-card .available-dropdown .available-dropdown-trigger,
+.mentor-setup-card .available-dropdown .available-dropdown-option {
+    background: #fff !important;
+    border-color: #cbd2dd !important;
+    color: #343b49 !important;
+}
+
+.mentor-setup-card .available-dropdown .available-dropdown-trigger:hover,
+.mentor-setup-card .available-dropdown.is-open .available-dropdown-trigger {
+    background: #fff !important;
+    border-color: #aeb7c5 !important;
+    color: #343b49 !important;
+}
+
+.available-dropdown-trigger:hover,
+.available-dropdown.is-open .available-dropdown-trigger {
+    border-color: #aeb7c5;
+}
+
+.available-dropdown-trigger:focus-visible {
+    outline: none;
+    border-color: #aeb7c5;
+    box-shadow: 0 0 0 3px rgba(255, 52, 59, .1);
+}
+
+.available-dropdown-trigger:disabled {
+    color: #98a0ad;
+    cursor: not-allowed;
+}
+
+.available-dropdown-chevron {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    border-right: 1.5px solid #8791a1;
+    border-bottom: 1.5px solid #8791a1;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform .18s ease;
+}
+
+.available-dropdown.is-open .available-dropdown-chevron {
+    transform: rotate(225deg) translate(-1px, -1px);
+}
+
+.available-dropdown-menu {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 7px);
+    right: 0;
+    width: 100%;
+    max-height: 240px;
+    padding: 7px;
+    overflow-y: auto;
+    border: 1px solid #e1e5eb;
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(23, 25, 35, .14);
+    animation: available-menu-in .14s ease-out;
+}
+
+.available-dropdown-option {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #343b49;
+    font: 600 13px Inter, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background .14s ease, color .14s ease;
+}
+
+.available-dropdown-option:hover,
+.available-dropdown-option:focus-visible {
+    outline: none;
+    background: #f4f6f9;
+}
+
+.mentor-setup-card .available-dropdown .available-dropdown-option:hover,
+.mentor-setup-card .available-dropdown .available-dropdown-option:focus-visible,
+.mentor-setup-card .available-dropdown .available-dropdown-option.is-selected {
+    background: #f4f6f9 !important;
+    border-color: transparent !important;
+    color: #252c38 !important;
+}
+
+.available-dropdown-option.is-selected {
+    background: #f5f7fa;
+    color: #252c38;
+}
+
+.available-dropdown-empty {
+    margin: 0;
+    padding: 10px 11px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+@keyframes available-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -28,6 +28,12 @@ router.get(
     attendanceController.getStudents
 );
 
+router.get(
+    "/me",
+    requireAuth,
+    attendanceController.getMyAttendance
+);
+
 
 /* =========================================================
    EMAIL ALERTS

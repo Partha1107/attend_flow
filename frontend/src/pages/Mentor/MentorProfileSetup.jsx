@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
+import {
+  AvailableDropdownSelector,
+  AvailableSquadSelector,
+} from "../../components/AvailableOptionSelector";
 import { supabase } from "../../lib/supabase";
 import {
   saveMentorProfile,
@@ -145,9 +149,7 @@ const MentorProfileSetup = () => {
   // JOB ROLE CHANGE
   // ============================================================
 
-  const handleJobRoleChange = (event) => {
-    const selectedRole = event.target.value;
-
+  const handleJobRoleChange = (selectedRole) => {
     setJobRole(selectedRole);
     setError("");
 
@@ -327,28 +329,17 @@ const MentorProfileSetup = () => {
           ==================================================== */}
 
           <div className="form-group">
-            <label htmlFor="jobRole">
-              Job Role
-            </label>
-
-            <select
-              id="jobRole"
+            <AvailableDropdownSelector
+              label="Job Role"
+              options={[
+                { value: "mentor", label: "Mentor" },
+                { value: "campus_manager", label: "Campus Manager" },
+              ]}
               value={jobRole}
               onChange={handleJobRoleChange}
               disabled={saving}
-            >
-              <option value="">
-                Select your job role
-              </option>
-
-              <option value="mentor">
-                Mentor
-              </option>
-
-              <option value="campus_manager">
-                Campus Manager
-              </option>
-            </select>
+              placeholder="Select your job role"
+            />
           </div>
 
           {/* ====================================================
@@ -359,32 +350,18 @@ const MentorProfileSetup = () => {
 
           {jobRole === "mentor" && (
             <div className="form-group">
-              <label htmlFor="squad">
-                Squad
-              </label>
-
-              <select
-                id="squad"
+              <AvailableSquadSelector
+                options={availableSquads.map((value) => ({
+                  value: String(value),
+                  label: `Squad ${value}`,
+                }))}
                 value={squad}
-                onChange={(event) => {
-                  setSquad(event.target.value);
+                onChange={(nextValue) => {
+                  setSquad(nextValue);
                   setError("");
                 }}
                 disabled={saving}
-              >
-                <option value="">
-                  Select your squad
-                </option>
-
-                {availableSquads.map((value) => (
-                  <option
-                    key={value}
-                    value={value}
-                  >
-                    Squad {value}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           )}
 

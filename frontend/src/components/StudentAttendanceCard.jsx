@@ -88,98 +88,98 @@ function StudentAttendanceCard({ student }) {
                         <div className="attendance-details">
                             <div className="attendance-table-wrapper">
 
-                        <table className="attendance-table">
+                                <table className="attendance-table">
 
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Classes Attended</th>
-                                    <th>Classes Conducted</th>
-                                    <th>Attendance</th>
-                                </tr>
-                            </thead>
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Classes Attended</th>
+                                            <th>Classes Conducted</th>
+                                            <th>Attendance</th>
+                                        </tr>
+                                    </thead>
 
-                            <tbody>
-                                {student.subjects.map(
-                                    (subject, index) => {
+                                    <tbody>
+                                        {student.subjects.map(
+                                            (subject, index) => {
 
-                                        const attended =
-                                            Number(
-                                                subject.sessionsAttended
-                                            ) || 0;
+                                                const attended =
+                                                    Number(
+                                                        subject.sessionsAttended
+                                                    ) || 0;
 
-                                        const conducted =
-                                            Number(
-                                                subject.sessionsConducted
-                                            ) || 0;
+                                                const conducted =
+                                                    Number(
+                                                        subject.sessionsConducted
+                                                    ) || 0;
 
-                                        const percentage =
-                                            conducted > 0
-                                                ? (
-                                                    (attended /
-                                                        conducted) *
-                                                    100
-                                                ).toFixed(2)
-                                                : "0.00";
+                                                const percentage =
+                                                    conducted > 0
+                                                        ? (
+                                                            (attended /
+                                                                conducted) *
+                                                            100
+                                                        ).toFixed(2)
+                                                        : "0.00";
 
-                                        return (
-                                            <tr
-                                                key={
-                                                    subject.id ??
-                                                    `${subject.name}-${index}`
-                                                }
-                                            >
+                                                return (
+                                                    <tr
+                                                        key={
+                                                            subject.id ??
+                                                            `${subject.name}-${index}`
+                                                        }
+                                                    >
 
+                                                        <td className="subject-name">
+                                                            {subject.name}
+                                                        </td>
+
+                                                        <td>
+                                                            {attended}
+                                                        </td>
+
+                                                        <td>
+                                                            {conducted}
+                                                        </td>
+
+                                                        <td className="attendance-percentage">
+                                                            {percentage}%
+                                                        </td>
+
+                                                    </tr>
+                                                );
+                                            }
+                                        )}
+
+                                        {student.growthHour && (
+                                            <tr className="growth-hour-row">
                                                 <td className="subject-name">
-                                                    {subject.name}
+                                                    Growth Hour
                                                 </td>
 
                                                 <td>
-                                                    {attended}
+                                                    {Number(
+                                                        student.growthHour.sessionsAttended
+                                                    ) || 0}
                                                 </td>
 
                                                 <td>
-                                                    {conducted}
+                                                    {Number(
+                                                        student.growthHour.sessionsConducted
+                                                    ) || 0}
                                                 </td>
 
                                                 <td className="attendance-percentage">
-                                                    {percentage}%
+                                                    {parseFloat(
+                                                        student.growthHour.attendancePercentage
+                                                    ).toFixed(2)}
+                                                    %
                                                 </td>
-
                                             </tr>
-                                        );
-                                    }
-                                )}
+                                        )}
+                                    </tbody>
 
-                                {student.growthHour && (
-                                    <tr className="growth-hour-row">
-                                        <td className="subject-name">
-                                            Growth Hour
-                                        </td>
-
-                                        <td>
-                                            {Number(
-                                                student.growthHour.sessionsAttended
-                                            ) || 0}
-                                        </td>
-
-                                        <td>
-                                            {Number(
-                                                student.growthHour.sessionsConducted
-                                            ) || 0}
-                                        </td>
-
-                                        <td className="attendance-percentage">
-                                            {parseFloat(
-                                                student.growthHour.attendancePercentage
-                                            ).toFixed(2)}
-                                            %
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-
-                        </table>
+                                </table>
 
                             </div>
                         </div>

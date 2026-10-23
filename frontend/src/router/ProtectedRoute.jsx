@@ -10,6 +10,12 @@ const ProtectedRoute = () => {
   const location = useLocation();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(Boolean(supabase));
+  const email = session?.user?.email?.toLowerCase() ?? "";
+  const isStudent = email.endsWith("@kalvium.community");
+  const isDeveloper = ALLOWED_USERS.includes(email);
+  const isStudentRedirect = isStudent && !isDeveloper;
+  const userId = session?.user?.id;
+  const shouldCheckAccess = Boolean(userId) && !(isStudent && !isDeveloper);
 
   // ============================================================
   // ACCESS CONTROL STATE
@@ -90,9 +96,7 @@ const ProtectedRoute = () => {
   // ============================================================
 
   useEffect(() => {
-    if (!session?.user?.id) {
-      return;
-    }
+    if (!shouldCheckAccess) return undefined;
 
     let mounted = true;
 
@@ -167,7 +171,7 @@ const ProtectedRoute = () => {
     return () => {
       mounted = false;
     };
-  }, [session]);
+  }, [userId, shouldCheckAccess]);
 
   // ============================================================
   // LOADING AUTHENTICATION
@@ -194,10 +198,17 @@ const ProtectedRoute = () => {
   // ============================================================
   // NOT LOGGED IN
   // ============================================================
-
   if (!session) {
     return <Navigate to="/login" replace />;
   }
+
+if (isStudentRedirect) {
+  if (location.pathname !== "/studentpage") {
+    return <Navigate to="/studentpage" replace />;
+  }
+
+  return <Outlet />;
+}
 
   // ============================================================
   // ACCESS CHECK NOT COMPLETED
@@ -212,7 +223,9 @@ const ProtectedRoute = () => {
   // before mentor profile verification finishes.
   // ============================================================
 
-  if (!accessResolved) {
+  const hasResolvedAccess = !shouldCheckAccess || accessResolved;
+
+  if (!hasResolvedAccess) {
     return (
       <Loader
         fullScreen={true}
@@ -226,7 +239,7 @@ const ProtectedRoute = () => {
   // ACCESS CHECKING
   // ============================================================
 
-  if (accessChecking) {
+  if (shouldCheckAccess && accessChecking) {
     return (
       <Loader
         fullScreen={true}
@@ -300,15 +313,16 @@ const ProtectedRoute = () => {
   // CHECK EMAIL
   // ============================================================
 
-  const email =
-    session.user?.email?.toLowerCase();
 
-  const isKalviumUser =
-    email?.endsWith("@kalvium.com");
+  const isKalviumUser = email.endsWith("@kalvium.com");
 
-  const isDeveloper =
-    email &&
-    ALLOWED_USERS.includes(email);
+  console.log("ProtectedRoute debug:", {
+    email,
+    isStudent,
+    isDeveloper,
+    isKalviumUser,
+    pathname: location.pathname,
+  });
 
   // ============================================================
   // UNAUTHORIZED USER
