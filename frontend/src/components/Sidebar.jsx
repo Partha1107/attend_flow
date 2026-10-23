@@ -1,7 +1,6 @@
 import {
   ChevronDown,
   FileSpreadsheet,
-  GraduationCap,
   History,
   LayoutDashboard,
   LogOut,
@@ -13,6 +12,7 @@ import {
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getMentorRole } from "../api/mentor";
+import logo from "../assets/web-favicon.svg";
 
 import "./Sidebar.css";
 
@@ -93,12 +93,7 @@ function Sidebar({ open = false, onClose = () => { } }) {
       {/* ================================================== */}
 
       <div className="sidebar-brand">
-        <div className="brand-mark">
-          <GraduationCap
-            size={24}
-            strokeWidth={2.4}
-          />
-        </div>
+        <img className="brand-mark" src={logo} alt="AESA logo" />
 
         <div className="brand-text">
           <div className="brand-name">

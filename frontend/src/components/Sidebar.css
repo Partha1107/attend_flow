@@ -38,15 +38,9 @@
 
   flex: 0 0 40px;
 
-  display: grid;
-  place-items: center;
-
-  color: #ffffff;
-  background: #f2383f;
-
-  border: 1px solid #d92d34;
+  display: block;
+  object-fit: cover;
   border-radius: 8px;
-
   box-shadow: 0 2px 6px rgba(242, 56, 63, 0.18);
 }
 
