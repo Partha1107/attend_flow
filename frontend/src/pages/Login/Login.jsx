@@ -5,7 +5,7 @@ import {
     supabase,
     supabaseConfigError,
 } from "../../lib/supabase";
-import logo from "../../assets/web-favicon.png";
+import logo from "../../assets/web-favicon.svg";
 import "./Login.css";
 
 const Login = () => {

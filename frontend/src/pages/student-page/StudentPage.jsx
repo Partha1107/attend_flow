@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
+import logo from "../../assets/web-favicon.svg";
 
 import SkeletonLoading from "../../components/SkeletonLoading";
 import {
@@ -1298,7 +1299,10 @@ AESA`
       {/* Header */}
       <header className="sp-header">
         <div className="sp-title">
-          <div className="sp-eyebrow">AESA / Student management</div>
+          <div className="sp-eyebrow">
+            <img className="sp-brand-logo" src={logo} alt="AESA logo" />
+            <span>Student management</span>
+          </div>
           <h1>Students</h1>
 
           {jobRole === "mentor" && assignedSquad && (

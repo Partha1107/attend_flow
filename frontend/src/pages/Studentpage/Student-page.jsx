@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import logo from "../../assets/web-favicon.png";
+import logo from "../../assets/web-favicon.svg";
 import "./Student-page.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
