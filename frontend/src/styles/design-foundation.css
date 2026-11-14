@@ -1,0 +1,275 @@
+/* Attend Flow — shared light design foundation.
+   Keep these tokens presentation-only: page data and business logic stay untouched. */
+
+:root {
+  color-scheme: light;
+
+  --af-canvas: #f6f7f9;
+  --af-surface: #ffffff;
+  --af-surface-muted: #f9fafb;
+  --af-surface-hover: #f3f4f6;
+  --af-ink: #171923;
+  --af-ink-soft: #454a57;
+  --af-muted: #737987;
+  --af-subtle: #9aa1ad;
+  --af-border: #e7e9ee;
+  --af-border-strong: #d9dde5;
+
+  --af-brand: #e53945;
+  --af-brand-hover: #c92e39;
+  --af-brand-soft: #fff0f1;
+  --af-brand-ring: rgb(229 57 69 / 18%);
+
+  --af-success: #16845b;
+  --af-success-soft: #eaf7f0;
+  --af-warning: #a96508;
+  --af-warning-soft: #fff5e5;
+  --af-danger: #c9363f;
+  --af-danger-soft: #fff0f1;
+  --af-info: #3569c8;
+  --af-info-soft: #edf3ff;
+
+  --af-radius-sm: 8px;
+  --af-radius-md: 12px;
+  --af-radius-lg: 16px;
+  --af-radius-xl: 20px;
+
+  --af-shadow-sm: 0 1px 2px rgb(16 24 40 / 4%);
+  --af-shadow-card: 0 2px 8px rgb(16 24 40 / 4%), 0 1px 2px rgb(16 24 40 / 3%);
+  --af-shadow-popover: 0 16px 40px rgb(16 24 40 / 12%);
+
+  --af-sidebar-width: 256px;
+  --af-content-max: 1600px;
+  --af-page-gutter: clamp(18px, 2.5vw, 36px);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--af-canvas);
+}
+
+body {
+  color: var(--af-ink);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+button,
+input,
+select,
+textarea {
+  accent-color: var(--af-brand);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--af-brand-ring);
+  outline-offset: 2px;
+}
+
+/* Shared application frame */
+.app-shell {
+  min-height: 100vh;
+  background: var(--af-canvas);
+}
+
+.app-main {
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: var(--af-sidebar-width);
+  background: var(--af-canvas);
+}
+
+.page-content {
+  width: 100%;
+  max-width: var(--af-content-max);
+  margin-inline: auto;
+  padding: 30px var(--af-page-gutter) 40px;
+}
+
+/* Sidebar foundation — existing navigation and role logic are preserved. */
+.sidebar {
+  width: var(--af-sidebar-width);
+  padding: 26px 16px 18px;
+  color: var(--af-ink);
+  background: var(--af-surface);
+  border-right: 1px solid var(--af-border);
+  box-shadow: var(--af-shadow-sm);
+}
+
+.sidebar-brand {
+  gap: 12px;
+  padding: 2px 8px 28px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.brand-name {
+  color: var(--af-ink);
+  font-size: 22px;
+  letter-spacing: -0.7px;
+}
+
+.brand-subtitle {
+  color: var(--af-muted);
+  font-size: 10px;
+  letter-spacing: 0.01em;
+}
+
+.sidebar-nav {
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.nav-item {
+  min-height: 44px;
+  padding-inline: 13px;
+  gap: 12px;
+  border-radius: 10px;
+  color: var(--af-muted);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.nav-item:hover,
+.nav-group-button:hover,
+.nav-subitem:hover {
+  color: var(--af-ink);
+  background: var(--af-surface-hover);
+}
+
+.nav-item.active,
+.nav-subitem.active {
+  color: var(--af-brand);
+  background: var(--af-brand-soft);
+  font-weight: 650;
+  box-shadow: inset 3px 0 0 var(--af-brand);
+}
+
+.nav-item.active svg,
+.nav-subitem.active svg {
+  color: var(--af-brand);
+}
+
+.nav-submenu {
+  margin-top: 5px;
+  margin-left: 18px;
+  padding-left: 12px;
+  border-left-color: var(--af-border-strong);
+}
+
+.nav-subitem {
+  min-height: 38px;
+  border-radius: 8px;
+  color: var(--af-muted);
+}
+
+.sidebar-footer {
+  padding-top: 14px;
+  border-top-color: var(--af-border);
+}
+
+.logout-btn {
+  min-height: 42px;
+  border-radius: 10px;
+  color: var(--af-muted);
+}
+
+.logout-btn:hover {
+  color: var(--af-danger);
+  background: var(--af-danger-soft);
+}
+
+/* Mobile/tablet layout keeps the existing drawer behavior. */
+.mobile-menu-toggle {
+  margin: 16px 0 0 var(--af-page-gutter);
+  border-color: var(--af-border);
+  border-radius: 10px;
+  box-shadow: var(--af-shadow-sm);
+}
+
+.sidebar-backdrop {
+  background: rgb(17 24 39 / 38%);
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 1100px) {
+  .app-main {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    box-shadow: var(--af-shadow-popover);
+  }
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: 20px 16px 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Higher-specificity application overrides ensure the foundation wins over
+   legacy page-level selectors without editing their behavior. */
+.app-shell .sidebar {
+  width: var(--af-sidebar-width);
+  padding: 26px 16px 18px;
+  color: var(--af-ink);
+  background: var(--af-surface);
+  border-right: 1px solid var(--af-border);
+  box-shadow: var(--af-shadow-sm);
+}
+.app-shell .sidebar-brand { gap: 12px; padding: 2px 8px 28px; }
+.app-shell .brand-mark { width: 42px; height: 42px; flex-basis: 42px; border-radius: 12px; box-shadow: none; }
+.app-shell .brand-name { color: var(--af-ink); font-size: 22px; letter-spacing: -0.7px; }
+.app-shell .brand-subtitle { color: var(--af-muted); }
+.app-shell .nav-item { min-height: 44px; border-radius: 10px; color: var(--af-muted); }
+.app-shell .nav-item:hover,
+.app-shell .nav-group-button:hover,
+.app-shell .nav-subitem:hover { color: var(--af-ink); background: var(--af-surface-hover); }
+.app-shell .nav-item.active,
+.app-shell .nav-subitem.active {
+  color: var(--af-brand);
+  background: var(--af-brand-soft);
+  font-weight: 650;
+  box-shadow: inset 3px 0 0 var(--af-brand);
+}
+.app-shell .nav-item.active svg,
+.app-shell .nav-subitem.active svg { color: var(--af-brand); }
+.app-shell .sidebar-footer { border-top-color: var(--af-border); }
+.app-shell .logout-btn:hover { color: var(--af-danger); background: var(--af-danger-soft); }
+.app-shell .app-main { margin-left: var(--af-sidebar-width); background: var(--af-canvas); }
+.app-shell .page-content {
+  width: 100%;
+  max-width: var(--af-content-max);
+  margin-inline: auto;
+  padding: 30px var(--af-page-gutter) 40px;
+}
+@media (max-width: 1100px) {
+  .app-shell .sidebar { box-shadow: var(--af-shadow-popover); }
+  .app-shell .app-main { margin-left: 0; }
+}
+@media (max-width: 640px) {
+  .app-shell .page-content { padding: 20px 16px 30px; }
+}
